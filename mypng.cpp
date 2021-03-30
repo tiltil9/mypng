@@ -62,7 +62,7 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.info_png.filter_method = 0;
 
     //
-    state.error = 1;
+    state.error = 0;
   }
   state.info_png.color.colortype = colortype;
   state.info_png.color.bitdepth = bitdepth;
@@ -74,42 +74,34 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
 
 unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGState* state)
 {
+  /*provide some proper output values if error will happen*/
+  *out = 0;
+  *outsize = 0;
+
   unsigned char* data = 0; /*uncompressed version of the IDAT chunk data*/
   size_t datasize = 0;
   ucvector outv = ucvector_init(NULL, 0);
 
-  /*provide some proper output values if error will happen*/
-  *out = 0;
-  *outsize = 0;
-  state->error = 0;
-
-  /* color convert and compute scanline filter types */
-  state->error = preProcessScanlines(&data, &datasize, image, w, h, &state->info_png, &state->encoder);
-  if(state->error) goto cleanup;
+  /* compute scanline filter types */
+  preProcessScanlines(&data, &datasize, image, w, h, &state->info_png, &state->encoder);
 
   /* output all PNG chunks */
   {
     /*write signature and chunks*/
-    state->error = writeSignature(&outv);
-    if(state->error) goto cleanup;
+    writeSignature(&outv);
     /*IHDR*/
-    state->error = addChunk_IHDR(&outv, w, h, state->info_png.color.colortype, state->info_png.color.bitdepth, state->info_png.interlace_method);
-    if(state->error) goto cleanup;
+    addChunk_IHDR(&outv, w, h, state->info_png.color.colortype, state->info_png.color.bitdepth, state->info_png.interlace_method);
     /*IDAT (multiple IDAT chunks must be consecutive)*/
-    state->error = addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings);
-    if(state->error) goto cleanup;
-    state->error = addChunk_IEND(&outv);
-    if(state->error) goto cleanup;
+    addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings);
+    addChunk_IEND(&outv);
   }
 
-cleanup:
   free(data);
-
   /*instead of cleaning the vector up, give it to the output*/
   *out = outv.data;
   *outsize = outv.size;
 
-  return state->error;
+  return 0;
 }
 
 /*out must be buffer big enough to contain uncompressed IDAT chunk data, and in must contain the full image.
