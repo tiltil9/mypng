@@ -83,18 +83,8 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   *outsize = 0;
   state->error = 0;
 
-  const LodePNGInfo* info_png = &state->info_png;
-  LodePNGInfo info;
-  info.color.colortype = LCT_RGBA;
-  info.color.bitdepth = 8;
-  info.interlace_method = 0;
-  info.compression_method = 0;
-  info.filter_method = 0;
-  lodepng_memcpy(&info, info_png, sizeof(LodePNGInfo));
-  lodepng_memcpy(&info.color, &info_png->color, sizeof(LodePNGColorMode)); // seems info is equal to info_png
-
   /* color convert and compute scanline filter types */
-  state->error = preProcessScanlines(&data, &datasize, image, w, h, &info, &state->encoder);
+  state->error = preProcessScanlines(&data, &datasize, image, w, h, &state->info_png, &state->encoder);
   if(state->error) goto cleanup;
 
   /* output all PNG chunks */
@@ -103,7 +93,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
     state->error = writeSignature(&outv);
     if(state->error) goto cleanup;
     /*IHDR*/
-    state->error = addChunk_IHDR(&outv, w, h, info.color.colortype, info.color.bitdepth, info.interlace_method);
+    state->error = addChunk_IHDR(&outv, w, h, state->info_png.color.colortype, state->info_png.color.bitdepth, state->info_png.interlace_method);
     if(state->error) goto cleanup;
     /*IDAT (multiple IDAT chunks must be consecutive)*/
     state->error = addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings);
