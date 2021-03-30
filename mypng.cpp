@@ -40,7 +40,6 @@ int main()
 
 unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth)
 {
-  unsigned error;
   LodePNGState state;
   {
     // init encoding settings
@@ -54,10 +53,6 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.encoder.filter_strategy = LFS_MINSUM;
     state.encoder.auto_convert = 0;
 
-    // init raw pixel buffer
-    state.info_raw.colortype = LCT_RGBA;
-    state.info_raw.bitdepth = 8;
-
     // init PNG image info
     state.info_png.color.colortype = LCT_RGBA;
     state.info_png.color.bitdepth = 8;
@@ -69,14 +64,12 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     //
     state.error = 1;
   }
-  state.info_raw.colortype = colortype;
-  state.info_raw.bitdepth = bitdepth;
   state.info_png.color.colortype = colortype;
   state.info_png.color.bitdepth = bitdepth;
 
   lodepng_encode(out, outsize, image, w, h, &state);
-  error = state.error;
-  return error;
+
+  return 0;
 }
 
 unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGState* state)
