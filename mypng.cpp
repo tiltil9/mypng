@@ -104,33 +104,21 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   return 0;
 }
 
-/*out must be buffer big enough to contain uncompressed IDAT chunk data, and in must contain the full image.
-return value is error**/
 static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in,
                                     unsigned w, unsigned h, const LodePNGInfo* info_png, const LodePNGEncoderSettings* settings)
 {
-  /*
-  This function converts the pure 2D image with the PNG's colortype, into filtered-padded-interlaced data. Steps:
-  *) if no Adam7: 1) add padding bits (= possible extra bits per scanline if bpp < 8) 2) filter
-  */
-  unsigned bpp = 4 * 8; //getNumColorChannels(info_png->color.colortype) * info_png->color.bitdepth;
-  unsigned error = 0;
+  unsigned bpp = 4 * 8; // getNumColorChannels(info_png->color.colortype) * info_png->color.bitdepth;
 
   *outsize = h + (h * ((w * bpp + 7u) / 8u)); /*image size plus an extra byte per scanline + possible padding bits*/
   *out = (unsigned char*)malloc(*outsize);
-  if(!(*out) && (*outsize)) error = 83; /*alloc fail*/
 
-  if(!error) {
-    /*non multiple of 8 bits per scanline, padding bits needed per scanline*/
-    if(bpp < 8 && w * bpp != ((w * bpp + 7u) / 8u) * 8u) {
-      //
-    } else {
-      /*we can immediately filter into the out buffer, no other steps needed*/
-      error = filter(*out, in, w, h, &info_png->color, settings);
-    }
+  if(bpp < 8 && w * bpp != ((w * bpp + 7u) / 8u) * 8u) {
+  }
+  else {
+    filter(*out, in, w, h, &info_png->color, settings);
   }
 
-  return error;
+  return 0;
 }
 
 static unsigned filter(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, const LodePNGColorMode* color, const LodePNGEncoderSettings* settings)
