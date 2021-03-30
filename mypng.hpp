@@ -21,7 +21,10 @@
 //                         FLEVEL, FDICT: 0, 0
 //                         BTYPE        : 1(compressed with fixed huffman codes)
 //
-// lodepng implementation: ...
+// lodepng implementation:
+//                         state.encoder.zlibsettings.btype = 1;
+//                         state.encoder.zlibsettings.lazymatching = 0;
+//                         state.encoder.auto_convert = 0;
 //
 //
 #include <stdio.h>
@@ -55,11 +58,11 @@ typedef enum LodePNGFilterStrategy {
 typedef struct LodePNGColorMode {
   /*header (IHDR)*/
   LodePNGColorType colortype; /*color type, see PNG standard or documentation further in this header file*/
-  unsigned bitdepth;  /*bits per sample, see PNG standard or documentation further in this header file*/
+  unsigned bitdepth;          /*bits per sample, see PNG standard or documentation further in this header file*/
 } LodePNGColorMode;
 
 typedef struct LodePNGInfo {
-  /*header (IHDR), palette (PLTE) and transparency (tRNS) chunks*/
+  /*header (IHDR)*/
   unsigned compression_method;/*compression method of the original file. Always 0.*/
   unsigned filter_method;     /*filter method of the original file*/
   unsigned interlace_method;  /*interlace method of the original file: 0=none, 1=Adam7*/
@@ -68,17 +71,17 @@ typedef struct LodePNGInfo {
 
 typedef struct LodePNGCompressSettings /*deflate = compress*/ {
   /*LZ77 related settings*/
-  unsigned btype; /*the block type for LZ (0, 1, 2 or 3, see zlib standard). Should be 2 for proper compression.*/
-  unsigned use_lz77; /*whether or not to use LZ77. Should be 1 for proper compression.*/
-  unsigned windowsize; /*must be a power of two <= 32768. higher compresses more but is slower. Default value: 2048.*/
-  unsigned minmatch; /*minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 0*/
-  unsigned nicematch; /*stop searching if >= this length found. Set to 258 for best compression. Default: 128*/
+  unsigned btype;        /*the block type for LZ (0, 1, 2 or 3, see zlib standard). Should be 2 for proper compression.*/
+  unsigned use_lz77;     /*whether or not to use LZ77. Should be 1 for proper compression.*/
+  unsigned windowsize;   /*must be a power of two <= 32768. higher compresses more but is slower. Default value: 2048.*/
+  unsigned minmatch;     /*minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 0*/
+  unsigned nicematch;    /*stop searching if >= this length found. Set to 258 for best compression. Default: 128*/
   unsigned lazymatching; /*use lazy matching: better compression but a bit slower. Default: true*/
 } LodePNGCompressSettings;
 
 typedef struct LodePNGEncoderSettings {
   LodePNGCompressSettings zlibsettings; /*settings for the zlib encoder, such as window size, ...*/
-  unsigned auto_convert; /*automatically choose output PNG color type. Default: true*/
+  unsigned auto_convert;                /*automatically choose output PNG color type. Default: true*/
   /*Which filter strategy to use when not using zeroes due to filter_palette_zero.
   Set filter_palette_zero to 0 to ensure always using your chosen strategy. Default: LFS_MINSUM*/
   LodePNGFilterStrategy filter_strategy;
@@ -86,7 +89,7 @@ typedef struct LodePNGEncoderSettings {
 
 typedef struct LodePNGState {
   LodePNGEncoderSettings encoder; /*the encoding settings*/
-  LodePNGInfo info_png; /*info of the PNG image obtained after decoding*/
+  LodePNGInfo info_png;           /*info of the PNG image obtained after decoding*/
   unsigned error;
 } LodePNGState;
 
