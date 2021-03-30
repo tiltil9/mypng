@@ -13,8 +13,6 @@
 
 int main()
 {
-  const char* filename = "test.png";
-
   /*generate some image*/
   unsigned width = 512, height = 512;
   unsigned char* image = (unsigned char*)malloc(width * height * 4);
@@ -28,20 +26,16 @@ int main()
   }
 
   /*Encode the image*/
-  lodepng_encode_file(filename, image, width, height, LCT_RGBA, 8);
-
-  free(image);
-  return 0;
-}
-
-unsigned lodepng_encode_file(const char* filename, const unsigned char* image, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth)
-{
   unsigned char* buffer;
   size_t buffersize;
-  unsigned error = lodepng_encode_memory(&buffer, &buffersize, image, w, h, colortype, bitdepth);
-  if(!error) error = lodepng_save_file(buffer, buffersize, filename);
+  lodepng_encode_memory(&buffer, &buffersize, image, width, height, LCT_RGBA, 8);
+
+  const char* filename = "test.png";
+  lodepng_save_file(buffer, buffersize, filename);
+
   free(buffer);
-  return error;
+  free(image);
+  return 0;
 }
 
 unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth)

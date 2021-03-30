@@ -662,7 +662,6 @@ static void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded
 }
 
 //********************************************************
-unsigned lodepng_encode_file(const char* filename, const unsigned char* image, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth);
 unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth);
 unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGState* state);
 static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in,
