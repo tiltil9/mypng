@@ -123,94 +123,77 @@ static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const 
 
 static unsigned filter(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, const LodePNGColorMode* color, const LodePNGEncoderSettings* settings)
 {
-  /*
-  For PNG filter method 0
-  out must be a buffer with as size: h + (w * h * bpp + 7u) / 8u, because there are the scanlines with 1 extra byte per scanline
-  */
-
   unsigned bpp = 4 * 8; //getNumColorChannels(color->colortype) * color->bitdepth;
-  if(bpp == 0) return 31; /*error: invalid color type*/
   /*the width of a scanline in bytes, not including the filter type*/
   size_t linebytes = ((size_t)(w / 8u) * bpp) + 1u + ((w & 7u) * bpp + 7u) / 8u - 1u;
   /*bytewidth is used for filtering, is 1 when bpp < 8, number of bytes per pixel otherwise*/
   size_t bytewidth = (bpp + 7u) / 8u;
 
-  /*
-  There is a heuristic called the minimum sum of absolute differences heuristic, suggested by the PNG standard:
-   *  If the image type is Palette, or the bit depth is smaller than 8, then do not filter the image (i.e.
-      use fixed filtering, with the filter None).
-   * (The other case) If the image type is Grayscale or RGB (with or without Alpha), and the bit depth is
-     not smaller than 8, then use adaptive filtering heuristic as follows: independently for each row, apply
-     all five filters and select the filter that produces the smallest sum of absolute values per row.
-  This heuristic is used if filter strategy is LFS_MINSUM and filter_palette_zero is true.
-
-  If filter_palette_zero is true and filter_strategy is not LFS_MINSUM, the above heuristic is followed,
-  but for "the other case", whatever strategy filter_strategy is set to instead of the minimum sum
-  heuristic is used.
-  */
-  LodePNGFilterStrategy strategy = settings->filter_strategy;
-  const unsigned char* prevline = 0;
-  unsigned x, y;
-  unsigned error = 0;
-
-  if(strategy >= LFS_ZERO && strategy <= LFS_FOUR) {
-    unsigned char type = (unsigned char)strategy;
-    for(y = 0; y != h; ++y) {
-      size_t outindex = (1 + linebytes) * y; /*the extra filterbyte added to each row*/
+  if(settings->filter_strategy >= LFS_ZERO && settings->filter_strategy <= LFS_FOUR) {
+    unsigned char type = (unsigned char)settings->filter_strategy;
+    const unsigned char* prevline = 0;
+    for(unsigned y = 0; y != h; ++y) {
       size_t inindex = linebytes * y;
+      size_t outindex = (1 + linebytes) * y; /*the extra filterbyte added to each row*/
       out[outindex] = type; /*filter type byte*/
       filterScanline(&out[outindex + 1], &in[inindex], prevline, linebytes, bytewidth, type);
       prevline = &in[inindex];
     }
-  } else if(strategy == LFS_MINSUM) {
+  }
+  else if(settings->filter_strategy == LFS_MINSUM) {
     /*adaptive filtering*/
+    /*
+    There is a heuristic called the minimum sum of absolute differences heuristic, suggested by the PNG standard:
+       If the image type is Grayscale or RGB (with or without Alpha), and the bit depth is
+       not smaller than 8, then use adaptive filtering heuristic as follows: independently for each row, apply
+       all five filters and select the filter that produces the smallest sum of absolute values per row.
+    */
+    size_t smallest = 0; // TODO: check if these two stuffs should be moved into y-loop below
+    unsigned char bestType = 0;
+
+    const unsigned char* prevline = 0;
     unsigned char* attempt[5]; /*five filtering attempts, one for each filter type*/
-    size_t smallest = 0;
-    unsigned char type, bestType = 0;
-    for(type = 0; type != 5; ++type) {
+    for(unsigned char type = 0; type != 5; ++type) {
       attempt[type] = (unsigned char*)malloc(linebytes);
-      if(!attempt[type]) error = 83; /*alloc fail*/
     }
 
-    if(!error) {
-      for(y = 0; y != h; ++y) {
-        /*try the 5 filter types*/
-        for(type = 0; type != 5; ++type) {
-          size_t sum = 0;
-          filterScanline(attempt[type], &in[y * linebytes], prevline, linebytes, bytewidth, type);
+    for(unsigned y = 0; y != h; ++y) {
+      for(unsigned char type = 0; type != 5; ++type) {
+        filterScanline(attempt[type], &in[y * linebytes], prevline, linebytes, bytewidth, type);
 
-          /*calculate the sum of the result*/
-          if(type == 0) {
-            for(x = 0; x != linebytes; ++x) sum += (unsigned char)(attempt[type][x]);
-          } else {
-            for(x = 0; x != linebytes; ++x) {
-              /*For differences, each byte should be treated as signed, values above 127 are negative
-              (converted to signed char). Filtertype 0 isn't a difference though, so use unsigned there.
-              This means filtertype 0 is almost never chosen, but that is justified.*/
-              unsigned char s = attempt[type][x];
-              sum += s < 128 ? s : (255U - s); // TODO: find whether this is reasonable
-            }
-          }
-
-          /*check if this is smallest sum (or if type == 0 it's the first case so always store the values)*/
-          if(type == 0 || sum < smallest) {
-            bestType = type;
-            smallest = sum;
+        size_t sum = 0;
+        /*calculate the sum of the result*/
+        if(type == 0) {
+          for(unsigned x = 0; x != linebytes; ++x) sum += (unsigned char)(attempt[type][x]);
+        }
+        else {
+          for(unsigned x = 0; x != linebytes; ++x) {
+            /*For differences, each byte should be treated as signed, values above 127 are negative
+            (converted to signed char). Filtertype 0 isn't a difference though, so use unsigned there.
+            This means filtertype 0 is almost never chosen, but that is justified.*/
+            unsigned char s = attempt[type][x];
+            sum += s < 128 ? s : (255U - s); // TODO: find whether this is reasonable
           }
         }
 
-        prevline = &in[y * linebytes];
-        /*now fill the out values*/
-        out[y * (linebytes + 1)] = bestType; /*the first byte of a scanline will be the filter type*/
-        for(x = 0; x != linebytes; ++x) out[y * (linebytes + 1) + 1 + x] = attempt[bestType][x];
+        /*check if this is smallest sum (or if type == 0 it's the first case so always store the values)*/
+        if(type == 0 || sum < smallest) {
+          bestType = type;
+          smallest = sum;
+        }
       }
+
+      prevline = &in[y * linebytes];
+      /*now fill the out values*/
+      out[y * (linebytes + 1)] = bestType; /*the first byte of a scanline will be the filter type*/
+      for(unsigned x = 0; x != linebytes; ++x) out[y * (linebytes + 1) + 1 + x] = attempt[bestType][x];
+
     }
 
-    for(type = 0; type != 5; ++type) free(attempt[type]);
+    for(unsigned char type = 0; type != 5; ++type) free(attempt[type]);
   }
-  else return 88; /* unknown filter strategy */
 
-  return error;
+  return 0;
 }
 
 static void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType)
