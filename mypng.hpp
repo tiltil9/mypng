@@ -103,9 +103,7 @@ unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const
   return 0;
 }
 
-#define LODEPNG_RESTRICT __restrict
-static void lodepng_memcpy(void* LODEPNG_RESTRICT dst,
-                           const void* LODEPNG_RESTRICT src, size_t size) {
+static void lodepng_memcpy(void* __restrict dst, const void* __restrict src, size_t size) {
   size_t i;
   for(i = 0; i < size; i++) ((char*)dst)[i] = ((const char*)src)[i];
 }
