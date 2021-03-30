@@ -18,18 +18,17 @@ int main()
   /*generate some image*/
   unsigned width = 512, height = 512;
   unsigned char* image = (unsigned char*)malloc(width * height * 4);
-  unsigned x, y;
-  for(y = 0; y < height; y++)
-  for(x = 0; x < width; x++) {
-    image[4 * width * y + 4 * x + 0] = 255 * !(x & y);
-    image[4 * width * y + 4 * x + 1] = x ^ y;
-    image[4 * width * y + 4 * x + 2] = x | y;
-    image[4 * width * y + 4 * x + 3] = 255;
+  for(unsigned y = 0; y < height; y++) {
+    for(unsigned x = 0; x < width; x++) {
+      image[4 * width * y + 4 * x + 0] = 255 * !(x & y);
+      image[4 * width * y + 4 * x + 1] = x ^ y;
+      image[4 * width * y + 4 * x + 2] = x | y;
+      image[4 * width * y + 4 * x + 3] = 255;
+    }
   }
 
   /*Encode the image*/
-  unsigned error = lodepng_encode_file(filename, image, width, height, LCT_RGBA, 8);
-  if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
+  lodepng_encode_file(filename, image, width, height, LCT_RGBA, 8);
 
   free(image);
   return 0;
