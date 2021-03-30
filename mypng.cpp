@@ -198,54 +198,55 @@ static unsigned filter(unsigned char* out, const unsigned char* in, unsigned w, 
 
 static void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType)
 {
-  size_t i;
   switch(filterType) {
     case 0: /*None*/
-      for(i = 0; i != length; ++i) out[i] = scanline[i];
+      for(size_t i = 0; i != length; ++i) out[i] = scanline[i];
       break;
     case 1: /*Sub*/
-      for(i = 0; i != bytewidth; ++i) out[i] = scanline[i];
-      for(i = bytewidth; i < length; ++i) out[i] = scanline[i] - scanline[i - bytewidth]; // -1 ~ -255 will be added 256 here, the same below
+      for(size_t i = 0; i != bytewidth; ++i) out[i] = scanline[i];
+      for(size_t i = bytewidth; i < length; ++i) out[i] = scanline[i] - scanline[i - bytewidth]; // -1 ~ -255 will be added 256 here, the same below
       break;
     case 2: /*Up*/
       if(prevline) {
-        for(i = 0; i != length; ++i) out[i] = scanline[i] - prevline[i];
-      } else {
-        for(i = 0; i != length; ++i) out[i] = scanline[i];
+        for(size_t i = 0; i != length; ++i) out[i] = scanline[i] - prevline[i];
+      }
+      else {
+        for(size_t i = 0; i != length; ++i) out[i] = scanline[i];
       }
       break;
     case 3: /*Average*/
       if(prevline) {
-        for(i = 0; i != bytewidth; ++i) out[i] = scanline[i] - (prevline[i] >> 1);
-        for(i = bytewidth; i < length; ++i) out[i] = scanline[i] - ((scanline[i - bytewidth] + prevline[i]) >> 1);
-      } else {
-        for(i = 0; i != bytewidth; ++i) out[i] = scanline[i];
-        for(i = bytewidth; i < length; ++i) out[i] = scanline[i] - (scanline[i - bytewidth] >> 1);
+        for(size_t i = 0; i != bytewidth; ++i) out[i] = scanline[i] - (prevline[i] >> 1);
+        for(size_t i = bytewidth; i < length; ++i) out[i] = scanline[i] - ((scanline[i - bytewidth] + prevline[i]) >> 1);
+      }
+      else {
+        for(size_t i = 0; i != bytewidth; ++i) out[i] = scanline[i];
+        for(size_t i = bytewidth; i < length; ++i) out[i] = scanline[i] - (scanline[i - bytewidth] >> 1);
       }
       break;
     case 4: /*Paeth*/
       if(prevline) {
         /*paethPredictor(0, prevline[i], 0) is always prevline[i]*/
-        for(i = 0; i != bytewidth; ++i) out[i] = (scanline[i] - prevline[i]);
-        for(i = bytewidth; i < length; ++i) {
+        for(size_t i = 0; i != bytewidth; ++i) out[i] = (scanline[i] - prevline[i]);
+        for(size_t i = bytewidth; i < length; ++i) {
           out[i] = (scanline[i] - paethPredictor(scanline[i - bytewidth], prevline[i], prevline[i - bytewidth]));
         }
-      } else {
-        for(i = 0; i != bytewidth; ++i) out[i] = scanline[i];
+      }
+      else {
+        for(size_t i = 0; i != bytewidth; ++i) out[i] = scanline[i];
         /*paethPredictor(scanline[i - bytewidth], 0, 0) is always scanline[i - bytewidth]*/
-        for(i = bytewidth; i < length; ++i) out[i] = (scanline[i] - scanline[i - bytewidth]);
+        for(size_t i = bytewidth; i < length; ++i) out[i] = (scanline[i] - scanline[i - bytewidth]);
       }
       break;
     default: return; /*invalid filter type given*/
   }
 }
 
-#define LODEPNG_ABS(x) ((x) < 0 ? -(x) : (x))
 static unsigned char paethPredictor(short a, short b, short c)
 {
-  short pa = LODEPNG_ABS(b - c);
-  short pb = LODEPNG_ABS(a - c);
-  short pc = LODEPNG_ABS(a + b - c - c);
+  short pa = ((b - c)         < 0 ? -(b - c)         : (b - c)        );
+  short pb = ((a - c)         < 0 ? -(a - c)         : (a - c)        );
+  short pc = ((a + b - c - c) < 0 ? -(a + b - c - c) : (a + b - c - c));
   /* return input value associated with smallest of pa, pb, pc (with certain priority if equal) */
   if(pb < pa) { a = b; pa = pb; }
   return (pc < pa) ? c : a;
