@@ -335,18 +335,14 @@ static unsigned getHash(const unsigned char* data, size_t size, size_t pos)
 {
   unsigned result = 0;
   if(pos + 2 < size) {
-    /*A simple shift and xor hash is used. Since the data of PNGs is dominated
-    by zeroes due to the filters, a better hash does not have a significant
-    effect on speed in traversing the chain, and causes more time spend on
-    calculating the hash.*/
     result ^= ((unsigned)data[pos + 0] << 0u);
     result ^= ((unsigned)data[pos + 1] << 4u);
     result ^= ((unsigned)data[pos + 2] << 8u);
-  } else {
-    size_t amount, i;
+  }
+  else {
     if(pos >= size) return 0;
-    amount = size - pos;
-    for(i = 0; i != amount; ++i) result ^= ((unsigned)data[pos + i] << (i * 8u));
+    size_t amount = size - pos;
+    for(size_t i = 0; i != amount; ++i) result ^= ((unsigned)data[pos + i] << (i * 8u));
   }
   return result & HASH_BIT_MASK;
 }
@@ -356,14 +352,15 @@ static unsigned countZeros(const unsigned char* data, size_t size, size_t pos)
   const unsigned char* start = data + pos;
   const unsigned char* end = start + MAX_SUPPORTED_DEFLATE_LENGTH;
   if(end > data + size) end = data + size;
-  data = start;
+
+  data = start; // still a temp ptr
   while(data != end && *data == 0) ++data;
   /*subtracting two addresses returned as 32-bit number (max value is MAX_SUPPORTED_DEFLATE_LENGTH)*/
   return (unsigned)(data - start);
 }
 
-/*wpos = pos & (windowsize - 1)*/
-static void updateHashChain(Hash* hash, size_t wpos, unsigned hashval, unsigned short numzeros) {
+static void updateHashChain(Hash* hash, size_t wpos, unsigned hashval, unsigned short numzeros)
+{
   hash->val[wpos] = (int)hashval;
   if(hash->head[hashval] != -1) hash->chain[wpos] = hash->head[hashval];
   hash->head[hashval] = (int)wpos;
