@@ -420,14 +420,11 @@ static void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t n
 }
 
 //********************************************************
-/*
-Huffman tree struct, containing multiple representations of the tree
-*/
 typedef struct HuffmanTree {
-  unsigned* codes; /*the huffman codes (bit patterns representing the symbols)*/
-  unsigned* lengths; /*the lengths of the huffman codes*/
+  unsigned* codes;    /*the huffman codes (bit patterns representing the symbols)*/
+  unsigned* lengths;  /*the lengths of the huffman codes*/
   unsigned maxbitlen; /*maximum number of bits a single code can get*/
-  unsigned numcodes; /*number of symbols in the alphabet = number of codes*/
+  unsigned numcodes;  /*number of symbols in the alphabet = number of codes*/
 } HuffmanTree;
 
 static void HuffmanTree_init(HuffmanTree* tree)
@@ -444,6 +441,9 @@ static void HuffmanTree_cleanup(HuffmanTree* tree)
 
 /*256 literals, the end code, some length codes, and 2 unused codes*/
 #define NUM_DEFLATE_CODE_SYMBOLS 288
+/*the distance codes have their own symbols, 30 used, 2 unused*/
+#define NUM_DISTANCE_SYMBOLS 32
+
 /*
 Second step for the ...makeFromLengths and ...makeFromFrequencies functions.
 numcodes, lengths and maxbitlen must already be filled in correctly. return
@@ -504,37 +504,31 @@ static unsigned HuffmanTree_makeFromLengths(HuffmanTree* tree, const unsigned* b
 /*get the literal and length code tree of a deflated block with fixed tree, as per the deflate specification*/
 static unsigned generateFixedLitLenTree(HuffmanTree* tree)
 {
-  unsigned i, error = 0;
   unsigned* bitlen = (unsigned*)malloc(NUM_DEFLATE_CODE_SYMBOLS * sizeof(unsigned));
-  if(!bitlen) return 83; /*alloc fail*/
 
   /*288 possible codes: 0-255=literals, 256=endcode, 257-285=lengthcodes, 286-287=unused*/
-  for(i =   0; i <= 143; ++i) bitlen[i] = 8;
-  for(i = 144; i <= 255; ++i) bitlen[i] = 9;
-  for(i = 256; i <= 279; ++i) bitlen[i] = 7;
-  for(i = 280; i <= 287; ++i) bitlen[i] = 8;
+  for(unsigned i =   0; i <= 143; ++i) bitlen[i] = 8;
+  for(unsigned i = 144; i <= 255; ++i) bitlen[i] = 9;
+  for(unsigned i = 256; i <= 279; ++i) bitlen[i] = 7;
+  for(unsigned i = 280; i <= 287; ++i) bitlen[i] = 8;
 
-  error = HuffmanTree_makeFromLengths(tree, bitlen, NUM_DEFLATE_CODE_SYMBOLS, 15);
+  HuffmanTree_makeFromLengths(tree, bitlen, NUM_DEFLATE_CODE_SYMBOLS, 15);
 
   free(bitlen);
-  return error;
+  return 0;
 }
 
-/*the distance codes have their own symbols, 30 used, 2 unused*/
-#define NUM_DISTANCE_SYMBOLS 32
 /*get the distance code tree of a deflated block with fixed tree, as specified in the deflate specification*/
 static unsigned generateFixedDistanceTree(HuffmanTree* tree)
 {
-  unsigned i, error = 0;
   unsigned* bitlen = (unsigned*)malloc(NUM_DISTANCE_SYMBOLS * sizeof(unsigned));
-  if(!bitlen) return 83; /*alloc fail*/
 
   /*there are 32 distance codes, but 30-31 are unused*/
-  for(i = 0; i != NUM_DISTANCE_SYMBOLS; ++i) bitlen[i] = 5;
-  error = HuffmanTree_makeFromLengths(tree, bitlen, NUM_DISTANCE_SYMBOLS, 15);
+  for(unsigned i = 0; i != NUM_DISTANCE_SYMBOLS; ++i) bitlen[i] = 5;
+  HuffmanTree_makeFromLengths(tree, bitlen, NUM_DISTANCE_SYMBOLS, 15);
 
   free(bitlen);
-  return error;
+  return 0;
 }
 
 //********************************************************

@@ -384,17 +384,15 @@ static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
                              const LodePNGCompressSettings* settings, unsigned final)
 {
   HuffmanTree tree_ll; /*tree for literal values and length codes*/
-  HuffmanTree tree_d; /*tree for distance codes*/
+  HuffmanTree tree_d;  /*tree for distance codes*/
+  HuffmanTree_init(&tree_ll);
+  HuffmanTree_init(&tree_d);
+  generateFixedLitLenTree(&tree_ll);
+  generateFixedDistanceTree(&tree_d);
 
   unsigned BFINAL = final;
   unsigned error = 0;
   size_t i;
-
-  HuffmanTree_init(&tree_ll);
-  HuffmanTree_init(&tree_d);
-
-  error = generateFixedLitLenTree(&tree_ll);
-  if(!error) error = generateFixedDistanceTree(&tree_d);
 
   if(!error) {
     writeBits(writer, BFINAL, 1);
