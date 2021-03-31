@@ -108,11 +108,6 @@ static void lodepng_memcpy(void* __restrict dst, const void* __restrict src, siz
   for(i = 0; i < size; i++) ((char*)dst)[i] = ((const char*)src)[i];
 }
 
-static int lodepng_addofl(size_t a, size_t b, size_t* result) {
-  *result = a + b; /* Unsigned addition is well defined and safe in C90 */
-  return *result < a;
-}
-
 static void lodepng_set32bitInt(unsigned char* buffer, unsigned value) {
   buffer[0] = (unsigned char)((value >> 24) & 0xff);
   buffer[1] = (unsigned char)((value >> 16) & 0xff);
@@ -129,7 +124,7 @@ static unsigned lodepng_read32bitInt(const unsigned char* buffer) {
 /*dynamic vector of unsigned chars*/
 typedef struct ucvector {
   unsigned char* data;
-  size_t size; /*used size*/
+  size_t size;      /*used size*/
   size_t allocsize; /*allocated size*/
 } ucvector;
 
@@ -140,7 +135,6 @@ static ucvector ucvector_init(unsigned char* buffer, size_t size) {
   return v;
 }
 
-/*returns 1 if success, 0 if failure ==> nothing done*/
 static unsigned ucvector_resize(ucvector* p, size_t size) {
   if(size > p->allocsize) {
     size_t newsize = size + (p->allocsize >> 1u); // a little larger than size
@@ -201,13 +195,10 @@ static unsigned uivector_push_back(uivector* p, unsigned c)
 //********************************************************
 static unsigned lodepng_chunk_init(unsigned char** chunk, ucvector* out, unsigned length, const char* type)
 {
-  size_t new_length = out->size;
-  if(lodepng_addofl(new_length, length, &new_length)) return 77;
-  if(lodepng_addofl(new_length, 12, &new_length)) return 77; // 4 + 4 + 4
+  size_t pos = out->size;
+  ucvector_resize(out, out->size + (4 + 4 + length + 4));
+  *chunk = out->data + pos;
 
-  if(!ucvector_resize(out, new_length)) return 83; /*alloc fail*/
-
-  *chunk = out->data + new_length - length - 12u;
   /*1: length*/
   lodepng_set32bitInt(*chunk, length);
   /*2: chunk name (4 letters)*/
