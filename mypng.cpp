@@ -391,32 +391,28 @@ static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
   generateFixedDistanceTree(&tree_d);
 
   unsigned BFINAL = final;
-  unsigned error = 0;
-  size_t i;
+  writeBits(writer, BFINAL, 1);
+  writeBits(writer, 1, 1); /*first bit of BTYPE*/
+  writeBits(writer, 0, 1); /*second bit of BTYPE*/
 
-  if(!error) {
-    writeBits(writer, BFINAL, 1);
-    writeBits(writer, 1, 1); /*first bit of BTYPE*/
-    writeBits(writer, 0, 1); /*second bit of BTYPE*/
-
-    if(settings->use_lz77) /*LZ77 encoded*/ {
-      uivector lz77_encoded;
-      uivector_init(&lz77_encoded);
-      error = encodeLZ77(&lz77_encoded, hash, data, datapos, dataend, settings->windowsize,
-                         settings->minmatch, settings->nicematch, settings->lazymatching);
-      if(!error) writeLZ77data(writer, &lz77_encoded, &tree_ll, &tree_d);
-      uivector_cleanup(&lz77_encoded);
-    } else /*no LZ77, but still will be Huffman compressed*/ {
-    }
-    /*add END code*/
-    if(!error) writeBitsReversed(writer,tree_ll.codes[256], tree_ll.lengths[256]);
+  if(settings->use_lz77) {
+    uivector lz77_encoded;
+    uivector_init(&lz77_encoded);
+    encodeLZ77(&lz77_encoded, hash, data, datapos, dataend,
+                settings->windowsize, settings->minmatch, settings->nicematch, settings->lazymatching);
+    writeLZ77data(writer, &lz77_encoded, &tree_ll, &tree_d);
+    uivector_cleanup(&lz77_encoded);
   }
+  else /*no LZ77, but still will be Huffman compressed*/ {
+  }
+  /*add END code*/
+  writeBitsReversed(writer,tree_ll.codes[256], tree_ll.lengths[256]);
 
   /*cleanup*/
   HuffmanTree_cleanup(&tree_ll);
   HuffmanTree_cleanup(&tree_d);
 
-  return error;
+  return 0;
 }
 
 /*
