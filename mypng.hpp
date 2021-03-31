@@ -540,26 +540,17 @@ static size_t searchCodeIndex(const unsigned* array, size_t array_size, size_t v
 }
 
 static void addLengthDistance(uivector* values, size_t length, size_t distance) {
-  /*values in encoded vector are those used by deflate:
-  0-255: literal bytes
-  256: end
-  257-285: length/distance pair (length code, followed by extra length bits, distance code, extra distance bits)
-  286-287: invalid*/
-
   unsigned length_code = (unsigned)searchCodeIndex(LENGTHBASE, 29, length);
   unsigned extra_length = (unsigned)(length - LENGTHBASE[length_code]);
   unsigned dist_code = (unsigned)searchCodeIndex(DISTANCEBASE, 30, distance);
   unsigned extra_distance = (unsigned)(distance - DISTANCEBASE[dist_code]);
 
   size_t pos = values->size;
-  /*TODO: return error when this fails (out of memory)*/
-  unsigned ok = uivector_resize(values, values->size + 4);
-  if(ok) {
-    values->data[pos + 0] = length_code + FIRST_LENGTH_CODE_INDEX;
-    values->data[pos + 1] = extra_length;
-    values->data[pos + 2] = dist_code;
-    values->data[pos + 3] = extra_distance;
-  }
+  uivector_resize(values, values->size + 4);
+  values->data[pos + 0] = length_code + FIRST_LENGTH_CODE_INDEX;
+  values->data[pos + 1] = extra_length;
+  values->data[pos + 2] = dist_code;
+  values->data[pos + 3] = extra_distance;
 }
 
 /*write the lz77-encoded data, which has lit, len and dist codes, to compressed stream using huffman trees.*/
