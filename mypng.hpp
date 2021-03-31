@@ -444,61 +444,41 @@ static void HuffmanTree_cleanup(HuffmanTree* tree)
 /*the distance codes have their own symbols, 30 used, 2 unused*/
 #define NUM_DISTANCE_SYMBOLS 32
 
-/*
-Second step for the ...makeFromLengths and ...makeFromFrequencies functions.
-numcodes, lengths and maxbitlen must already be filled in correctly. return
-value is error.
-*/
-static unsigned HuffmanTree_makeFromLengths2(HuffmanTree* tree)
+static unsigned HuffmanTree_makeFromLengths(HuffmanTree* tree, const unsigned* bitlen, size_t numcodes, unsigned maxbitlen)
 {
-  unsigned* blcount;
-  unsigned* nextcode;
-  unsigned error = 0;
-  unsigned bits, n;
+  tree->lengths = (unsigned*)malloc(numcodes * sizeof(unsigned));
+  for(unsigned i = 0; i != numcodes; ++i) tree->lengths[i] = bitlen[i];
 
-  tree->codes = (unsigned*)malloc(tree->numcodes * sizeof(unsigned));
-  blcount = (unsigned*)malloc((tree->maxbitlen + 1) * sizeof(unsigned));
-  nextcode = (unsigned*)malloc((tree->maxbitlen + 1) * sizeof(unsigned));
-  if(!tree->codes || !blcount || !nextcode) error = 83; /*alloc fail*/
+  tree->numcodes = (unsigned)numcodes; /*number of symbols*/
+  tree->maxbitlen = maxbitlen;
 
-  if(!error) {
-    for(n = 0; n != tree->maxbitlen + 1; n++) blcount[n] = nextcode[n] = 0;
+  {
+    tree->codes = (unsigned*)malloc(tree->numcodes * sizeof(unsigned));
+    unsigned* blcount = (unsigned*)malloc((tree->maxbitlen + 1) * sizeof(unsigned)); // bitlen count of 0 ~ tree->maxbitlen
+    unsigned* nextcode = (unsigned*)malloc((tree->maxbitlen + 1) * sizeof(unsigned)); // next code of 0 ~ tree->maxbitlen
+
+    for(unsigned n = 0; n != tree->maxbitlen + 1; n++) blcount[n] = nextcode[n] = 0;
+
     /*step 1: count number of instances of each code length*/
-    for(bits = 0; bits != tree->numcodes; ++bits) ++blcount[tree->lengths[bits]];
+    for(unsigned bits = 0; bits != tree->numcodes; ++bits) ++blcount[tree->lengths[bits]];
     /*step 2: generate the nextcode values*/
-    for(bits = 1; bits <= tree->maxbitlen; ++bits) {
+    for(unsigned bits = 1; bits <= tree->maxbitlen; ++bits) {
       nextcode[bits] = (nextcode[bits - 1] + blcount[bits - 1]) << 1u;
     }
     /*step 3: generate all the codes*/
-    for(n = 0; n != tree->numcodes; ++n) {
+    for(unsigned n = 0; n != tree->numcodes; ++n) {
       if(tree->lengths[n] != 0) {
         tree->codes[n] = nextcode[tree->lengths[n]]++;
         /*remove superfluous bits from the code*/
         tree->codes[n] &= ((1u << tree->lengths[n]) - 1u);
       }
     }
+
+    free(blcount);
+    free(nextcode);
   }
 
-  free(blcount);
-  free(nextcode);
-
-  return error;
-}
-
-/*
-given the code lengths (as stored in the PNG file), generate the tree as defined
-by Deflate. maxbitlen is the maximum bits that a code in the tree can have.
-return value is error.
-*/
-static unsigned HuffmanTree_makeFromLengths(HuffmanTree* tree, const unsigned* bitlen, size_t numcodes, unsigned maxbitlen)
-{
-  unsigned i;
-  tree->lengths = (unsigned*)malloc(numcodes * sizeof(unsigned));
-  if(!tree->lengths) return 83; /*alloc fail*/
-  for(i = 0; i != numcodes; ++i) tree->lengths[i] = bitlen[i];
-  tree->numcodes = (unsigned)numcodes; /*number of symbols*/
-  tree->maxbitlen = maxbitlen;
-  return HuffmanTree_makeFromLengths2(tree);
+  return 0;
 }
 
 /*get the literal and length code tree of a deflated block with fixed tree, as per the deflate specification*/
