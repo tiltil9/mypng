@@ -428,8 +428,6 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
                            const unsigned char* in, size_t inpos, size_t inposend, 
                            unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching)
 {
-  unsigned error = 0;
-
   unsigned usezeros = 0; /*not sure if setting it to false for windowsize < 8192 is better or worse*/
   unsigned numzeros = 0;
   /*for large window lengths, assume the user wants no compression loss. Otherwise, max hash chain length speedup.*/
@@ -453,24 +451,25 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
     updateHashChain(hash, wpos, hashval, numzeros);
 
 
+    const unsigned char * lastptr = &in[inposend < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? inposend : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
+
     unsigned chainlength = 0;
+    unsigned hashpos = hash->chain[wpos];
 
     /*the length and offset found for the current position*/
     unsigned length = 0;
     unsigned offset = 0; /*the offset represents the distance in LZ77 terminology*/
 
-    unsigned hashpos = hash->chain[wpos];
-
-    const unsigned char * lastptr = &in[inposend < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? inposend : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
-
     /*search for the longest string*/
     unsigned prev_offset = 0;
+
     for(;;) {
       if(chainlength++ >= maxchainlength) break;
       unsigned current_offset = (unsigned)(hashpos <= wpos ? wpos - hashpos : wpos - hashpos + windowsize);
 
       if(current_offset < prev_offset) break; /*stop when went completely around the circular buffer*/
       prev_offset = current_offset;
+
       if(current_offset > 0) {
         /*test the next characters*/
         const unsigned char * foreptr = &in[pos];
@@ -500,7 +499,6 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
       }
 
       if(hashpos == hash->chain[hashpos]) break;
-
       if(numzeros >= 3 && length > numzeros) {
         //hashpos = hash->chainz[hashpos];
         //if(hash->zeros[hashpos] != numzeros) break;
@@ -512,16 +510,16 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
       }
     }
 
-    if(length >= 3 && offset > windowsize)  {error = 86;  break;};
-
     /*encode it as length/distance pair or literal value*/
     if(length < 3) /*only lengths of 3 or higher are supported as length/distance pair*/ {
-      if(!uivector_push_back(out, in[pos]))  {error = 83;  break;};
-    } else if(length < minmatch || (length == 3 && offset > 4096)) {
+      uivector_push_back(out, in[pos]);
+    }
+    else if(length < minmatch || (length == 3 && offset > 4096)) {
       /*compensate for the fact that longer offsets have more extra bits, a
       length of only 3 may be not worth it then*/
-      if(!uivector_push_back(out, in[pos]))  {error = 83;  break;};
-    } else {
+      uivector_push_back(out, in[pos]);
+    }
+    else {
       addLengthDistance(out, length, offset);
       for(unsigned i = 1; i < length; ++i) {
         ++pos;
@@ -541,5 +539,5 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
     }
   } /*end of the loop through each character of input*/
 
-  return error;
+  return 0;
 }

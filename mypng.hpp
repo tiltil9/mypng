@@ -168,7 +168,6 @@ static void uivector_cleanup(void* p) {
   ((uivector*)p)->data = NULL;
 }
 
-/*returns 1 if success, 0 if failure ==> nothing done*/
 static unsigned uivector_resize(uivector* p, size_t size)
 {
   size_t allocsize = size * sizeof(unsigned);
@@ -185,12 +184,11 @@ static unsigned uivector_resize(uivector* p, size_t size)
   return 1; /*success*/
 }
 
-/*returns 1 if success, 0 if failure ==> nothing done*/
 static unsigned uivector_push_back(uivector* p, unsigned c)
 {
-  if(!uivector_resize(p, p->size + 1)) return 0;
+  uivector_resize(p, p->size + 1);
   p->data[p->size - 1] = c;
-  return 1;
+  return 1; /*success*/
 }
 
 //********************************************************
