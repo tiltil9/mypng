@@ -152,7 +152,7 @@ static unsigned ucvector_resize(ucvector* p, size_t size) {
 /*dynamic vector of unsigned ints*/
 typedef struct uivector {
   unsigned* data;
-  size_t size; /*size in number of unsigned longs*/
+  size_t size;      /*size in number of unsigned longs*/
   size_t allocsize; /*allocated size in bytes*/
 } uivector;
 
@@ -385,11 +385,10 @@ static void LodePNGBitWriter_init(LodePNGBitWriter* writer, ucvector* data)
   writer->bp = 0;
 }
 
-/*TODO: this ignores potential out of memory errors*/
 #define WRITEBIT(writer, bit){\
   /* append new byte */\
   if(((writer->bp) & 7u) == 0) {\
-    if(!ucvector_resize(writer->data, writer->data->size + 1)) return;\
+    ucvector_resize(writer->data, writer->data->size + 1);\
     writer->data->data[writer->data->size - 1] = 0;\
   }\
   (writer->data->data[writer->data->size - 1]) |= (bit << ((writer->bp) & 7u));\
@@ -401,20 +400,18 @@ static void writeBits(LodePNGBitWriter* writer, unsigned value, size_t nbits)
 {
   if(nbits == 1) { /* compiler should statically compile this case if nbits == 1 */
     WRITEBIT(writer, value);
-  } else {
-    /* TODO: increase output size only once here rather than in each WRITEBIT */
-    size_t i;
-    for(i = 0; i != nbits; ++i) {
+  }
+  else {
+    for(size_t i = 0; i != nbits; ++i) {
       WRITEBIT(writer, (unsigned char)((value >> i) & 1));
     }
   }
 }
 
 /* This one is to use for adding huffman symbol, the value bits are written MSB first */
-static void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t nbits) {
-  size_t i;
-  for(i = 0; i != nbits; ++i) {
-    /* TODO: increase output size only once here rather than in each WRITEBIT */
+static void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t nbits)
+{
+  for(size_t i = 0; i != nbits; ++i) {
     WRITEBIT(writer, (unsigned char)((value >> (nbits - 1u - i)) & 1u));
   }
 }
@@ -512,15 +509,6 @@ static unsigned generateFixedDistanceTree(HuffmanTree* tree)
 }
 
 //********************************************************
-/*the extra bits used by codes 257-285 (added to base length)*/
-static const unsigned LENGTHEXTRA[29]
-  = {0, 0, 0, 0, 0, 0, 0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  3,  3,  3,  3,
-      4,  4,  4,   4,   5,   5,   5,   5,   0};
-/*the extra bits of backwards distances (added to base)*/
-static const unsigned DISTANCEEXTRA[30]
-  = {0, 0, 0, 0, 1, 1, 2,  2,  3,  3,  4,  4,  5,  5,   6,   6,   7,   7,   8,
-       8,    9,    9,   10,   10,   11,   11,   12,    12,    13,    13};
-
 #define FIRST_LENGTH_CODE_INDEX 257
 /*the base lengths represented by codes 257-285*/
 static const unsigned LENGTHBASE[29]
@@ -530,6 +518,14 @@ static const unsigned LENGTHBASE[29]
 static const unsigned DISTANCEBASE[30]
   = {1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513,
      769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577};
+/*the extra bits used by codes 257-285 (added to base length)*/
+static const unsigned LENGTHEXTRA[29]
+  = {0, 0, 0, 0, 0, 0, 0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  3,  3,  3,  3,
+      4,  4,  4,   4,   5,   5,   5,   5,   0};
+/*the extra bits of backwards distances (added to base)*/
+static const unsigned DISTANCEEXTRA[30]
+  = {0, 0, 0, 0, 1, 1, 2,  2,  3,  3,  4,  4,  5,  5,   6,   6,   7,   7,   8,
+       8,    9,    9,   10,   10,   11,   11,   12,    12,    13,    13};
 
 /*search the index in the array, that has the largest value smaller than or equal to the given value,
 given array must be sorted (if no value is smaller, it returns the size of the given array)*/
@@ -570,29 +566,25 @@ static void addLengthDistance(uivector* values, size_t length, size_t distance) 
   }
 }
 
-/*
-write the lz77-encoded data, which has lit, len and dist codes, to compressed stream using huffman trees.
-tree_ll: the tree for lit and len codes.
-tree_d: the tree for distance codes.
-*/
+/*write the lz77-encoded data, which has lit, len and dist codes, to compressed stream using huffman trees.*/
 static void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded, const HuffmanTree* tree_ll, const HuffmanTree* tree_d)
 {
-  size_t i = 0;
-  for(i = 0; i != lz77_encoded->size; ++i) {
+  for(size_t i = 0; i != lz77_encoded->size; ++i) {
     unsigned val = lz77_encoded->data[i];
     writeBitsReversed(writer, tree_ll->codes[val], tree_ll->lengths[val]);
+
     if(val > 256) /*for a length code, 3 more things have to be added*/ {
       unsigned length_index = val - FIRST_LENGTH_CODE_INDEX;
       unsigned n_length_extra_bits = LENGTHEXTRA[length_index];
       unsigned length_extra_bits = lz77_encoded->data[++i];
 
       unsigned distance_code = lz77_encoded->data[++i];
-
       unsigned distance_index = distance_code;
       unsigned n_distance_extra_bits = DISTANCEEXTRA[distance_index];
       unsigned distance_extra_bits = lz77_encoded->data[++i];
 
       writeBits(writer, length_extra_bits, n_length_extra_bits);
+
       writeBitsReversed(writer, tree_d->codes[distance_code], tree_d->lengths[distance_code]);
       writeBits(writer, distance_extra_bits, n_distance_extra_bits);
     }
