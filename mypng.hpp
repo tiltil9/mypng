@@ -646,7 +646,6 @@ static unsigned addChunk_IEND(ucvector* out);
 static unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings);
 unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings);
 unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings);
-static unsigned lodepng_deflatev(ucvector* out, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings);
 static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
                              const unsigned char* data, size_t datapos, size_t dataend,
                              const LodePNGCompressSettings* settings, unsigned final);

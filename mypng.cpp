@@ -350,41 +350,33 @@ unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsig
 
 unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
 {
-  ucvector v = ucvector_init(*out, *outsize);
-  unsigned error = lodepng_deflatev(&v, in, insize, settings);
+  ucvector vout = ucvector_init(*out, *outsize);
 
-  *out = v.data;
-  *outsize = v.size;
-  return error;
-}
+  {
+    LodePNGBitWriter writer;
+    Hash hash;
+    LodePNGBitWriter_init(&writer, &vout);
+    hash_init(&hash, settings->windowsize);
 
-static unsigned lodepng_deflatev(ucvector* out, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
-{
-  unsigned error = 0;
+    size_t blocksize = insize; /*if(settings->btype == 1)*/ 
+    size_t numdeflateblocks = (insize + blocksize - 1) / blocksize;
+    if(numdeflateblocks == 0) numdeflateblocks = 1;
 
-  size_t i, blocksize, numdeflateblocks;
-  /*if(settings->btype == 1)*/ blocksize = insize;
-  numdeflateblocks = (insize + blocksize - 1) / blocksize;
-  if(numdeflateblocks == 0) numdeflateblocks = 1;
-
-  LodePNGBitWriter writer;
-  Hash hash;
-  LodePNGBitWriter_init(&writer, out);
-  error = hash_init(&hash, settings->windowsize);
-
-  if(!error) {
-    for(i = 0; i != numdeflateblocks && !error; ++i) {
+    for(size_t i = 0; i != numdeflateblocks; ++i) {
       unsigned final = (i == numdeflateblocks - 1);
       size_t start = i * blocksize;
       size_t end = start + blocksize;
       if(end > insize) end = insize;
 
-      /*if(settings->btype == 1)*/ error = deflateFixed(&writer, &hash, in, start, end, settings, final);
+      deflateFixed(&writer, &hash, in, start, end, settings, final); /*if(settings->btype == 1)*/
     }
+
+    hash_cleanup(&hash);
   }
 
-  hash_cleanup(&hash);
-  return error;
+  *out = vout.data;
+  *outsize = vout.size;
+  return 0;
 }
 
 static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
