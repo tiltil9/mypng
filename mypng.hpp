@@ -286,25 +286,22 @@ static unsigned adler32(const unsigned char* data, unsigned len)
 
 //********************************************************
 typedef struct Hash {
-  int* head; /*hash value to head circular pos - can be outdated if went around window*/
+  int* head;             /*hash value to head circular pos - can be outdated if went around window*/
   unsigned short* chain; /*circular pos to prev circular pos*/
-  int* val; /*circular pos to hash value*/
+  int* val;              /*circular pos to hash value*/
 
   /*TODO: do this not only for zeros but for any repeated byte. However for PNG
   it's always going to be the zeros that dominate, so not important for PNG*/
-  int* headz; /*similar to head, but for chainz*/
+  int* headz;             /*similar to head, but for chainz*/
   unsigned short* chainz; /*those with same amount of zeros*/
-  unsigned short* zeros; /*length of zeros streak, used as a second hash chain*/
+  unsigned short* zeros;  /*length of zeros streak, used as a second hash chain*/
 } Hash;
 
 static const size_t MAX_SUPPORTED_DEFLATE_LENGTH = 258;
-/*3 bytes of data get encoded into two bytes. The hash cannot use more than 3
-bytes as input because 3 is the minimum match length for deflate*/
 static const unsigned HASH_NUM_VALUES = 65536;
 static const unsigned HASH_BIT_MASK = 65535; /*HASH_NUM_VALUES - 1, but C90 does not like that as initializer*/
 static unsigned hash_init(Hash* hash, unsigned windowsize)
 {
-  unsigned i;
   hash->head = (int*)malloc(sizeof(int) * HASH_NUM_VALUES);
   hash->chain = (unsigned short*)malloc(sizeof(unsigned short) * windowsize);
   hash->val = (int*)malloc(sizeof(int) * windowsize);
@@ -313,17 +310,13 @@ static unsigned hash_init(Hash* hash, unsigned windowsize)
   hash->chainz = (unsigned short*)malloc(sizeof(unsigned short) * windowsize);
   hash->zeros = (unsigned short*)malloc(sizeof(unsigned short) * windowsize);
 
-  if(!hash->head || !hash->chain || !hash->val  || !hash->headz|| !hash->chainz || !hash->zeros) {
-    return 83; /*alloc fail*/
-  }
-
   /*initialize hash table*/
-  for(i = 0; i != HASH_NUM_VALUES; ++i) hash->head[i] = -1;
-  for(i = 0; i != windowsize; ++i) hash->chain[i] = i; /*same value as index indicates uninitialized*/
-  for(i = 0; i != windowsize; ++i) hash->val[i] = -1;
+  for(unsigned i = 0; i != HASH_NUM_VALUES; ++i) hash->head[i] = -1;
+  for(unsigned i = 0; i != windowsize; ++i) hash->chain[i] = i; /*same value as index indicates uninitialized*/
+  for(unsigned i = 0; i != windowsize; ++i) hash->val[i] = -1;
 
-  for(i = 0; i <= MAX_SUPPORTED_DEFLATE_LENGTH; ++i) hash->headz[i] = -1;
-  for(i = 0; i != windowsize; ++i) hash->chainz[i] = i; /*same value as index indicates uninitialized*/
+  for(unsigned i = 0; i <= MAX_SUPPORTED_DEFLATE_LENGTH; ++i) hash->headz[i] = -1;
+  for(unsigned i = 0; i != windowsize; ++i) hash->chainz[i] = i; /*same value as index indicates uninitialized*/
 
   return 0;
 }
