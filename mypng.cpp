@@ -441,10 +441,10 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
     unsigned hashval = getHash(in, inposend, pos);
 
     if(usezeros && hashval == 0) {
-      if(numzeros == 0)
-        numzeros = countZeros(in, inposend, pos);
-      else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0)
-        --numzeros;
+      //if(numzeros == 0)
+      //  numzeros = countZeros(in, inposend, pos);
+      //else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0)
+      //  --numzeros;
     }
     else {
       numzeros = 0;
@@ -478,10 +478,10 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
 
         /*common case in PNGs is lots of zeros. Quickly skip over them as a speedup*/
         if(numzeros >= 3) {
-          unsigned skip = hash->zeros[hashpos];
-          if(skip > numzeros) skip = numzeros;
-          backptr += skip;
-          foreptr += skip;
+          //unsigned skip = hash->zeros[hashpos];
+          //if(skip > numzeros) skip = numzeros;
+          //backptr += skip;
+          //foreptr += skip;
         }
 
         while(foreptr != lastptr && *backptr == *foreptr) /*maximum supported length by deflate is max length*/ {
@@ -502,9 +502,10 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
       if(hashpos == hash->chain[hashpos]) break;
 
       if(numzeros >= 3 && length > numzeros) {
-        hashpos = hash->chainz[hashpos];
-        if(hash->zeros[hashpos] != numzeros) break;
-      } else {
+        //hashpos = hash->chainz[hashpos];
+        //if(hash->zeros[hashpos] != numzeros) break;
+      }
+      else {
         hashpos = hash->chain[hashpos];
         /*outdated hash value, happens if particular value was not encountered in whole last window*/
         if(hash->val[hashpos] != (int)hashval) break;
@@ -527,9 +528,12 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
         wpos = pos & (windowsize - 1);
         hashval = getHash(in, inposend, pos);
         if(usezeros && hashval == 0) {
-          if(numzeros == 0) numzeros = countZeros(in, inposend, pos);
-          else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0) --numzeros;
-        } else {
+          //if(numzeros == 0)
+          //  numzeros = countZeros(in, inposend, pos);
+          //else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0)
+          //  --numzeros;
+        }
+        else {
           numzeros = 0;
         }
         updateHashChain(hash, wpos, hashval, numzeros);
