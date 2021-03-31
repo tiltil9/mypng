@@ -445,18 +445,23 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
 
   for(size_t pos = inpos; pos < inposend; ++pos) {
     size_t wpos = pos & (windowsize - 1); /*position for in 'circular' hash buffers*/
-    unsigned chainlength = 0;
 
     hashval = getHash(in, inposend, pos);
 
     if(usezeros && hashval == 0) {
-      if(numzeros == 0) numzeros = countZeros(in, inposend, pos);
-      else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0) --numzeros;
-    } else {
+      if(numzeros == 0)
+        numzeros = countZeros(in, inposend, pos);
+      else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0)
+        --numzeros;
+    }
+    else {
       numzeros = 0;
     }
 
     updateHashChain(hash, wpos, hashval, numzeros);
+
+
+    unsigned chainlength = 0;
 
     /*the length and offset found for the current position*/
     length = 0;
