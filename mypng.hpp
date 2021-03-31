@@ -609,7 +609,7 @@ static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
                              const unsigned char* data, size_t datapos, size_t dataend,
                              const LodePNGCompressSettings* settings, unsigned final);
 static unsigned encodeLZ77(uivector* out, Hash* hash,
-                           const unsigned char* in, size_t inpos, size_t insize, 
+                           const unsigned char* in, size_t inpos, size_t inposend, 
                            unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching);
 
 //********************************************************

@@ -425,7 +425,7 @@ the "dictionary". A brute force search through all possible distances would be s
 this hash technique is one out of several ways to speed this up.
 */
 static unsigned encodeLZ77(uivector* out, Hash* hash,
-                           const unsigned char* in, size_t inpos, size_t insize, 
+                           const unsigned char* in, size_t inpos, size_t inposend, 
                            unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching)
 {
   size_t pos;
@@ -452,15 +452,15 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
 
   if(nicematch > MAX_SUPPORTED_DEFLATE_LENGTH) nicematch = MAX_SUPPORTED_DEFLATE_LENGTH;
 
-  for(pos = inpos; pos < insize; ++pos) {
+  for(pos = inpos; pos < inposend; ++pos) {
     size_t wpos = pos & (windowsize - 1); /*position for in 'circular' hash buffers*/
     unsigned chainlength = 0;
 
-    hashval = getHash(in, insize, pos);
+    hashval = getHash(in, inposend, pos);
 
     if(usezeros && hashval == 0) {
-      if(numzeros == 0) numzeros = countZeros(in, insize, pos);
-      else if(pos + numzeros > insize || in[pos + numzeros - 1] != 0) --numzeros;
+      if(numzeros == 0) numzeros = countZeros(in, inposend, pos);
+      else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0) --numzeros;
     } else {
       numzeros = 0;
     }
@@ -473,7 +473,7 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
 
     hashpos = hash->chain[wpos];
 
-    lastptr = &in[insize < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? insize : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
+    lastptr = &in[inposend < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? inposend : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
 
     /*search for the longest string*/
     prev_offset = 0;
@@ -559,10 +559,10 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
       for(i = 1; i < length; ++i) {
         ++pos;
         wpos = pos & (windowsize - 1);
-        hashval = getHash(in, insize, pos);
+        hashval = getHash(in, inposend, pos);
         if(usezeros && hashval == 0) {
-          if(numzeros == 0) numzeros = countZeros(in, insize, pos);
-          else if(pos + numzeros > insize || in[pos + numzeros - 1] != 0) --numzeros;
+          if(numzeros == 0) numzeros = countZeros(in, inposend, pos);
+          else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0) --numzeros;
         } else {
           numzeros = 0;
         }
