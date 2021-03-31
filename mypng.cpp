@@ -432,15 +432,12 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
   unsigned i, error = 0;
   /*for large window lengths, assume the user wants no compression loss. Otherwise, max hash chain length speedup.*/
   unsigned maxchainlength = windowsize >= 8192 ? windowsize : windowsize / 8u;
-  unsigned maxlazymatch = windowsize >= 8192 ? MAX_SUPPORTED_DEFLATE_LENGTH : 64;
 
   unsigned usezeros = 1; /*not sure if setting it to false for windowsize < 8192 is better or worse*/
   unsigned numzeros = 0;
 
   unsigned offset; /*the offset represents the distance in LZ77 terminology*/
   unsigned length;
-  unsigned lazy = 0;
-  unsigned lazylength = 0, lazyoffset = 0;
   unsigned hashval;
   unsigned current_offset, current_length;
   unsigned prev_offset;
@@ -523,28 +520,6 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
       }
     }
 
-    if(lazymatching) {
-      if(!lazy && length >= 3 && length <= maxlazymatch && length < MAX_SUPPORTED_DEFLATE_LENGTH) {
-        lazy = 1;
-        lazylength = length;
-        lazyoffset = offset;
-        continue; /*try the next byte*/
-      }
-      if(lazy) {
-        lazy = 0;
-        if(pos == 0) {error = 81;  break;}
-        if(length > lazylength + 1) {
-          /*push the previous character as literal*/
-          if(!uivector_push_back(out, in[pos - 1]))  {error = 83;  break;};
-        } else {
-          length = lazylength;
-          offset = lazyoffset;
-          hash->head[hashval] = -1; /*the same hashchain update will be done, this ensures no wrong alteration*/
-          hash->headz[numzeros] = -1; /*idem*/
-          --pos;
-        }
-      }
-    }
     if(length >= 3 && offset > windowsize)  {error = 86;  break;};
 
     /*encode it as length/distance pair or literal value*/
