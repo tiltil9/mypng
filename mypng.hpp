@@ -263,17 +263,17 @@ void lodepng_chunk_generate_crc(unsigned char* chunk)
 }
 
 //********************************************************
-static unsigned update_adler32(unsigned adler, const unsigned char* data, unsigned len)
+static unsigned adler32(const unsigned char* data, unsigned len)
 {
+  unsigned adler = 1u;
   unsigned s1 = adler & 0xffffu;
   unsigned s2 = (adler >> 16u) & 0xffffu;
 
   while(len != 0u) {
-    unsigned i;
     /*at least 5552 sums can be done before the sums overflow, saving a lot of module divisions*/
     unsigned amount = len > 5552u ? 5552u : len;
     len -= amount;
-    for(i = 0; i != amount; ++i) {
+    for(unsigned i = 0; i != amount; ++i) {
       s1 += (*data++);
       s2 += s1;
     }
@@ -282,11 +282,6 @@ static unsigned update_adler32(unsigned adler, const unsigned char* data, unsign
   }
 
   return (s2 << 16u) | s1;
-}
-
-static unsigned adler32(const unsigned char* data, unsigned len)
-{
-  return update_adler32(1u, data, len);
 }
 
 //********************************************************

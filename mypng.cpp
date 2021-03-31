@@ -318,23 +318,17 @@ static unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t d
 
 unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
 {
-  size_t i;
-  unsigned error;
+  *out = NULL;
+  *outsize = 0;
 
   unsigned char* deflatedata = 0;
   size_t deflatesize = 0;
-  error = lodepng_deflate(&deflatedata, &deflatesize, in, insize, settings);
+  lodepng_deflate(&deflatedata, &deflatesize, in, insize, settings);
 
-  *out = NULL;
-  *outsize = 0;
-  if(!error) {
-    *outsize = deflatesize + 6; // 1 + 1 + 4
-    *out = (unsigned char*)malloc(*outsize);
-    if(!*out) error = 83; /*alloc fail*/
-  }
+  *outsize = 1 + 1 + deflatesize + 4;
+  *out = (unsigned char*)malloc(*outsize);
 
-  if(!error) {
-    unsigned ADLER32 = adler32(in, (unsigned)insize);
+  {
     /*zlib data: 1 byte CMF (CM+CINFO), 1 byte FLG, deflate data, 4 byte ADLER32 checksum of the Decompressed data*/
     unsigned CMF = 120; /*0b01111000: CM 8, CINFO 7. With CINFO 7, any window size up to 32768 can be used.*/
     unsigned FLEVEL = 0;
@@ -342,15 +336,16 @@ unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsig
     unsigned CMFFLG = 256 * CMF + FDICT * 32 + FLEVEL * 64;
     unsigned FCHECK = 31 - CMFFLG % 31;
     CMFFLG += FCHECK;
+    unsigned ADLER32 = adler32(in, (unsigned)insize);
 
     (*out)[0] = (unsigned char)(CMFFLG >> 8);
     (*out)[1] = (unsigned char)(CMFFLG & 255);
-    for(i = 0; i != deflatesize; ++i) (*out)[i + 2] = deflatedata[i];
+    for(size_t i = 0; i != deflatesize; ++i) (*out)[i + 2] = deflatedata[i];
     lodepng_set32bitInt(&(*out)[*outsize - 4], ADLER32);
   }
 
   free(deflatedata);
-  return error;
+  return 0;
 }
 
 unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
