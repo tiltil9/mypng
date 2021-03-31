@@ -297,18 +297,23 @@ static unsigned addChunk_IEND(ucvector* out)
 
 static unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
 {
-  unsigned error = 0;
   unsigned char* zlib = 0;
   size_t zlibsize = 0;
+  lodepng_zlib_compress(&zlib, &zlibsize, data, datasize, zlibsettings);
 
-  error = lodepng_zlib_compress(&zlib, &zlibsize, data, datasize, zlibsettings);
+  {
+    unsigned char* chunk;
 
-  if(!error) {
-    error = lodepng_chunk_createv(out, zlibsize, "IDAT", zlib);
+    lodepng_chunk_init(&chunk, out, zlibsize, "IDAT");
+
+    /*3: the data*/
+    lodepng_memcpy(chunk + 8, zlib, zlibsize);
+    /*4: CRC (of the chunkname characters and the data)*/
+    lodepng_chunk_generate_crc(chunk);
   }
 
   free(zlib);
-  return error;
+  return 0;
 }
 
 unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)

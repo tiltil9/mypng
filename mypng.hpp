@@ -262,21 +262,6 @@ void lodepng_chunk_generate_crc(unsigned char* chunk)
   lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
-/* like lodepng_chunk_create but with custom allocsize */
-static unsigned lodepng_chunk_createv(ucvector* out, unsigned length, const char* type, const unsigned char* data)
-{
-  unsigned char* chunk;
-  unsigned error = lodepng_chunk_init(&chunk, out, length, type);
-  if(error) return error;
-
-  /*3: the data*/
-  lodepng_memcpy(chunk + 8, data, length);
-  /*4: CRC (of the chunkname characters and the data)*/
-  lodepng_chunk_generate_crc(chunk);
-
-  return 0;
-}
-
 //********************************************************
 static unsigned update_adler32(unsigned adler, const unsigned char* data, unsigned len)
 {
