@@ -1599,7 +1599,7 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
   unsigned maxchainlength = windowsize >= 8192 ? windowsize : windowsize / 8u;
   unsigned maxlazymatch = windowsize >= 8192 ? MAX_SUPPORTED_DEFLATE_LENGTH : 64;
 
-  unsigned usezeros = 1; /*not sure if setting it to false for windowsize < 8192 is better or worse*/
+  unsigned usezeros = 0; /*not sure if setting it to false for windowsize < 8192 is better or worse*/
   unsigned numzeros = 0;
 
   unsigned offset; /*the offset represents the distance in LZ77 terminology*/

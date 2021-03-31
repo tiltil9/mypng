@@ -25,6 +25,7 @@
 //                         state.encoder.zlibsettings.btype = 1;
 //                         state.encoder.zlibsettings.lazymatching = 0;
 //                         state.encoder.auto_convert = 0;
+//                         usezeros = 0;
 //
 //
 #include <stdio.h>

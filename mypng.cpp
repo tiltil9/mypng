@@ -429,11 +429,11 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
                            unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching)
 {
   unsigned error = 0;
+
+  unsigned usezeros = 0; /*not sure if setting it to false for windowsize < 8192 is better or worse*/
+  unsigned numzeros = 0;
   /*for large window lengths, assume the user wants no compression loss. Otherwise, max hash chain length speedup.*/
   unsigned maxchainlength = windowsize >= 8192 ? windowsize : windowsize / 8u;
-
-  unsigned usezeros = 1; /*not sure if setting it to false for windowsize < 8192 is better or worse*/
-  unsigned numzeros = 0;
 
   for(size_t pos = inpos; pos < inposend; ++pos) {
     size_t wpos = pos & (windowsize - 1); /*position for in 'circular' hash buffers*/
