@@ -435,18 +435,10 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
   unsigned usezeros = 1; /*not sure if setting it to false for windowsize < 8192 is better or worse*/
   unsigned numzeros = 0;
 
-  unsigned offset; /*the offset represents the distance in LZ77 terminology*/
-  unsigned length;
-  unsigned hashval;
-  unsigned current_offset, current_length;
-  unsigned prev_offset;
-  const unsigned char *lastptr, *foreptr, *backptr;
-  unsigned hashpos;
-
   for(size_t pos = inpos; pos < inposend; ++pos) {
     size_t wpos = pos & (windowsize - 1); /*position for in 'circular' hash buffers*/
 
-    hashval = getHash(in, inposend, pos);
+    unsigned hashval = getHash(in, inposend, pos);
 
     if(usezeros && hashval == 0) {
       if(numzeros == 0)
@@ -464,25 +456,25 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
     unsigned chainlength = 0;
 
     /*the length and offset found for the current position*/
-    length = 0;
-    offset = 0;
+    unsigned length = 0;
+    unsigned offset = 0; /*the offset represents the distance in LZ77 terminology*/
 
-    hashpos = hash->chain[wpos];
+    unsigned hashpos = hash->chain[wpos];
 
-    lastptr = &in[inposend < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? inposend : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
+    const unsigned char * lastptr = &in[inposend < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? inposend : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
 
     /*search for the longest string*/
-    prev_offset = 0;
+    unsigned prev_offset = 0;
     for(;;) {
       if(chainlength++ >= maxchainlength) break;
-      current_offset = (unsigned)(hashpos <= wpos ? wpos - hashpos : wpos - hashpos + windowsize);
+      unsigned current_offset = (unsigned)(hashpos <= wpos ? wpos - hashpos : wpos - hashpos + windowsize);
 
       if(current_offset < prev_offset) break; /*stop when went completely around the circular buffer*/
       prev_offset = current_offset;
       if(current_offset > 0) {
         /*test the next characters*/
-        foreptr = &in[pos];
-        backptr = &in[pos - current_offset];
+        const unsigned char * foreptr = &in[pos];
+        const unsigned char * backptr = &in[pos - current_offset];
 
         /*common case in PNGs is lots of zeros. Quickly skip over them as a speedup*/
         if(numzeros >= 3) {
@@ -496,7 +488,7 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
           ++backptr;
           ++foreptr;
         }
-        current_length = (unsigned)(foreptr - &in[pos]);
+        unsigned current_length = (unsigned)(foreptr - &in[pos]);
 
         if(current_length > length) {
           length = current_length; /*the longest length*/
