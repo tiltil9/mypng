@@ -428,8 +428,7 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
                            const unsigned char* in, size_t inpos, size_t inposend, 
                            unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching)
 {
-  size_t pos;
-  unsigned i, error = 0;
+  unsigned error = 0;
   /*for large window lengths, assume the user wants no compression loss. Otherwise, max hash chain length speedup.*/
   unsigned maxchainlength = windowsize >= 8192 ? windowsize : windowsize / 8u;
 
@@ -444,12 +443,7 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
   const unsigned char *lastptr, *foreptr, *backptr;
   unsigned hashpos;
 
-  if(windowsize == 0 || windowsize > 32768) return 60; /*error: windowsize smaller/larger than allowed*/
-  if((windowsize & (windowsize - 1)) != 0) return 90; /*error: must be power of two*/
-
-  if(nicematch > MAX_SUPPORTED_DEFLATE_LENGTH) nicematch = MAX_SUPPORTED_DEFLATE_LENGTH;
-
-  for(pos = inpos; pos < inposend; ++pos) {
+  for(size_t pos = inpos; pos < inposend; ++pos) {
     size_t wpos = pos & (windowsize - 1); /*position for in 'circular' hash buffers*/
     unsigned chainlength = 0;
 
@@ -531,7 +525,7 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
       if(!uivector_push_back(out, in[pos]))  {error = 83;  break;};
     } else {
       addLengthDistance(out, length, offset);
-      for(i = 1; i < length; ++i) {
+      for(unsigned i = 1; i < length; ++i) {
         ++pos;
         wpos = pos & (windowsize - 1);
         hashval = getHash(in, inposend, pos);
