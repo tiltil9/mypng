@@ -611,3 +611,37 @@ static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
 static unsigned encodeLZ77(uivector* out, Hash* hash,
                            const unsigned char* in, size_t inpos, size_t insize, 
                            unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching);
+
+//********************************************************
+//static unsigned deflateNoCompression(ucvector* out, const unsigned char* data, size_t datasize) {
+//  /*non compressed deflate block data: 1 bit BFINAL,2 bits BTYPE,(5 bits): it jumps to start of next byte,
+//  2 bytes LEN, 2 bytes NLEN, LEN bytes literal DATA*/
+//
+//  size_t i, numdeflateblocks = (datasize + 65534u) / 65535u;
+//  unsigned datapos = 0;
+//  for(i = 0; i != numdeflateblocks; ++i) {
+//    unsigned BFINAL, BTYPE, LEN, NLEN;
+//    unsigned char firstbyte;
+//    size_t pos = out->size;
+//
+//    BFINAL = (i == numdeflateblocks - 1);
+//    BTYPE = 0;
+//
+//    LEN = 65535;
+//    if(datasize - datapos < 65535u) LEN = (unsigned)datasize - datapos;
+//    NLEN = 65535 - LEN;
+//
+//    if(!ucvector_resize(out, out->size + LEN + 5)) return 83; /*alloc fail*/
+//
+//    firstbyte = (unsigned char)(BFINAL + ((BTYPE & 1u) << 1u) + ((BTYPE & 2u) << 1u));
+//    out->data[pos + 0] = firstbyte;
+//    out->data[pos + 1] = (unsigned char)(LEN & 255);
+//    out->data[pos + 2] = (unsigned char)(LEN >> 8u);
+//    out->data[pos + 3] = (unsigned char)(NLEN & 255);
+//    out->data[pos + 4] = (unsigned char)(NLEN >> 8u);
+//    lodepng_memcpy(out->data + pos + 5, data + datapos, LEN);
+//    datapos += LEN;
+//  }
+//
+//  return 0;
+//}
