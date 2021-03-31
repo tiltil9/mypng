@@ -43,19 +43,19 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
   LodePNGState state;
   {
     // init encoding settings
-    state.encoder.zlibsettings.btype = 1;
-    state.encoder.zlibsettings.use_lz77 = 1;
-    state.encoder.zlibsettings.windowsize = 2048;
-    state.encoder.zlibsettings.minmatch = 3;
-    state.encoder.zlibsettings.nicematch = 128;
+    state.encoder.zlibsettings.btype = 1;         // unchangeable
+    state.encoder.zlibsettings.use_lz77 = 1;      // unchangeable
+    state.encoder.zlibsettings.windowsize = 2048; // changeable
+    state.encoder.zlibsettings.minmatch = 3;      // changeable
+    state.encoder.zlibsettings.nicematch = 128;   // changeable
     state.encoder.zlibsettings.lazymatching = 0; // TODO : check this
 
-    state.encoder.filter_strategy = LFS_MINSUM;
-    state.encoder.auto_convert = 0;
+    state.encoder.filter_strategy = LFS_MINSUM;   // changeable
+    state.encoder.auto_convert = 0;               // unchangeable
 
     // init PNG image info
-    state.info_png.color.colortype = LCT_RGBA;
-    state.info_png.color.bitdepth = 8;
+    state.info_png.color.colortype = LCT_RGBA;    // unchangeable
+    state.info_png.color.bitdepth = 8;            // unchangeable
 
     state.info_png.interlace_method = 0;
     state.info_png.compression_method = 0;
