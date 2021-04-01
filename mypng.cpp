@@ -48,7 +48,7 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.encoder.zlibsettings.windowsize = 2048; // changeable
     state.encoder.zlibsettings.minmatch = 3;      // changeable
     state.encoder.zlibsettings.nicematch = 128;   // changeable
-    state.encoder.zlibsettings.lazymatching = 0; // TODO : check this
+    state.encoder.zlibsettings.lazymatching = 0;  // unchangeable
 
     state.encoder.filter_strategy = LFS_MINSUM;   // changeable
     state.encoder.auto_convert = 0;               // unchangeable
@@ -428,7 +428,7 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
                            const unsigned char* in, size_t inpos, size_t inposend, 
                            unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching)
 {
-  unsigned usezeros = 0; /*not sure if setting it to false for windowsize < 8192 is better or worse*/
+  unsigned usezeros = 0; // unchangeable /*not sure if setting it to false for windowsize < 8192 is better or worse*/
   unsigned numzeros = 0;
   /*for large window lengths, assume the user wants no compression loss. Otherwise, max hash chain length speedup.*/
   unsigned maxchainlength = windowsize >= 8192 ? windowsize : windowsize / 8u;
