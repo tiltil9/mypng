@@ -79,9 +79,6 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.info_png.interlace_method = 0;
     state.info_png.compression_method = 0;
     state.info_png.filter_method = 0;
-
-    //
-    state.error = 0;
   }
   state.info_png.color.colortype = colortype;
   state.info_png.color.bitdepth = bitdepth;

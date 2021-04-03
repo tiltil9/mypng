@@ -95,7 +95,6 @@ typedef struct LodePNGEncoderSettings {
 typedef struct LodePNGState {
   LodePNGEncoderSettings encoder; /*the encoding settings*/
   LodePNGInfo info_png;           /*info of the PNG image obtained after decoding*/
-  unsigned error;
 } LodePNGState;
 
 //********************************************************
