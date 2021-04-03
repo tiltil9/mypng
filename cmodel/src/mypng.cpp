@@ -99,7 +99,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   ucvector outv = ucvector_init(NULL, 0);
 
   /* compute scanline filter types */
-  preProcessScanlines(&data, &datasize, image, w, h, &state->info_png, &state->encoder);
+  preProcessScanlines32bitRGBA(&data, &datasize, image, w, h, &state->encoder);
 
   /* output all PNG chunks */
   {
@@ -120,10 +120,12 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   return 0;
 }
 
-static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in,
-                                    unsigned w, unsigned h, const LodePNGInfo* info_png, const LodePNGEncoderSettings* settings)
+static unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in,
+                                    unsigned w, unsigned h, const LodePNGEncoderSettings* settings)
 {
-  unsigned bpp = 4 * 8; // getNumColorChannels(info_png->color.colortype) * info_png->color.bitdepth;
+  unsigned colorChannels = 4; /*RGBA*/
+  unsigned bitdepth = 8;
+  unsigned bpp = colorChannels * bitdepth;
 
   *outsize = h + (h * ((w * bpp + 7u) / 8u)); /*image size plus an extra byte per scanline + possible padding bits*/
   *out = (unsigned char*)malloc(*outsize);
