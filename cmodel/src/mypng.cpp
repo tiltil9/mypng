@@ -99,7 +99,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   ucvector outv = ucvector_init(NULL, 0);
 
   /* compute scanline filter types */
-  preProcessScanlines32bitRGBA(&data, &datasize, image, w, h, &state->encoder);
+  preProcessScanlines32bitRGBA(&data, &datasize, image, w, h, state->encoder.filter_strategy);
 
   /* output all PNG chunks */
   {
@@ -120,8 +120,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   return 0;
 }
 
-static unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in,
-                                    unsigned w, unsigned h, const LodePNGEncoderSettings* settings)
+static unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   unsigned colorChannels = 4; /*RGBA*/
   unsigned bitdepth = 8;
@@ -133,13 +132,13 @@ static unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsiz
   if(bpp < 8 && w * bpp != ((w * bpp + 7u) / 8u) * 8u) {
   }
   else {
-    filter32bitRGBA(*out, in, w, h, settings);
+    filter32bitRGBA(*out, in, w, h, strategy);
   }
 
   return 0;
 }
 
-static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, const LodePNGEncoderSettings* settings)
+static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   unsigned colorChannels = 4; /*RGBA*/
   unsigned bitdepth = 8;
@@ -147,8 +146,8 @@ static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, uns
   size_t linebytes = ((size_t)(w / 8u) * bpp) + 1u + ((w & 7u) * bpp + 7u) / 8u - 1u; /*the width of a scanline in bytes, not including the filter type*/
   size_t bytewidth = (bpp + 7u) / 8u; /*bytewidth is used for filtering, is 1 when bpp < 8, number of bytes per pixel otherwise*/
 
-  if(settings->filter_strategy >= LFS_ZERO && settings->filter_strategy <= LFS_FOUR) {
-    unsigned char type = (unsigned char)settings->filter_strategy;
+  if(strategy >= LFS_ZERO && strategy <= LFS_FOUR) {
+    unsigned char type = (unsigned char)strategy;
     const unsigned char* prevline = 0;
     for(unsigned y = 0; y != h; ++y) {
       size_t inindex = linebytes * y;
@@ -158,7 +157,7 @@ static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, uns
       prevline = &in[inindex];
     }
   }
-  else if(settings->filter_strategy == LFS_MINSUM) {
+  else if(strategy == LFS_MINSUM) {
     /*adaptive filtering*/
     /*
     There is a heuristic called the minimum sum of absolute differences heuristic, suggested by the PNG standard:
