@@ -131,19 +131,19 @@ static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const 
   if(bpp < 8 && w * bpp != ((w * bpp + 7u) / 8u) * 8u) {
   }
   else {
-    filter(*out, in, w, h, &info_png->color, settings);
+    filter32bitRGBA(*out, in, w, h, settings);
   }
 
   return 0;
 }
 
-static unsigned filter(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, const LodePNGColorMode* color, const LodePNGEncoderSettings* settings)
+static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, const LodePNGEncoderSettings* settings)
 {
-  unsigned bpp = 4 * 8; //getNumColorChannels(color->colortype) * color->bitdepth;
-  /*the width of a scanline in bytes, not including the filter type*/
-  size_t linebytes = ((size_t)(w / 8u) * bpp) + 1u + ((w & 7u) * bpp + 7u) / 8u - 1u;
-  /*bytewidth is used for filtering, is 1 when bpp < 8, number of bytes per pixel otherwise*/
-  size_t bytewidth = (bpp + 7u) / 8u;
+  unsigned colorChannels = 4; /*RGBA*/
+  unsigned bitdepth = 8;
+  unsigned bpp = colorChannels * bitdepth;
+  size_t linebytes = ((size_t)(w / 8u) * bpp) + 1u + ((w & 7u) * bpp + 7u) / 8u - 1u; /*the width of a scanline in bytes, not including the filter type*/
+  size_t bytewidth = (bpp + 7u) / 8u; /*bytewidth is used for filtering, is 1 when bpp < 8, number of bytes per pixel otherwise*/
 
   if(settings->filter_strategy >= LFS_ZERO && settings->filter_strategy <= LFS_FOUR) {
     unsigned char type = (unsigned char)settings->filter_strategy;

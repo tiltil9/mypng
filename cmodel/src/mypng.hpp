@@ -586,7 +586,7 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
 unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGState* state);
 static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in,
                                     unsigned w, unsigned h, const LodePNGInfo* info_png, const LodePNGEncoderSettings* settings);
-static unsigned filter(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, const LodePNGColorMode* color, const LodePNGEncoderSettings* settings);
+static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, const LodePNGEncoderSettings* settings);
 static void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType);
 static unsigned char paethPredictor(short a, short b, short c);
 static unsigned writeSignature(ucvector* out);
