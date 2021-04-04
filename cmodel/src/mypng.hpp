@@ -551,7 +551,7 @@ static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, uns
 static void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType);
 static unsigned char paethPredictor(short a, short b, short c);
 static unsigned writeSignature(ucvector* out);
-static unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth, unsigned interlace_method);
+static unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method);
 static unsigned addChunk_IEND(ucvector* out);
 static unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings);
 unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);

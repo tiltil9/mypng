@@ -105,7 +105,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
     /*write signature and chunks*/
     writeSignature(&outv);
     /*IHDR*/
-    addChunk_IHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.colortype, state->info_png.bitdepth, state->info_png.interlace_method);
+    addChunk_IHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.bitdepth, state->info_png.colortype, state->info_png.interlace_method);
     /*IDAT (multiple IDAT chunks must be consecutive)*/
     addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings);
     addChunk_IEND(&outv);
@@ -277,7 +277,7 @@ static unsigned writeSignature(ucvector* out)
   return 0;
 }
 
-static unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth, unsigned interlace_method)
+static unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method)
 {
   unsigned char *chunk, *data;
 
