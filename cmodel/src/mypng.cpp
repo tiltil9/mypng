@@ -63,7 +63,6 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
   {
     // init encoding settings
     state.encoder.zlibsettings.btype = 1;         // unchangeable
-    state.encoder.zlibsettings.use_lz77 = 1;      // unchangeable
     state.encoder.zlibsettings.windowsize = 2048; // changeable
     state.encoder.zlibsettings.minmatch = 3;      // changeable
     state.encoder.zlibsettings.nicematch = 128;   // changeable
@@ -413,15 +412,11 @@ static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
   writeBits(writer, 1, 1); /*first bit of BTYPE*/
   writeBits(writer, 0, 1); /*second bit of BTYPE*/
 
-  if(settings->use_lz77) {
-    uivector lz77_encoded;
-    uivector_init(&lz77_encoded);
-    encodeLZ77(&lz77_encoded, hash, data, datapos, dataend, settings->windowsize, settings->minmatch, settings->nicematch);
-    writeLZ77data(writer, &lz77_encoded, &tree_ll, &tree_d);
-    uivector_cleanup(&lz77_encoded);
-  }
-  else /*no LZ77, but still will be Huffman compressed*/ {
-  }
+  uivector lz77_encoded;
+  uivector_init(&lz77_encoded);
+  encodeLZ77(&lz77_encoded, hash, data, datapos, dataend, settings->windowsize, settings->minmatch, settings->nicematch);
+  writeLZ77data(writer, &lz77_encoded, &tree_ll, &tree_d);
+  uivector_cleanup(&lz77_encoded);
   /*add END code*/
   writeBitsReversed(writer,tree_ll.codes[256], tree_ll.lengths[256]);
 
