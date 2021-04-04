@@ -96,7 +96,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   ucvector outv = ucvector_init(NULL, 0);
 
   /* compute scanline filter types */
-  preProcessScanlines32bitRGBA(&data, &datasize, image, state->info_png.width, state->info_png.height, state->encoder.filter_strategy);
+  preProcessScanlines(&data, &datasize, image, state->info_png.width, state->info_png.height, state->encoder.filter_strategy);
 
   /* output all PNG chunks */
   {
@@ -114,6 +114,12 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   *out = outv.data;
   *outsize = outv.size;
 
+  return 0;
+}
+
+static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+{
+  preProcessScanlines32bitRGBA(out, outsize, in, w, h, strategy);
   return 0;
 }
 
