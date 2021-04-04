@@ -333,6 +333,7 @@ static unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t d
   return 0;
 }
 
+/*The input are raw bytes, the output is the complete zlib stream*/
 unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
 {
   *out = NULL;
@@ -365,12 +366,14 @@ unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsig
   return 0;
 }
 
+/*The input are raw bytes, the output is the stream of zlib compressed data blocks*/
 unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
 {
   lodepng_deflate_fixed(out, outsize, in, insize, settings);
   return 0;
 }
 
+/*The input are raw bytes, the output is LZ77-compressed data encoded with fixed Huffman codes*/
 unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
 {
   //settings->btype = 1;
@@ -423,15 +426,9 @@ unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsig
   return 0;
 }
 
-/*
-LZ77-encode the data. Return value is error code. The input are raw bytes, the output
-is in the form of unsigned integers with codes representing for example literal bytes, or
-length/distance pairs.
-It uses a hash table technique to let it encode faster. When doing LZ77 encoding, a
-sliding window (of windowsize) is used, and all past bytes in that window can be used as
-the "dictionary". A brute force search through all possible distances would be slow, and
-this hash technique is one out of several ways to speed this up.
-*/
+/*The input are raw bytes, the output is in the form of unsigned integers
+with codes representing for example literal bytes, or length/distance pairs.
+It uses a hash table technique to let it encode faster. */
 static unsigned encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
 {
   //unsigned usezeros = 0;     // unchangeable
