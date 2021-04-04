@@ -81,7 +81,6 @@ typedef struct LodePNGCompressSettings /*deflate = compress*/ {
 
 typedef struct LodePNGEncoderSettings {
   LodePNGCompressSettings zlibsettings; /*settings for the zlib encoder, such as window size, ...*/
-  unsigned auto_convert;                /*automatically choose output PNG color type. Default: true*/
   /*Which filter strategy to use when not using zeroes due to filter_palette_zero.
   Set filter_palette_zero to 0 to ensure always using your chosen strategy. Default: LFS_MINSUM*/
   LodePNGFilterStrategy filter_strategy;

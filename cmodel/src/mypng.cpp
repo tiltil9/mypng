@@ -68,7 +68,6 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.encoder.zlibsettings.nicematch = 128;   // changeable
 
     state.encoder.filter_strategy = LFS_MINSUM;   // changeable
-    state.encoder.auto_convert = 0;               // unchangeable
 
     // init PNG image info
     state.info_png.colortype = LCT_RGBA;          // unchangeable
