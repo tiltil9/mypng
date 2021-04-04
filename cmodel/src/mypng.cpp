@@ -334,14 +334,14 @@ static unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t d
 }
 
 /*The input are raw bytes, the output is the complete zlib stream*/
-unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
+unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
   *out = NULL;
   *outsize = 0;
 
   unsigned char* deflatedata = 0;
   size_t deflatesize = 0;
-  lodepng_deflate(&deflatedata, &deflatesize, in, insize, settings);
+  lodepng_deflate(&deflatedata, &deflatesize, in, insize, zlibsettings);
 
   *outsize = 1 + 1 + deflatesize + 4;
   *out = (unsigned char*)malloc(*outsize);
@@ -367,22 +367,22 @@ unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsig
 }
 
 /*The input are raw bytes, the output is the stream of zlib compressed data blocks*/
-unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
+unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
-  lodepng_deflate_fixed(out, outsize, in, insize, settings);
+  lodepng_deflate_fixed(out, outsize, in, insize, zlibsettings);
   return 0;
 }
 
 /*The input are raw bytes, the output is LZ77-compressed data encoded with fixed Huffman codes*/
-unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
+unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
-  //settings->btype = 1;
+  //zlibsettings->btype = 1;
   ucvector vout = ucvector_init(*out, *outsize);
 
   LodePNGBitWriter writer;
   Hash hash;
   LodePNGBitWriter_init(&writer, &vout);
-  hash_init(&hash, settings->windowsize);
+  hash_init(&hash, zlibsettings->windowsize);
 
   HuffmanTree tree_ll; /*tree for literal values and length codes*/
   HuffmanTree tree_d;  /*tree for distance codes*/
@@ -408,7 +408,7 @@ unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsig
 
     uivector lz77_encoded;
     uivector_init(&lz77_encoded);
-    encodeLZ77(&lz77_encoded, &hash, in, start, end, settings->windowsize, settings->minmatch, settings->nicematch);
+    encodeLZ77(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
     writeLZ77data(&writer, &lz77_encoded, &tree_ll, &tree_d);
     uivector_cleanup(&lz77_encoded);
     /*add END code*/
