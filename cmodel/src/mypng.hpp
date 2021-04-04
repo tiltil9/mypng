@@ -60,20 +60,15 @@ typedef enum LodePNGFilterStrategy {
   //LFS_PREDEFINED
 } LodePNGFilterStrategy;
 
-typedef struct LodePNGColorMode {
-  /*header (IHDR)*/
-  LodePNGColorType colortype; /*color type, see PNG standard or documentation further in this header file*/
-  unsigned bitdepth;          /*bits per sample, see PNG standard or documentation further in this header file*/
-} LodePNGColorMode;
-
 typedef struct LodePNGInfo {
   /*header (IHDR)*/
   unsigned width;
   unsigned height;
+  unsigned bitdepth;          /*bits per sample, see PNG standard or documentation further in this header file*/
+  LodePNGColorType colortype; /*color type, see PNG standard or documentation further in this header file*/
   unsigned compression_method;/*compression method of the original file. Always 0.*/
   unsigned filter_method;     /*filter method of the original file*/
   unsigned interlace_method;  /*interlace method of the original file: 0=none, 1=Adam7*/
-  LodePNGColorMode color;     /*color type and bits, palette and transparency of the PNG file*/
 } LodePNGInfo;
 
 typedef struct LodePNGCompressSettings /*deflate = compress*/ {

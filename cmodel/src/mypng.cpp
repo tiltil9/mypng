@@ -73,8 +73,8 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.encoder.auto_convert = 0;               // unchangeable
 
     // init PNG image info
-    state.info_png.color.colortype = LCT_RGBA;    // unchangeable
-    state.info_png.color.bitdepth = 8;            // unchangeable
+    state.info_png.colortype = LCT_RGBA;          // unchangeable
+    state.info_png.bitdepth = 8;                  // unchangeable
 
     state.info_png.width = w;
     state.info_png.height = h;
@@ -82,8 +82,8 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.info_png.compression_method = 0;
     state.info_png.filter_method = 0;
   }
-  state.info_png.color.colortype = colortype;
-  state.info_png.color.bitdepth = bitdepth;
+  state.info_png.colortype = colortype;
+  state.info_png.bitdepth = bitdepth;
 
   lodepng_encode(out, outsize, image, &state);
 
@@ -108,7 +108,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
     /*write signature and chunks*/
     writeSignature(&outv);
     /*IHDR*/
-    addChunk_IHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.color.colortype, state->info_png.color.bitdepth, state->info_png.interlace_method);
+    addChunk_IHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.colortype, state->info_png.bitdepth, state->info_png.interlace_method);
     /*IDAT (multiple IDAT chunks must be consecutive)*/
     addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings);
     addChunk_IEND(&outv);
