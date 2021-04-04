@@ -72,8 +72,8 @@ typedef struct LodePNGInfo {
 } LodePNGInfo;
 
 typedef struct LodePNGCompressSettings /*deflate = compress*/ {
-  /*LZ77 related settings*/
   unsigned btype;        /*the block type for LZ (0, 1, 2 or 3, see zlib standard). Should be 2 for proper compression.*/
+  /*LZ77 related settings*/
   unsigned windowsize;   /*must be a power of two <= 32768. higher compresses more but is slower. Default value: 2048.*/
   unsigned minmatch;     /*minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 0*/
   unsigned nicematch;    /*stop searching if >= this length found. Set to 258 for best compression. Default: 128*/
@@ -81,9 +81,7 @@ typedef struct LodePNGCompressSettings /*deflate = compress*/ {
 
 typedef struct LodePNGEncoderSettings {
   LodePNGCompressSettings zlibsettings; /*settings for the zlib encoder, such as window size, ...*/
-  /*Which filter strategy to use when not using zeroes due to filter_palette_zero.
-  Set filter_palette_zero to 0 to ensure always using your chosen strategy. Default: LFS_MINSUM*/
-  LodePNGFilterStrategy filter_strategy;
+  LodePNGFilterStrategy filter_strategy;/*Which filter strategy to use. Default: LFS_MINSUM*/
 } LodePNGEncoderSettings;
 
 typedef struct LodePNGState {
