@@ -288,12 +288,6 @@ typedef struct Hash {
   int* head;             /*hash value to head circular pos - can be outdated if went around window*/
   unsigned short* chain; /*circular pos to prev circular pos*/
   int* val;              /*circular pos to hash value*/
-
-  /*TODO: do this not only for zeros but for any repeated byte. However for PNG
-  it's always going to be the zeros that dominate, so not important for PNG*/
-  int* headz;             /*similar to head, but for chainz*/
-  unsigned short* chainz; /*those with same amount of zeros*/
-  unsigned short* zeros;  /*length of zeros streak, used as a second hash chain*/
 } Hash;
 
 static const size_t MAX_SUPPORTED_DEFLATE_LENGTH = 258;
@@ -305,17 +299,10 @@ static unsigned hash_init(Hash* hash, unsigned windowsize)
   hash->chain = (unsigned short*)malloc(sizeof(unsigned short) * windowsize);
   hash->val = (int*)malloc(sizeof(int) * windowsize);
 
-  hash->headz = (int*)malloc(sizeof(int) * (MAX_SUPPORTED_DEFLATE_LENGTH + 1));
-  hash->chainz = (unsigned short*)malloc(sizeof(unsigned short) * windowsize);
-  hash->zeros = (unsigned short*)malloc(sizeof(unsigned short) * windowsize);
-
   /*initialize hash table*/
   for(unsigned i = 0; i != HASH_NUM_VALUES; ++i) hash->head[i] = -1;
   for(unsigned i = 0; i != windowsize; ++i) hash->chain[i] = i; /*same value as index indicates uninitialized*/
   for(unsigned i = 0; i != windowsize; ++i) hash->val[i] = -1;
-
-  for(unsigned i = 0; i <= MAX_SUPPORTED_DEFLATE_LENGTH; ++i) hash->headz[i] = -1;
-  for(unsigned i = 0; i != windowsize; ++i) hash->chainz[i] = i; /*same value as index indicates uninitialized*/
 
   return 0;
 }
@@ -325,9 +312,6 @@ static void hash_cleanup(Hash* hash)
   free(hash->head);
   free(hash->val);
   free(hash->chain);
-  free(hash->zeros);
-  free(hash->headz);
-  free(hash->chainz);
 }
 
 static unsigned getHash(const unsigned char* data, size_t size, size_t pos)
@@ -346,27 +330,11 @@ static unsigned getHash(const unsigned char* data, size_t size, size_t pos)
   return result & HASH_BIT_MASK;
 }
 
-static unsigned countZeros(const unsigned char* data, size_t size, size_t pos)
-{
-  const unsigned char* start = data + pos;
-  const unsigned char* end = start + MAX_SUPPORTED_DEFLATE_LENGTH;
-  if(end > data + size) end = data + size;
-
-  data = start; // still a temp ptr
-  while(data != end && *data == 0) ++data;
-  /*subtracting two addresses returned as 32-bit number (max value is MAX_SUPPORTED_DEFLATE_LENGTH)*/
-  return (unsigned)(data - start);
-}
-
-static void updateHashChain(Hash* hash, size_t wpos, unsigned hashval, unsigned short numzeros)
+static void updateHashChain(Hash* hash, size_t wpos, unsigned hashval)
 {
   hash->val[wpos] = (int)hashval;
   if(hash->head[hashval] != -1) hash->chain[wpos] = hash->head[hashval];
   hash->head[hashval] = (int)wpos;
-
-  hash->zeros[wpos] = numzeros;
-  if(hash->headz[numzeros] != -1) hash->chainz[wpos] = hash->headz[numzeros];
-  hash->headz[numzeros] = (int)wpos;
 }
 
 //********************************************************

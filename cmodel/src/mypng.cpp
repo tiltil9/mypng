@@ -447,27 +447,14 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
                            const unsigned char* in, size_t inpos, size_t inposend, 
                            unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching)
 {
-  unsigned usezeros = 0; // unchangeable /*not sure if setting it to false for windowsize < 8192 is better or worse*/
-  unsigned numzeros = 0;
+  //unsigned usezeros = 0; // unchangeable
   /*for large window lengths, assume the user wants no compression loss. Otherwise, max hash chain length speedup.*/
   unsigned maxchainlength = windowsize >= 8192 ? windowsize : windowsize / 8u;
 
   for(size_t pos = inpos; pos < inposend; ++pos) {
     size_t wpos = pos & (windowsize - 1); /*position for in 'circular' hash buffers*/
-
     unsigned hashval = getHash(in, inposend, pos);
-
-    if(usezeros && hashval == 0) {
-      //if(numzeros == 0)
-      //  numzeros = countZeros(in, inposend, pos);
-      //else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0)
-      //  --numzeros;
-    }
-    else {
-      numzeros = 0;
-    }
-
-    updateHashChain(hash, wpos, hashval, numzeros);
+    updateHashChain(hash, wpos, hashval);
 
 
     const unsigned char * lastptr = &in[inposend < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? inposend : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
@@ -494,14 +481,6 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
         const unsigned char * foreptr = &in[pos];
         const unsigned char * backptr = &in[pos - current_offset];
 
-        /*common case in PNGs is lots of zeros. Quickly skip over them as a speedup*/
-        if(numzeros >= 3) {
-          //unsigned skip = hash->zeros[hashpos];
-          //if(skip > numzeros) skip = numzeros;
-          //backptr += skip;
-          //foreptr += skip;
-        }
-
         while(foreptr != lastptr && *backptr == *foreptr) /*maximum supported length by deflate is max length*/ {
           ++backptr;
           ++foreptr;
@@ -518,15 +497,9 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
       }
 
       if(hashpos == hash->chain[hashpos]) break;
-      if(numzeros >= 3 && length > numzeros) {
-        //hashpos = hash->chainz[hashpos];
-        //if(hash->zeros[hashpos] != numzeros) break;
-      }
-      else {
-        hashpos = hash->chain[hashpos];
-        /*outdated hash value, happens if particular value was not encountered in whole last window*/
-        if(hash->val[hashpos] != (int)hashval) break;
-      }
+      hashpos = hash->chain[hashpos];
+      /*outdated hash value, happens if particular value was not encountered in whole last window*/
+      if(hash->val[hashpos] != (int)hashval) break;
     }
 
     /*encode it as length/distance pair or literal value*/
@@ -544,16 +517,7 @@ static unsigned encodeLZ77(uivector* out, Hash* hash,
         ++pos;
         wpos = pos & (windowsize - 1);
         hashval = getHash(in, inposend, pos);
-        if(usezeros && hashval == 0) {
-          //if(numzeros == 0)
-          //  numzeros = countZeros(in, inposend, pos);
-          //else if(pos + numzeros > inposend || in[pos + numzeros - 1] != 0)
-          //  --numzeros;
-        }
-        else {
-          numzeros = 0;
-        }
-        updateHashChain(hash, wpos, hashval, numzeros);
+        updateHashChain(hash, wpos, hashval);
       }
     }
   } /*end of the loop through each character of input*/
