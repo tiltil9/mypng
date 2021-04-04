@@ -68,6 +68,8 @@ typedef struct LodePNGColorMode {
 
 typedef struct LodePNGInfo {
   /*header (IHDR)*/
+  unsigned width;
+  unsigned height;
   unsigned compression_method;/*compression method of the original file. Always 0.*/
   unsigned filter_method;     /*filter method of the original file*/
   unsigned interlace_method;  /*interlace method of the original file: 0=none, 1=Adam7*/
@@ -583,7 +585,7 @@ static void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded
 
 //********************************************************
 unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth);
-unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGState* state);
+unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
 static unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 static void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType);

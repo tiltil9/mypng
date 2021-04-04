@@ -76,6 +76,8 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.info_png.color.colortype = LCT_RGBA;    // unchangeable
     state.info_png.color.bitdepth = 8;            // unchangeable
 
+    state.info_png.width = w;
+    state.info_png.height = h;
     state.info_png.interlace_method = 0;
     state.info_png.compression_method = 0;
     state.info_png.filter_method = 0;
@@ -83,12 +85,12 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
   state.info_png.color.colortype = colortype;
   state.info_png.color.bitdepth = bitdepth;
 
-  lodepng_encode(out, outsize, image, w, h, &state);
+  lodepng_encode(out, outsize, image, &state);
 
   return 0;
 }
 
-unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGState* state)
+unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state)
 {
   /*provide some proper output values if error will happen*/
   *out = 0;
@@ -99,14 +101,14 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   ucvector outv = ucvector_init(NULL, 0);
 
   /* compute scanline filter types */
-  preProcessScanlines32bitRGBA(&data, &datasize, image, w, h, state->encoder.filter_strategy);
+  preProcessScanlines32bitRGBA(&data, &datasize, image, state->info_png.width, state->info_png.height, state->encoder.filter_strategy);
 
   /* output all PNG chunks */
   {
     /*write signature and chunks*/
     writeSignature(&outv);
     /*IHDR*/
-    addChunk_IHDR(&outv, w, h, state->info_png.color.colortype, state->info_png.color.bitdepth, state->info_png.interlace_method);
+    addChunk_IHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.color.colortype, state->info_png.color.bitdepth, state->info_png.interlace_method);
     /*IDAT (multiple IDAT chunks must be consecutive)*/
     addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings);
     addChunk_IEND(&outv);
