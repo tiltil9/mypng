@@ -385,7 +385,7 @@ unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned ch
       size_t end = start + blocksize;
       if(end > insize) end = insize;
 
-      deflateFixed(&writer, &hash, in, start, end, settings, final); /*if(settings->btype == 1)*/
+      deflateFixed(&writer, &hash, in, start, end, settings->windowsize, settings->minmatch, settings->nicematch, final); /*if(settings->btype == 1)*/
     }
 
     hash_cleanup(&hash);
@@ -396,9 +396,8 @@ unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned ch
   return 0;
 }
 
-static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
-                             const unsigned char* data, size_t datapos, size_t dataend,
-                             const LodePNGCompressSettings* settings, unsigned final)
+static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash, const unsigned char* data, size_t datapos, size_t dataend,
+                             unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned final)
 {
   HuffmanTree tree_ll; /*tree for literal values and length codes*/
   HuffmanTree tree_d;  /*tree for distance codes*/
@@ -414,7 +413,7 @@ static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
 
   uivector lz77_encoded;
   uivector_init(&lz77_encoded);
-  encodeLZ77(&lz77_encoded, hash, data, datapos, dataend, settings->windowsize, settings->minmatch, settings->nicematch);
+  encodeLZ77(&lz77_encoded, hash, data, datapos, dataend, windowsize, minmatch, nicematch);
   writeLZ77data(writer, &lz77_encoded, &tree_ll, &tree_d);
   uivector_cleanup(&lz77_encoded);
   /*add END code*/
