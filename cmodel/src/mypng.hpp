@@ -78,7 +78,6 @@ typedef struct LodePNGCompressSettings /*deflate = compress*/ {
   unsigned windowsize;   /*must be a power of two <= 32768. higher compresses more but is slower. Default value: 2048.*/
   unsigned minmatch;     /*minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 0*/
   unsigned nicematch;    /*stop searching if >= this length found. Set to 258 for best compression. Default: 128*/
-  unsigned lazymatching; /*use lazy matching: better compression but a bit slower. Default: true*/
 } LodePNGCompressSettings;
 
 typedef struct LodePNGEncoderSettings {
@@ -562,9 +561,7 @@ unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned ch
 static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
                              const unsigned char* data, size_t datapos, size_t dataend,
                              const LodePNGCompressSettings* settings, unsigned final);
-static unsigned encodeLZ77(uivector* out, Hash* hash,
-                           const unsigned char* in, size_t inpos, size_t inposend, 
-                           unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching);
+static unsigned encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch);
 
 //********************************************************
 //static unsigned deflateNoCompression(ucvector* out, const unsigned char* data, size_t datasize) {

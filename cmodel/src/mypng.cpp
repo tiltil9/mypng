@@ -67,7 +67,6 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.encoder.zlibsettings.windowsize = 2048; // changeable
     state.encoder.zlibsettings.minmatch = 3;      // changeable
     state.encoder.zlibsettings.nicematch = 128;   // changeable
-    state.encoder.zlibsettings.lazymatching = 0;  // unchangeable
 
     state.encoder.filter_strategy = LFS_MINSUM;   // changeable
     state.encoder.auto_convert = 0;               // unchangeable
@@ -417,8 +416,7 @@ static unsigned deflateFixed(LodePNGBitWriter* writer, Hash* hash,
   if(settings->use_lz77) {
     uivector lz77_encoded;
     uivector_init(&lz77_encoded);
-    encodeLZ77(&lz77_encoded, hash, data, datapos, dataend,
-                settings->windowsize, settings->minmatch, settings->nicematch, settings->lazymatching);
+    encodeLZ77(&lz77_encoded, hash, data, datapos, dataend, settings->windowsize, settings->minmatch, settings->nicematch);
     writeLZ77data(writer, &lz77_encoded, &tree_ll, &tree_d);
     uivector_cleanup(&lz77_encoded);
   }
@@ -443,11 +441,10 @@ sliding window (of windowsize) is used, and all past bytes in that window can be
 the "dictionary". A brute force search through all possible distances would be slow, and
 this hash technique is one out of several ways to speed this up.
 */
-static unsigned encodeLZ77(uivector* out, Hash* hash,
-                           const unsigned char* in, size_t inpos, size_t inposend, 
-                           unsigned windowsize, unsigned minmatch, unsigned nicematch, unsigned lazymatching)
+static unsigned encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
 {
-  //unsigned usezeros = 0; // unchangeable
+  //unsigned usezeros = 0;     // unchangeable
+  //unsigned lazymatching = 0; // unchangeable
   /*for large window lengths, assume the user wants no compression loss. Otherwise, max hash chain length speedup.*/
   unsigned maxchainlength = windowsize >= 8192 ? windowsize : windowsize / 8u;
 
