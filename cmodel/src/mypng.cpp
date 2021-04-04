@@ -367,6 +367,12 @@ unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsig
 
 unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
 {
+  lodepng_deflate_fixed(out, outsize, in, insize, settings);
+  return 0;
+}
+
+unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* settings)
+{
   ucvector vout = ucvector_init(*out, *outsize);
 
   {
