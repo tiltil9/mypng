@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   /*Encode the image*/
   unsigned char* buffer;
   size_t buffersize;
-  lodepng_encode_memory(&buffer, &buffersize, image, width, height, LCT_RGBA, 8);
+  lodepng_encode_32bitRGBA(&buffer, &buffersize, image, width, height);
 
   
   string png_path = "./pic_png/";
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h, LodePNGColorType colortype, unsigned bitdepth)
+unsigned lodepng_encode_32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h)
 {
   LodePNGState state;
   {
@@ -70,17 +70,15 @@ unsigned lodepng_encode_memory(unsigned char** out, size_t* outsize, const unsig
     state.encoder.filter_strategy = LFS_MINSUM;   // changeable
 
     // init PNG image info
-    state.info_png.colortype = LCT_RGBA;          // unchangeable
-    state.info_png.bitdepth = 8;                  // unchangeable
-
     state.info_png.width = w;
     state.info_png.height = h;
+    state.info_png.bitdepth = 8;                  // unchangeable
+    state.info_png.colortype = LCT_RGBA;          // unchangeable
     state.info_png.interlace_method = 0;
     state.info_png.compression_method = 0;
     state.info_png.filter_method = 0;
   }
-  state.info_png.colortype = colortype;
-  state.info_png.bitdepth = bitdepth;
+
 
   lodepng_encode(out, outsize, image, &state);
 
