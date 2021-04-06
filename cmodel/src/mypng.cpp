@@ -31,6 +31,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
+/*The input are command line arguments, the output are setted state and image*/
 unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv)
 {
   lodepng_setstate_32bitRGBA(state, image, argc, argv);
@@ -89,6 +90,7 @@ unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, 
   return 0;
 }
 
+/*The input are setted state and image, the output are full PNG stream and its size*/
 unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state)
 {
   /*provide some proper output values if error will happen*/
@@ -121,6 +123,7 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   return 0;
 }
 
+/*The input is image, the output is filtered stream*/
 static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   preProcessScanlines32bitRGBA(out, outsize, in, w, h, strategy);
