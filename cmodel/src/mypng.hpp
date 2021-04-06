@@ -542,7 +542,8 @@ static void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded
 }
 
 //********************************************************
-unsigned lodepng_encode_32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h);
+unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv);
+unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, int argc, char **argv);
 unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
 static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 static unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);

@@ -13,6 +13,32 @@
 
 int main(int argc, char **argv)
 {
+  unsigned char* image;
+  LodePNGState state;
+  lodepng_setstate(&state, &image, argc, argv);
+
+  /*Encode the image*/
+  unsigned char* buffer;
+  size_t buffersize;
+  lodepng_encode(&buffer, &buffersize, image, &state);
+
+  string png_path = "./pic_png/";
+  string png_file = png_path  + argv[1] + ".png";
+  lodepng_save_file(buffer, buffersize, png_file.c_str());
+
+  free(buffer);
+  free(image);
+  return 0;
+}
+
+unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv)
+{
+  lodepng_setstate_32bitRGBA(state, image, argc, argv);
+  return 0;
+}
+
+unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, int argc, char **argv)
+{
   /*read image*/
   // check file
   string rgba_path = "./pic_rgba_anchor/";
@@ -31,56 +57,34 @@ int main(int argc, char **argv)
   fgets(dat, 10, fpt);
   unsigned height = atoi(dat);
   // read R G B A...
-  unsigned char* image = (unsigned char*)malloc(width * height * 4);
+  *image = (unsigned char*)malloc(width * height * 4);
   for(unsigned y = 0; y < height; y++) {
     for(unsigned x = 0; x < width; x++) {
       for(unsigned c = 0; c < 4; c++) {
         fgets(dat, 10, fpt);
-        image[4 * width * y + 4 * x + c] = atoi(dat);
+        (*image)[4 * width * y + 4 * x + c] = atoi(dat);
       }
     }
   }
   fclose(fpt); 
 
-  /*Encode the image*/
-  unsigned char* buffer;
-  size_t buffersize;
-  lodepng_encode_32bitRGBA(&buffer, &buffersize, image, width, height);
 
-  
-  string png_path = "./pic_png/";
-  string png_file = png_path  + argv[1] + ".png";
-  lodepng_save_file(buffer, buffersize, png_file.c_str());
+  // init encoding settings
+  state->encoder.zlibsettings.btype = 1;         // unchangeable
+  state->encoder.zlibsettings.windowsize = 2048; // changeable
+  state->encoder.zlibsettings.minmatch = 3;      // changeable
+  state->encoder.zlibsettings.nicematch = 128;   // changeable
 
-  free(buffer);
-  free(image);
-  return 0;
-}
+  state->encoder.filter_strategy = LFS_MINSUM;   // changeable
 
-unsigned lodepng_encode_32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* image, unsigned w, unsigned h)
-{
-  LodePNGState state;
-  {
-    // init encoding settings
-    state.encoder.zlibsettings.btype = 1;         // unchangeable
-    state.encoder.zlibsettings.windowsize = 2048; // changeable
-    state.encoder.zlibsettings.minmatch = 3;      // changeable
-    state.encoder.zlibsettings.nicematch = 128;   // changeable
-
-    state.encoder.filter_strategy = LFS_MINSUM;   // changeable
-
-    // init PNG image info
-    state.info_png.width = w;
-    state.info_png.height = h;
-    state.info_png.bitdepth = 8;                  // unchangeable
-    state.info_png.colortype = LCT_RGBA;          // unchangeable
-    state.info_png.interlace_method = 0;
-    state.info_png.compression_method = 0;
-    state.info_png.filter_method = 0;
-  }
-
-
-  lodepng_encode(out, outsize, image, &state);
+  // init PNG image info
+  state->info_png.width = width;
+  state->info_png.height = height;
+  state->info_png.bitdepth = 8;                  // unchangeable
+  state->info_png.colortype = LCT_RGBA;          // unchangeable
+  state->info_png.interlace_method = 0;
+  state->info_png.compression_method = 0;
+  state->info_png.filter_method = 0;
 
   return 0;
 }
