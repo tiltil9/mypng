@@ -124,13 +124,13 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
 }
 
 /*The input is image, the output is filtered stream*/
-static unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   preProcessScanlines32bitRGBA(out, outsize, in, w, h, strategy);
   return 0;
 }
 
-static unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   unsigned colorChannels = 4; /*RGBA*/
   unsigned bitdepth = 8;
@@ -148,7 +148,7 @@ static unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsiz
   return 0;
 }
 
-static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   unsigned colorChannels = 4; /*RGBA*/
   unsigned bitdepth = 8;
@@ -223,7 +223,7 @@ static unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, uns
   return 0;
 }
 
-static void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType)
+void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType)
 {
   switch(filterType) {
     case 0: /*None*/
@@ -269,7 +269,7 @@ static void filterScanline(unsigned char* out, const unsigned char* scanline, co
   }
 }
 
-static unsigned char paethPredictor(short a, short b, short c)
+unsigned char paethPredictor(short a, short b, short c)
 {
   short pa = ((b - c)         < 0 ? -(b - c)         : (b - c)        );
   short pb = ((a - c)         < 0 ? -(a - c)         : (a - c)        );
@@ -279,7 +279,7 @@ static unsigned char paethPredictor(short a, short b, short c)
   return (pc < pa) ? c : a;
 }
 
-static unsigned writeSignature(ucvector* out)
+unsigned writeSignature(ucvector* out)
 {
   size_t pos = out->size;
   const unsigned char signature[] = {137, 80, 78, 71, 13, 10, 26, 10}; /*8 bytes PNG signature, aka the magic bytes*/
@@ -288,7 +288,7 @@ static unsigned writeSignature(ucvector* out)
   return 0;
 }
 
-static unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method)
+unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method)
 {
   unsigned char *chunk, *data;
 
@@ -308,7 +308,7 @@ static unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bi
   return 0;
 }
 
-static unsigned addChunk_IEND(ucvector* out)
+unsigned addChunk_IEND(ucvector* out)
 {
   unsigned char* chunk;
 
@@ -322,7 +322,7 @@ static unsigned addChunk_IEND(ucvector* out)
   return 0;
 }
 
-static unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
+unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
 {
   unsigned char* zlib = 0;
   size_t zlibsize = 0;
@@ -439,7 +439,7 @@ unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsig
 /*The input are raw bytes, the output is in the form of unsigned integers
 with codes representing for example literal bytes, or length/distance pairs.
 It uses a hash table technique to let it encode faster. */
-static unsigned encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
+unsigned encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
 {
   //unsigned usezeros = 0;     // unchangeable
   //unsigned lazymatching = 0; // unchangeable
