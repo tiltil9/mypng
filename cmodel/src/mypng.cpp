@@ -34,8 +34,7 @@ int main(int argc, char **argv)
 /*The input are command line arguments, the output are setted state and image*/
 unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv)
 {
-  lodepng_setstate_32bitRGBA(state, image, argc, argv);
-  return 0;
+  return lodepng_setstate_32bitRGBA(state, image, argc, argv);
 }
 
 unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, int argc, char **argv)
@@ -44,9 +43,9 @@ unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, 
   // check file
   string rgba_path = "./pic_rgba_anchor/";
   string rgba_file = rgba_path + argv[1] + ".txt";
-  if(fopen(rgba_file.c_str(), "r") == NULL){
+  if(fopen(rgba_file.c_str(), "r") == NULL) {
     printf("file does not exist\n");
-    return 0;
+    return -1;
   }
   // read width height R G B A...
   FILE *fpt = fopen(rgba_file.c_str(), "r");
@@ -91,7 +90,7 @@ unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, 
 }
 
 /*The input are setted state and image, the output are full PNG stream and its size*/
-unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state)
+void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state)
 {
   /*provide some proper output values if error will happen*/
   *out = 0;
@@ -119,18 +118,15 @@ unsigned lodepng_encode(unsigned char** out, size_t* outsize, const unsigned cha
   /*instead of cleaning the vector up, give it to the output*/
   *out = outv.data;
   *outsize = outv.size;
-
-  return 0;
 }
 
 /*The input is image, the output is filtered stream*/
-unsigned preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   preProcessScanlines32bitRGBA(out, outsize, in, w, h, strategy);
-  return 0;
 }
 
-unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+void preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   unsigned colorChannels = 4; /*RGBA*/
   unsigned bitdepth = 8;
@@ -144,11 +140,9 @@ unsigned preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, cons
   else {
     filter32bitRGBA(*out, in, w, h, strategy);
   }
-
-  return 0;
 }
 
-unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
 {
   unsigned colorChannels = 4; /*RGBA*/
   unsigned bitdepth = 8;
@@ -219,8 +213,6 @@ unsigned filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w
 
     for(unsigned char type = 0; type != 5; ++type) free(attempt[type]);
   }
-
-  return 0;
 }
 
 void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType)
@@ -279,16 +271,15 @@ unsigned char paethPredictor(short a, short b, short c)
   return (pc < pa) ? c : a;
 }
 
-unsigned writeSignature(ucvector* out)
+void writeSignature(ucvector* out)
 {
   size_t pos = out->size;
   const unsigned char signature[] = {137, 80, 78, 71, 13, 10, 26, 10}; /*8 bytes PNG signature, aka the magic bytes*/
   ucvector_resize(out, out->size + 8);
   lodepng_memcpy(out->data + pos, signature, 8);
-  return 0;
 }
 
-unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method)
+void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method)
 {
   unsigned char *chunk, *data;
 
@@ -304,11 +295,9 @@ unsigned addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth,
   data[12] = interlace_method;        /*interlace method*/
 
   lodepng_chunk_generate_crc(chunk);
-
-  return 0;
 }
 
-unsigned addChunk_IEND(ucvector* out)
+void addChunk_IEND(ucvector* out)
 {
   unsigned char* chunk;
 
@@ -318,11 +307,9 @@ unsigned addChunk_IEND(ucvector* out)
   lodepng_memcpy(chunk + 8, NULL, 0);
   /*4: CRC (of the chunkname characters and the data)*/
   lodepng_chunk_generate_crc(chunk);
-
-  return 0;
 }
 
-unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
+void addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
 {
   unsigned char* zlib = 0;
   size_t zlibsize = 0;
@@ -340,11 +327,10 @@ unsigned addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize
   }
 
   free(zlib);
-  return 0;
 }
 
 /*The input are raw bytes, the output is the complete zlib stream*/
-unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+void lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
   *out = NULL;
   *outsize = 0;
@@ -373,18 +359,16 @@ unsigned lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsig
   }
 
   free(deflatedata);
-  return 0;
 }
 
 /*The input are raw bytes, the output is the stream of zlib compressed data blocks*/
-unsigned lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+void lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
   lodepng_deflate_fixed(out, outsize, in, insize, zlibsettings);
-  return 0;
 }
 
 /*The input are raw bytes, the output is LZ77-compressed data encoded with fixed Huffman codes*/
-unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
   //zlibsettings->btype = 1;
   ucvector vout = ucvector_init(*out, *outsize);
@@ -433,13 +417,12 @@ unsigned lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsig
 
   *out = vout.data;
   *outsize = vout.size;
-  return 0;
 }
 
 /*The input are raw bytes, the output is in the form of unsigned integers
 with codes representing for example literal bytes, or length/distance pairs.
 It uses a hash table technique to let it encode faster. */
-unsigned encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
+void encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
 {
   //unsigned usezeros = 0;     // unchangeable
   //unsigned lazymatching = 0; // unchangeable
@@ -516,6 +499,4 @@ unsigned encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t i
       }
     }
   } /*end of the loop through each character of input*/
-
-  return 0;
 }
