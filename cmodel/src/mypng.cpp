@@ -11,27 +11,46 @@
 //
 #include "mypng.hpp"
 
-int main()
+int main(int argc, char **argv)
 {
-  /*generate some image*/
-  unsigned width = 512, height = 512;
+  /*read image*/
+  // check file
+  string rgba_path = "./pic_rgba_anchor/";
+  string rgba_file = rgba_path + argv[1] + ".txt";
+  if(fopen(rgba_file.c_str(), "r") == NULL){
+    printf("file does not exist\n");
+    return 0;
+  }
+  // read width height R G B A...
+  FILE *fpt = fopen(rgba_file.c_str(), "r");
+  char dat [10];
+  // read width
+  fgets(dat, 10, fpt);
+  unsigned width = atoi(dat);
+  // read height
+  fgets(dat, 10, fpt);
+  unsigned height = atoi(dat);
+  // read R G B A...
   unsigned char* image = (unsigned char*)malloc(width * height * 4);
   for(unsigned y = 0; y < height; y++) {
     for(unsigned x = 0; x < width; x++) {
-      image[4 * width * y + 4 * x + 0] = 255 * !(x & y);
-      image[4 * width * y + 4 * x + 1] = x ^ y;
-      image[4 * width * y + 4 * x + 2] = x | y;
-      image[4 * width * y + 4 * x + 3] = 255;
+      for(unsigned c = 0; c < 4; c++) {
+        fgets(dat, 10, fpt);
+        image[4 * width * y + 4 * x + c] = atoi(dat);
+      }
     }
   }
+  fclose(fpt); 
 
   /*Encode the image*/
   unsigned char* buffer;
   size_t buffersize;
   lodepng_encode_memory(&buffer, &buffersize, image, width, height, LCT_RGBA, 8);
 
-  const char* filename = "test.png";
-  lodepng_save_file(buffer, buffersize, filename);
+  
+  string png_path = "./pic_png/";
+  string png_file = png_path  + argv[1] + ".png";
+  lodepng_save_file(buffer, buffersize, png_file.c_str());
 
   free(buffer);
   free(image);

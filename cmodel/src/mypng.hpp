@@ -31,6 +31,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <cstdlib>
+#include <string>
+
+using namespace std;
 
 typedef enum LodePNGColorType {
   //LCT_GREY = 0,
