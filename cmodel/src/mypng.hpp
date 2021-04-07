@@ -113,21 +113,6 @@ ucvector ucvector_init(unsigned char* buffer, size_t size);
 
 unsigned ucvector_resize(ucvector* p, size_t size);
 
-/*dynamic vector of unsigned ints*/
-typedef struct uivector {
-  unsigned* data;
-  size_t size;      /*size in number of unsigned longs*/
-  size_t allocsize; /*allocated size in bytes*/
-} uivector;
-
-void uivector_init(uivector* p);
-
-void uivector_cleanup(void* p);
-
-unsigned uivector_resize(uivector* p, size_t size);
-
-unsigned uivector_push_back(uivector* p, unsigned c);
-
 //********************************************************
 unsigned lodepng_chunk_init(unsigned char** chunk, ucvector* out, unsigned length, const char* type);
 
@@ -171,104 +156,6 @@ static unsigned lodepng_crc32_table[256] = {
 unsigned lodepng_crc32(const unsigned char* data, size_t length);
 
 void lodepng_chunk_generate_crc(unsigned char* chunk);
-
-//********************************************************
-unsigned adler32(const unsigned char* data, unsigned len);
-
-//********************************************************
-typedef struct Hash {
-  int* head;             /*hash value to head circular pos - can be outdated if went around window*/
-  unsigned short* chain; /*circular pos to prev circular pos*/
-  int* val;              /*circular pos to hash value*/
-} Hash;
-
-static const size_t MAX_SUPPORTED_DEFLATE_LENGTH = 258;
-static const unsigned HASH_NUM_VALUES = 65536;
-static const unsigned HASH_BIT_MASK = 65535; /*HASH_NUM_VALUES - 1, but C90 does not like that as initializer*/
-unsigned hash_init(Hash* hash, unsigned windowsize);
-
-void hash_cleanup(Hash* hash);
-
-unsigned getHash(const unsigned char* data, size_t size, size_t pos);
-
-void updateHashChain(Hash* hash, size_t wpos, unsigned hashval);
-
-//********************************************************
-typedef struct {
-  ucvector* data;
-  unsigned char bp; /*ok to overflow, indicates bit pos inside byte*/
-} LodePNGBitWriter;
-
-void LodePNGBitWriter_init(LodePNGBitWriter* writer, ucvector* data);
-
-#define WRITEBIT(writer, bit){\
-  /* append new byte */\
-  if(((writer->bp) & 7u) == 0) {\
-    ucvector_resize(writer->data, writer->data->size + 1);\
-    writer->data->data[writer->data->size - 1] = 0;\
-  }\
-  (writer->data->data[writer->data->size - 1]) |= (bit << ((writer->bp) & 7u));\
-  ++writer->bp;\
-}
-
-/* LSB of value is written first, and LSB of bytes is used first */
-void writeBits(LodePNGBitWriter* writer, unsigned value, size_t nbits);
-
-/* This one is to use for adding huffman symbol, the value bits are written MSB first */
-void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t nbits);
-
-//********************************************************
-typedef struct HuffmanTree {
-  unsigned* codes;    /*the huffman codes (bit patterns representing the symbols)*/
-  unsigned* lengths;  /*the lengths of the huffman codes*/
-  unsigned maxbitlen; /*maximum number of bits a single code can get*/
-  unsigned numcodes;  /*number of symbols in the alphabet = number of codes*/
-} HuffmanTree;
-
-void HuffmanTree_init(HuffmanTree* tree);
-
-void HuffmanTree_cleanup(HuffmanTree* tree);
-
-/*256 literals, the end code, some length codes, and 2 unused codes*/
-#define NUM_DEFLATE_CODE_SYMBOLS 288
-/*the distance codes have their own symbols, 30 used, 2 unused*/
-#define NUM_DISTANCE_SYMBOLS 32
-
-unsigned HuffmanTree_makeFromLengths(HuffmanTree* tree, const unsigned* bitlen, size_t numcodes, unsigned maxbitlen);
-
-/*get the literal and length code tree of a deflated block with fixed tree, as per the deflate specification*/
-unsigned generateFixedLitLenTree(HuffmanTree* tree);
-
-/*get the distance code tree of a deflated block with fixed tree, as specified in the deflate specification*/
-unsigned generateFixedDistanceTree(HuffmanTree* tree);
-
-//********************************************************
-#define FIRST_LENGTH_CODE_INDEX 257
-/*the base lengths represented by codes 257-285*/
-static const unsigned LENGTHBASE[29]
-  = {3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59,
-     67, 83, 99, 115, 131, 163, 195, 227, 258};
-/*the base backwards distances (the bits of distance codes appear after length codes and use their own huffman tree)*/
-static const unsigned DISTANCEBASE[30]
-  = {1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513,
-     769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577};
-/*the extra bits used by codes 257-285 (added to base length)*/
-static const unsigned LENGTHEXTRA[29]
-  = {0, 0, 0, 0, 0, 0, 0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  3,  3,  3,  3,
-      4,  4,  4,   4,   5,   5,   5,   5,   0};
-/*the extra bits of backwards distances (added to base)*/
-static const unsigned DISTANCEEXTRA[30]
-  = {0, 0, 0, 0, 1, 1, 2,  2,  3,  3,  4,  4,  5,  5,   6,   6,   7,   7,   8,
-       8,    9,    9,   10,   10,   11,   11,   12,    12,    13,    13};
-
-/*search the index in the array, that has the largest value smaller than or equal to the given value,
-given array must be sorted (if no value is smaller, it returns the size of the given array)*/
-size_t searchCodeIndex(const unsigned* array, size_t array_size, size_t value);
-
-void addLengthDistance(uivector* values, size_t length, size_t distance);
-
-/*write the lz77-encoded data, which has lit, len and dist codes, to compressed stream using huffman trees.*/
-void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded, const HuffmanTree* tree_ll, const HuffmanTree* tree_d);
 
 //********************************************************
 unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv);
