@@ -48,37 +48,3 @@ unsigned ucvector_resize(ucvector* p, size_t size) {
   p->size = size;
   return 1; /*success*/
 }
-
-//********************************************************
-unsigned lodepng_chunk_init(unsigned char** chunk, ucvector* out, unsigned length, const char* type)
-{
-  size_t pos = out->size;
-  ucvector_resize(out, out->size + (4 + 4 + length + 4));
-  *chunk = out->data + pos;
-
-  /*1: length*/
-  lodepng_set32bitInt(*chunk, length);
-  /*2: chunk name (4 letters)*/
-  lodepng_memcpy(*chunk + 4, type, 4);
-
-  return 0;
-}
-
-/*Return the CRC of the bytes buf[0..len-1].*/
-unsigned lodepng_crc32(const unsigned char* data, size_t length)
-{
-  unsigned r = 0xffffffffu;
-  size_t i;
-  for(i = 0; i < length; ++i) {
-    r = lodepng_crc32_table[(r ^ data[i]) & 0xffu] ^ (r >> 8u);
-  }
-  return r ^ 0xffffffffu;
-}
-
-void lodepng_chunk_generate_crc(unsigned char* chunk)
-{
-  unsigned length = lodepng_read32bitInt(&chunk[0]);
-
-  unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
-  lodepng_set32bitInt(chunk + 8 + length, CRC);
-}
