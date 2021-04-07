@@ -93,8 +93,6 @@ typedef struct LodePNGState {
 } LodePNGState;
 
 //********************************************************
-unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
-
 void lodepng_memcpy(void* __restrict dst, const void* __restrict src, size_t size);
 
 void lodepng_set32bitInt(unsigned char* buffer, unsigned value);
@@ -114,6 +112,7 @@ ucvector ucvector_init(unsigned char* buffer, size_t size);
 unsigned ucvector_resize(ucvector* p, size_t size);
 
 //********************************************************
+unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
 unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv);
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
