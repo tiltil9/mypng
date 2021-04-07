@@ -1,6 +1,5 @@
 #!/bin/bash
 g++ ../src/mypng.cpp        \
-    ../src/mypng_temp.cpp   \
     ../src/mypng_parse.cpp  \
     ../src/mypng_chunk.cpp  \
     ../src/mypng_filter.cpp \
