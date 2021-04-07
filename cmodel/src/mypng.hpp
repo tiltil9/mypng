@@ -162,10 +162,6 @@ unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, 
 unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, int argc, char **argv);
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
-void preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
-void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
-void filterScanline(unsigned char* out, const unsigned char* scanline, const unsigned char* prevline, size_t length, size_t bytewidth, unsigned char filterType);
-unsigned char paethPredictor(short a, short b, short c);
 void writeSignature(ucvector* out);
 void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method);
 void addChunk_IEND(ucvector* out);
