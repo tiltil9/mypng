@@ -1,5 +1,10 @@
 #!/bin/bash
-g++ ../src/mypng.cpp -o mypng
+g++ ../src/mypng.cpp        \
+    ../src/mypng_temp.cpp   \
+    ../src/mypng_parse.cpp  \
+    ../src/mypng_chunk.cpp  \
+    ../src/mypng_filter.cpp \
+    ../src/mypng_deflate.cpp -o mypng
 
 # set const
 LIST_FILE=(
