@@ -28,6 +28,9 @@
 //                         usezeros = 0;
 //
 //
+#ifndef __MY_PNG_HPP__
+#define __MY_PNG_HPP__
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -99,19 +102,19 @@ unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const
   return 0;
 }
 
-static void lodepng_memcpy(void* __restrict dst, const void* __restrict src, size_t size) {
+void lodepng_memcpy(void* __restrict dst, const void* __restrict src, size_t size) {
   size_t i;
   for(i = 0; i < size; i++) ((char*)dst)[i] = ((const char*)src)[i];
 }
 
-static void lodepng_set32bitInt(unsigned char* buffer, unsigned value) {
+void lodepng_set32bitInt(unsigned char* buffer, unsigned value) {
   buffer[0] = (unsigned char)((value >> 24) & 0xff);
   buffer[1] = (unsigned char)((value >> 16) & 0xff);
   buffer[2] = (unsigned char)((value >>  8) & 0xff);
   buffer[3] = (unsigned char)((value      ) & 0xff);
 }
 
-static unsigned lodepng_read32bitInt(const unsigned char* buffer) {
+unsigned lodepng_read32bitInt(const unsigned char* buffer) {
   return (((unsigned)buffer[0] << 24u) | ((unsigned)buffer[1] << 16u) |
          ((unsigned)buffer[2] << 8u) | (unsigned)buffer[3]);
 }
@@ -124,14 +127,14 @@ typedef struct ucvector {
   size_t allocsize; /*allocated size*/
 } ucvector;
 
-static ucvector ucvector_init(unsigned char* buffer, size_t size) {
+ucvector ucvector_init(unsigned char* buffer, size_t size) {
   ucvector v;
   v.data = buffer;
   v.allocsize = v.size = size;
   return v;
 }
 
-static unsigned ucvector_resize(ucvector* p, size_t size) {
+unsigned ucvector_resize(ucvector* p, size_t size) {
   if(size > p->allocsize) {
     size_t newsize = size + (p->allocsize >> 1u); // a little larger than size
     void* data = realloc(p->data, newsize);
@@ -152,18 +155,18 @@ typedef struct uivector {
   size_t allocsize; /*allocated size in bytes*/
 } uivector;
 
-static void uivector_init(uivector* p) {
+void uivector_init(uivector* p) {
   p->data = NULL;
   p->size = p->allocsize = 0;
 }
 
-static void uivector_cleanup(void* p) {
+void uivector_cleanup(void* p) {
   ((uivector*)p)->size = ((uivector*)p)->allocsize = 0;
   free(((uivector*)p)->data);
   ((uivector*)p)->data = NULL;
 }
 
-static unsigned uivector_resize(uivector* p, size_t size)
+unsigned uivector_resize(uivector* p, size_t size)
 {
   size_t allocsize = size * sizeof(unsigned);
   if(allocsize > p->allocsize) {
@@ -179,7 +182,7 @@ static unsigned uivector_resize(uivector* p, size_t size)
   return 1; /*success*/
 }
 
-static unsigned uivector_push_back(uivector* p, unsigned c)
+unsigned uivector_push_back(uivector* p, unsigned c)
 {
   uivector_resize(p, p->size + 1);
   p->data[p->size - 1] = c;
@@ -187,7 +190,7 @@ static unsigned uivector_push_back(uivector* p, unsigned c)
 }
 
 //********************************************************
-static unsigned lodepng_chunk_init(unsigned char** chunk, ucvector* out, unsigned length, const char* type)
+unsigned lodepng_chunk_init(unsigned char** chunk, ucvector* out, unsigned length, const char* type)
 {
   size_t pos = out->size;
   ucvector_resize(out, out->size + (4 + 4 + length + 4));
@@ -257,7 +260,7 @@ void lodepng_chunk_generate_crc(unsigned char* chunk)
 }
 
 //********************************************************
-static unsigned adler32(const unsigned char* data, unsigned len)
+unsigned adler32(const unsigned char* data, unsigned len)
 {
   unsigned adler = 1u;
   unsigned s1 = adler & 0xffffu;
@@ -288,7 +291,7 @@ typedef struct Hash {
 static const size_t MAX_SUPPORTED_DEFLATE_LENGTH = 258;
 static const unsigned HASH_NUM_VALUES = 65536;
 static const unsigned HASH_BIT_MASK = 65535; /*HASH_NUM_VALUES - 1, but C90 does not like that as initializer*/
-static unsigned hash_init(Hash* hash, unsigned windowsize)
+unsigned hash_init(Hash* hash, unsigned windowsize)
 {
   hash->head = (int*)malloc(sizeof(int) * HASH_NUM_VALUES);
   hash->chain = (unsigned short*)malloc(sizeof(unsigned short) * windowsize);
@@ -302,14 +305,14 @@ static unsigned hash_init(Hash* hash, unsigned windowsize)
   return 0;
 }
 
-static void hash_cleanup(Hash* hash)
+void hash_cleanup(Hash* hash)
 {
   free(hash->head);
   free(hash->val);
   free(hash->chain);
 }
 
-static unsigned getHash(const unsigned char* data, size_t size, size_t pos)
+unsigned getHash(const unsigned char* data, size_t size, size_t pos)
 {
   unsigned result = 0;
   if(pos + 2 < size) {
@@ -325,7 +328,7 @@ static unsigned getHash(const unsigned char* data, size_t size, size_t pos)
   return result & HASH_BIT_MASK;
 }
 
-static void updateHashChain(Hash* hash, size_t wpos, unsigned hashval)
+void updateHashChain(Hash* hash, size_t wpos, unsigned hashval)
 {
   hash->val[wpos] = (int)hashval;
   if(hash->head[hashval] != -1) hash->chain[wpos] = hash->head[hashval];
@@ -338,7 +341,7 @@ typedef struct {
   unsigned char bp; /*ok to overflow, indicates bit pos inside byte*/
 } LodePNGBitWriter;
 
-static void LodePNGBitWriter_init(LodePNGBitWriter* writer, ucvector* data)
+void LodePNGBitWriter_init(LodePNGBitWriter* writer, ucvector* data)
 {
   writer->data = data;
   writer->bp = 0;
@@ -355,7 +358,7 @@ static void LodePNGBitWriter_init(LodePNGBitWriter* writer, ucvector* data)
 }
 
 /* LSB of value is written first, and LSB of bytes is used first */
-static void writeBits(LodePNGBitWriter* writer, unsigned value, size_t nbits)
+void writeBits(LodePNGBitWriter* writer, unsigned value, size_t nbits)
 {
   if(nbits == 1) { /* compiler should statically compile this case if nbits == 1 */
     WRITEBIT(writer, value);
@@ -368,7 +371,7 @@ static void writeBits(LodePNGBitWriter* writer, unsigned value, size_t nbits)
 }
 
 /* This one is to use for adding huffman symbol, the value bits are written MSB first */
-static void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t nbits)
+void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t nbits)
 {
   for(size_t i = 0; i != nbits; ++i) {
     WRITEBIT(writer, (unsigned char)((value >> (nbits - 1u - i)) & 1u));
@@ -383,13 +386,13 @@ typedef struct HuffmanTree {
   unsigned numcodes;  /*number of symbols in the alphabet = number of codes*/
 } HuffmanTree;
 
-static void HuffmanTree_init(HuffmanTree* tree)
+void HuffmanTree_init(HuffmanTree* tree)
 {
   tree->codes = 0;
   tree->lengths = 0;
 }
 
-static void HuffmanTree_cleanup(HuffmanTree* tree)
+void HuffmanTree_cleanup(HuffmanTree* tree)
 {
   free(tree->codes);
   free(tree->lengths);
@@ -400,7 +403,7 @@ static void HuffmanTree_cleanup(HuffmanTree* tree)
 /*the distance codes have their own symbols, 30 used, 2 unused*/
 #define NUM_DISTANCE_SYMBOLS 32
 
-static unsigned HuffmanTree_makeFromLengths(HuffmanTree* tree, const unsigned* bitlen, size_t numcodes, unsigned maxbitlen)
+unsigned HuffmanTree_makeFromLengths(HuffmanTree* tree, const unsigned* bitlen, size_t numcodes, unsigned maxbitlen)
 {
   tree->lengths = (unsigned*)malloc(numcodes * sizeof(unsigned));
   for(unsigned i = 0; i != numcodes; ++i) tree->lengths[i] = bitlen[i];
@@ -438,7 +441,7 @@ static unsigned HuffmanTree_makeFromLengths(HuffmanTree* tree, const unsigned* b
 }
 
 /*get the literal and length code tree of a deflated block with fixed tree, as per the deflate specification*/
-static unsigned generateFixedLitLenTree(HuffmanTree* tree)
+unsigned generateFixedLitLenTree(HuffmanTree* tree)
 {
   unsigned* bitlen = (unsigned*)malloc(NUM_DEFLATE_CODE_SYMBOLS * sizeof(unsigned));
 
@@ -455,7 +458,7 @@ static unsigned generateFixedLitLenTree(HuffmanTree* tree)
 }
 
 /*get the distance code tree of a deflated block with fixed tree, as specified in the deflate specification*/
-static unsigned generateFixedDistanceTree(HuffmanTree* tree)
+unsigned generateFixedDistanceTree(HuffmanTree* tree)
 {
   unsigned* bitlen = (unsigned*)malloc(NUM_DISTANCE_SYMBOLS * sizeof(unsigned));
 
@@ -488,7 +491,7 @@ static const unsigned DISTANCEEXTRA[30]
 
 /*search the index in the array, that has the largest value smaller than or equal to the given value,
 given array must be sorted (if no value is smaller, it returns the size of the given array)*/
-static size_t searchCodeIndex(const unsigned* array, size_t array_size, size_t value) {
+size_t searchCodeIndex(const unsigned* array, size_t array_size, size_t value) {
   /*binary search (only small gain over linear). TODO: use CPU log2 instruction for getting symbols instead*/
   size_t left = 1;
   size_t right = array_size - 1;
@@ -502,7 +505,7 @@ static size_t searchCodeIndex(const unsigned* array, size_t array_size, size_t v
   return left;
 }
 
-static void addLengthDistance(uivector* values, size_t length, size_t distance) {
+void addLengthDistance(uivector* values, size_t length, size_t distance) {
   unsigned length_code = (unsigned)searchCodeIndex(LENGTHBASE, 29, length);
   unsigned extra_length = (unsigned)(length - LENGTHBASE[length_code]);
   unsigned dist_code = (unsigned)searchCodeIndex(DISTANCEBASE, 30, distance);
@@ -517,7 +520,7 @@ static void addLengthDistance(uivector* values, size_t length, size_t distance) 
 }
 
 /*write the lz77-encoded data, which has lit, len and dist codes, to compressed stream using huffman trees.*/
-static void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded, const HuffmanTree* tree_ll, const HuffmanTree* tree_d)
+void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded, const HuffmanTree* tree_ll, const HuffmanTree* tree_d)
 {
   for(size_t i = 0; i != lz77_encoded->size; ++i) {
     unsigned val = lz77_encoded->data[i];
@@ -592,3 +595,5 @@ void encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos
 //
 //  return 0;
 //}
+
+#endif /*__MY_PNG_HPP__*/
