@@ -115,7 +115,6 @@ unsigned ucvector_resize(ucvector* p, size_t size);
 
 //********************************************************
 unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv);
-unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, int argc, char **argv);
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 void writeSignature(ucvector* out);
