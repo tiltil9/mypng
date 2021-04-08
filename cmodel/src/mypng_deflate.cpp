@@ -274,7 +274,7 @@ void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded, const
   }
 }
 
-//*** CORE  ********************************************************************
+//*** CORE *********************************************************************
 unsigned adler32(const unsigned char* data, unsigned len)
 {
   unsigned adler = 1u;
