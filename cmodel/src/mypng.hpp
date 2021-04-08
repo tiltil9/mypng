@@ -140,6 +140,45 @@ static unsigned ucvector_resize(ucvector* p, size_t size) {
   return 1; /*success*/
 }
 
+/*dynamic vector of unsigned ints*/
+typedef struct uivector {
+  unsigned* data;
+  size_t size;      /*size in number of unsigned longs*/
+  size_t allocsize; /*allocated size in bytes*/
+} uivector;
+
+static void uivector_init(uivector* p) {
+  p->data = NULL;
+  p->size = p->allocsize = 0;
+}
+
+static void uivector_cleanup(void* p) {
+  ((uivector*)p)->size = ((uivector*)p)->allocsize = 0;
+  free(((uivector*)p)->data);
+  ((uivector*)p)->data = NULL;
+}
+
+static unsigned uivector_resize(uivector* p, size_t size) {
+  size_t allocsize = size * sizeof(unsigned);
+  if(allocsize > p->allocsize) {
+    size_t newsize = allocsize + (p->allocsize >> 1u);
+    void* data = realloc(p->data, newsize);
+    if(data) {
+      p->allocsize = newsize;
+      p->data = (unsigned*)data;
+    }
+    else return 0; /*error: not enough memory*/
+  }
+  p->size = size;
+  return 1; /*success*/
+}
+
+static unsigned uivector_push_back(uivector* p, unsigned c) {
+  uivector_resize(p, p->size + 1);
+  p->data[p->size - 1] = c;
+  return 1; /*success*/
+}
+
 //*** INTERFACE FUNCTION DECLARATION *******************************************
 unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
 unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv);

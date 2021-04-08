@@ -10,71 +10,7 @@
 ******************************************************************************/
 #include "mypng.hpp"
 
-//********************************************************
-/*dynamic vector of unsigned ints*/
-typedef struct uivector {
-  unsigned* data;
-  size_t size;      /*size in number of unsigned longs*/
-  size_t allocsize; /*allocated size in bytes*/
-} uivector;
-
-void uivector_init(uivector* p) {
-  p->data = NULL;
-  p->size = p->allocsize = 0;
-}
-
-void uivector_cleanup(void* p) {
-  ((uivector*)p)->size = ((uivector*)p)->allocsize = 0;
-  free(((uivector*)p)->data);
-  ((uivector*)p)->data = NULL;
-}
-
-unsigned uivector_resize(uivector* p, size_t size)
-{
-  size_t allocsize = size * sizeof(unsigned);
-  if(allocsize > p->allocsize) {
-    size_t newsize = allocsize + (p->allocsize >> 1u);
-    void* data = realloc(p->data, newsize);
-    if(data) {
-      p->allocsize = newsize;
-      p->data = (unsigned*)data;
-    }
-    else return 0; /*error: not enough memory*/
-  }
-  p->size = size;
-  return 1; /*success*/
-}
-
-unsigned uivector_push_back(uivector* p, unsigned c)
-{
-  uivector_resize(p, p->size + 1);
-  p->data[p->size - 1] = c;
-  return 1; /*success*/
-}
-
-//********************************************************
-unsigned adler32(const unsigned char* data, unsigned len)
-{
-  unsigned adler = 1u;
-  unsigned s1 = adler & 0xffffu;
-  unsigned s2 = (adler >> 16u) & 0xffffu;
-
-  while(len != 0u) {
-    /*at least 5552 sums can be done before the sums overflow, saving a lot of module divisions*/
-    unsigned amount = len > 5552u ? 5552u : len;
-    len -= amount;
-    for(unsigned i = 0; i != amount; ++i) {
-      s1 += (*data++);
-      s2 += s1;
-    }
-    s1 %= 65521u;
-    s2 %= 65521u;
-  }
-
-  return (s2 << 16u) | s1;
-}
-
-//********************************************************
+//*** HASH *********************************************************************
 typedef struct Hash {
   int* head;             /*hash value to head circular pos - can be outdated if went around window*/
   unsigned short* chain; /*circular pos to prev circular pos*/
@@ -129,7 +65,7 @@ void updateHashChain(Hash* hash, size_t wpos, unsigned hashval)
   hash->head[hashval] = (int)wpos;
 }
 
-//********************************************************
+//*** BIT WRTIER ***************************************************************
 typedef struct {
   ucvector* data;
   unsigned char bp; /*ok to overflow, indicates bit pos inside byte*/
@@ -172,7 +108,7 @@ void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t nbits)
   }
 }
 
-//********************************************************
+//*** HUFFMAN TREE *************************************************************
 typedef struct HuffmanTree {
   unsigned* codes;    /*the huffman codes (bit patterns representing the symbols)*/
   unsigned* lengths;  /*the lengths of the huffman codes*/
@@ -264,7 +200,7 @@ unsigned generateFixedDistanceTree(HuffmanTree* tree)
   return 0;
 }
 
-//********************************************************
+//*** LZ77 TOOL ****************************************************************
 #define FIRST_LENGTH_CODE_INDEX 257
 /*the base lengths represented by codes 257-285*/
 static const unsigned LENGTHBASE[29]
@@ -338,8 +274,27 @@ void writeLZ77data(LodePNGBitWriter* writer, const uivector* lz77_encoded, const
   }
 }
 
-//********************************************************
+//*** CORE  ********************************************************************
+unsigned adler32(const unsigned char* data, unsigned len)
+{
+  unsigned adler = 1u;
+  unsigned s1 = adler & 0xffffu;
+  unsigned s2 = (adler >> 16u) & 0xffffu;
 
+  while(len != 0u) {
+    /*at least 5552 sums can be done before the sums overflow, saving a lot of module divisions*/
+    unsigned amount = len > 5552u ? 5552u : len;
+    len -= amount;
+    for(unsigned i = 0; i != amount; ++i) {
+      s1 += (*data++);
+      s2 += s1;
+    }
+    s1 %= 65521u;
+    s2 %= 65521u;
+  }
+
+  return (s2 << 16u) | s1;
+}
 
 /*The input are raw bytes, the output is in the form of unsigned integers
 with codes representing for example literal bytes, or length/distance pairs.
