@@ -65,7 +65,7 @@ void updateHashChain(Hash* hash, size_t wpos, unsigned hashval)
   hash->head[hashval] = (int)wpos;
 }
 
-//*** BIT WRTIER ***************************************************************
+//*** BIT WRITER ***************************************************************
 typedef struct {
   ucvector* data;
   unsigned char bp; /*ok to overflow, indicates bit pos inside byte*/

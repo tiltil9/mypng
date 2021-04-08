@@ -180,14 +180,17 @@ static unsigned uivector_push_back(uivector* p, unsigned c) {
 }
 
 //*** INTERFACE FUNCTION DECLARATION *******************************************
-unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
+// main interface function
 unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv);
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
+unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
+// encode interface function
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 void writeSignature(ucvector* out);
 void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method);
 void addChunk_IEND(ucvector* out);
 void addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings);
+// deflate interface function
 void lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);
 
 //*** BACKUP *******************************************************************

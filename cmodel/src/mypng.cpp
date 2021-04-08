@@ -10,26 +10,6 @@
 ******************************************************************************/
 #include "mypng.hpp"
 
-int main(int argc, char **argv)
-{
-  unsigned char* image;
-  LodePNGState state;
-  lodepng_setstate(&state, &image, argc, argv);
-
-  /*Encode the image*/
-  unsigned char* buffer;
-  size_t buffersize;
-  lodepng_encode(&buffer, &buffersize, image, &state);
-
-  string png_path = "./pic_png/";
-  string png_file = png_path  + argv[1] + ".png";
-  lodepng_save_file(buffer, buffersize, png_file.c_str());
-
-  free(buffer);
-  free(image);
-  return 0;
-}
-
 /*The input are setted state and image, the output are full PNG stream and its size*/
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state)
 {
@@ -59,4 +39,25 @@ void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* i
   /*instead of cleaning the vector up, give it to the output*/
   *out = outv.data;
   *outsize = outv.size;
+}
+
+//*** MAIN *********************************************************************
+int main(int argc, char **argv)
+{
+  unsigned char* image;
+  LodePNGState state;
+  lodepng_setstate(&state, &image, argc, argv);
+
+  /*Encode the image*/
+  unsigned char* buffer;
+  size_t buffersize;
+  lodepng_encode(&buffer, &buffersize, image, &state);
+
+  string png_path = "./pic_png/";
+  string png_file = png_path  + argv[1] + ".png";
+  lodepng_save_file(buffer, buffersize, png_file.c_str());
+
+  free(buffer);
+  free(image);
+  return 0;
 }
