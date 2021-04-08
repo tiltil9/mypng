@@ -10,8 +10,16 @@
 ******************************************************************************/
 #include "mypng.hpp"
 
-//********************************************************
-
+//*** CORE *********************************************************************
+unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename)
+{
+  FILE* file;
+  file = fopen(filename, "wb" );
+  if(!file) return 79;
+  fwrite(buffer, 1, buffersize, file);
+  fclose(file);
+  return 0;
+}
 
 unsigned lodepng_setstate_32bitRGBA(LodePNGState* state, unsigned char** image, int argc, char **argv)
 {
