@@ -10,7 +10,7 @@
 ******************************************************************************/
 #include "mypng.hpp"
 
-//********************************************************
+//*** CHUNK TOOL ***************************************************************
 unsigned lodepng_chunk_init(unsigned char** chunk, ucvector* out, unsigned length, const char* type)
 {
   size_t pos = out->size;
@@ -80,9 +80,7 @@ void lodepng_chunk_generate_crc(unsigned char* chunk)
   lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
-//********************************************************
-
-
+//*** CORE *********************************************************************
 void writeSignature(ucvector* out)
 {
   size_t pos = out->size;
