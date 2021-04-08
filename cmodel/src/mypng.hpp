@@ -39,6 +39,7 @@
 
 using namespace std;
 
+//*** ENUM AND STRUCT **********************************************************
 typedef enum LodePNGColorType {
   //LCT_GREY = 0,
   //LCT_RGB = 2,
@@ -92,7 +93,7 @@ typedef struct LodePNGState {
   LodePNGInfo info_png;           /*info of the PNG image obtained after decoding*/
 } LodePNGState;
 
-//********************************************************
+//*** COMMON TOOL **************************************************************
 static void lodepng_memcpy(void* __restrict dst, const void* __restrict src, size_t size) {
   size_t i;
   for(i = 0; i < size; i++) ((char*)dst)[i] = ((const char*)src)[i];
@@ -110,7 +111,7 @@ static unsigned lodepng_read32bitInt(const unsigned char* buffer) {
          ((unsigned)buffer[2] << 8u) | (unsigned)buffer[3]);
 }
 
-//********************************************************
+//*** DYNAMIC VECTOR ***********************************************************
 /*dynamic vector of unsigned chars*/
 typedef struct ucvector {
   unsigned char* data;
@@ -139,7 +140,7 @@ static unsigned ucvector_resize(ucvector* p, size_t size) {
   return 1; /*success*/
 }
 
-//********************************************************
+//*** INTERFACE FUNCTION DECLARATION *******************************************
 unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
 unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv);
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
@@ -150,7 +151,7 @@ void addChunk_IEND(ucvector* out);
 void addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings);
 void lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);
 
-//********************************************************
+//*** BACKUP *******************************************************************
 //static unsigned deflateNoCompression(ucvector* out, const unsigned char* data, size_t datasize) {
 //  /*non compressed deflate block data: 1 bit BFINAL,2 bits BTYPE,(5 bits): it jumps to start of next byte,
 //  2 bytes LEN, 2 bytes NLEN, LEN bytes literal DATA*/
