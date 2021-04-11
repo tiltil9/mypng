@@ -24,6 +24,7 @@ void cfgHelp()
   cout << "--windowsize         / -s   sliding window size for lz77                                     " << endl;
   cout << "--minmatch           / -m   minimal match size / length for lz77                             " << endl;
   cout << "--nicematch          / -n   nice match size for lz77; stop searching if >= this length found " << endl;
+  cout << "--btype              / -b   the block type for lz77                                          " << endl;
 }
 
 
@@ -36,6 +37,7 @@ void cfgInit(cfg_t *cfg)
   cfg->windowsize   = 2048;
   cfg->minmatch     = 3;
   cfg->nicematch    = 128;
+  cfg->btype        = 1;
 }
 
 void cfgMap(cfg_t *cfg, string datKey, string datCfg)
@@ -45,13 +47,14 @@ void cfgMap(cfg_t *cfg, string datKey, string datCfg)
   int datCfgInt = atoi(datCfgStr);
 
   // mapping
-  if      (datKey == "--input_file " || datKey == "-i") cfg->input_file  = datCfgStr;
+  if      (datKey == "--input_file"  || datKey == "-i") cfg->input_file  = datCfgStr;
   else if (datKey == "--output_file" || datKey == "-o") cfg->output_file = datCfgStr;
-  else if (datKey == "--width      " || datKey == "-w") cfg->width       = datCfgInt;
-  else if (datKey == "--height     " || datKey == "-h") cfg->height      = datCfgInt;
-  else if (datKey == "--windowsize " || datKey == "-s") cfg->windowsize  = datCfgInt;
-  else if (datKey == "--minmatch   " || datKey == "-m") cfg->minmatch    = datCfgInt;
-  else if (datKey == "--nicematch  " || datKey == "-n") cfg->nicematch   = datCfgInt;
+  else if (datKey == "--width"       || datKey == "-w") cfg->width       = datCfgInt;
+  else if (datKey == "--height"      || datKey == "-h") cfg->height      = datCfgInt;
+  else if (datKey == "--windowsize"  || datKey == "-s") cfg->windowsize  = datCfgInt;
+  else if (datKey == "--minmatch"    || datKey == "-m") cfg->minmatch    = datCfgInt;
+  else if (datKey == "--nicematch"   || datKey == "-n") cfg->nicematch   = datCfgInt;
+  else if (datKey == "--btype"       || datKey == "-b") cfg->btype       = datCfgInt;
 }
 
 unsigned cfgSetFromFile(cfg_t *cfg, int argc, char **argv)
@@ -59,8 +62,9 @@ unsigned cfgSetFromFile(cfg_t *cfg, int argc, char **argv)
   // get config file
   bool flgFile = 0;
   string fileCfg;
-  for (int i = 0; i < argc; i++) {
-    if (argv[i] == "--configuration_file" || argv[i] == "-c"){
+  for (int i = 1; i < argc; i++) {
+    string datKey = argv[i];
+    if (datKey == "--configuration_file" || datKey == "-c"){
       flgFile = 1;
       fileCfg = argv[i+1];
       break;
@@ -122,8 +126,12 @@ unsigned cfgChk(cfg_t *cfg)
     cout << "ERROR: minmatch should with [3, 258]" << endl;
     return 1;
   }
-  if (cfg->nicematch < 1 || cfg->nicematch > 258){
+  if (cfg->nicematch < 3 || cfg->nicematch > 258){
     cout << "ERROR: nicematch should with [3, 258]" << endl;
+    return 1;
+  }
+  if (cfg->btype < 0 || cfg->btype > 1){
+    cout << "ERROR: btype should with [0, 1]" << endl;
     return 1;
   }
 
@@ -168,11 +176,10 @@ unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const
 }
 
 
-
 void lodepng_setstate_32bitRGBA(cfg_t* cfg, LodePNGState* state)
 {
   // init encoding settings
-  state->encoder.zlibsettings.btype = 1;         // unchangeable
+  state->encoder.zlibsettings.btype = 1;         // changeable
   state->encoder.zlibsettings.windowsize = 2048; // changeable
   state->encoder.zlibsettings.minmatch = 3;      // changeable
   state->encoder.zlibsettings.nicematch = 128;   // changeable
@@ -194,6 +201,7 @@ void lodepng_setstate_32bitRGBA(cfg_t* cfg, LodePNGState* state)
   state->encoder.zlibsettings.nicematch  = cfg->nicematch; 
   state->info_png.width                  = cfg->width;
   state->info_png.height                 = cfg->height;
+  state->encoder.zlibsettings.btype      = cfg->btype;
 }
 
 /*The input are command line arguments, the output are setted state and image*/

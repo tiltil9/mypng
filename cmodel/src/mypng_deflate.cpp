@@ -430,50 +430,52 @@ void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned 
   *outsize = vout.size;
 }
 
-///*The input are raw bytes, the output is no-compressed data*/
-//void lodepng_deflate_nocompression(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
-//{
-//  //zlibsettings->btype = 0;
-//  /*non compressed deflate block data: 1 bit BFINAL,2 bits BTYPE,(5 bits): it jumps to start of next byte, 2 bytes LEN, 2 bytes NLEN, LEN bytes literal DATA*/
-//  ucvector vout = ucvector_init(*out, *outsize);
-//
-//  size_t numdeflateblocks = (insize + 65534u) / 65535u;
-//  unsigned datapos = 0;
-//
-//  for(size_t i = 0; i != numdeflateblocks; ++i) {
-//    unsigned BFINAL, BTYPE, LEN, NLEN;
-//    unsigned char firstbyte;
-//    size_t pos = vout.size;
-//
-//    BFINAL = (i == numdeflateblocks - 1);
-//    BTYPE = 0;
-//
-//    LEN = 65535;
-//    if(insize - datapos < 65535u) LEN = (unsigned)insize - datapos;
-//    NLEN = 65535 - LEN;
-//
-//    ucvector_resize(&vout, vout.size + LEN + 5);
-//
-//    firstbyte = (unsigned char)(BFINAL + ((BTYPE & 1u) << 1u) + ((BTYPE & 2u) << 1u));
-//    vout.data[pos + 0] = firstbyte;
-//    vout.data[pos + 1] = (unsigned char)(LEN & 255);
-//    vout.data[pos + 2] = (unsigned char)(LEN >> 8u);
-//    vout.data[pos + 3] = (unsigned char)(NLEN & 255);
-//    vout.data[pos + 4] = (unsigned char)(NLEN >> 8u);
-//    lodepng_memcpy(vout.data + pos + 5, in + datapos, LEN);
-//
-//    datapos += LEN;
-//  }
-//
-//  *out = vout.data;
-//  *outsize = vout.size;
-//}
+/*The input are raw bytes, the output is no-compressed data*/
+void lodepng_deflate_nocompression(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+{
+  //zlibsettings->btype = 0;
+  /*non compressed deflate block data: 1 bit BFINAL,2 bits BTYPE,(5 bits): it jumps to start of next byte, 2 bytes LEN, 2 bytes NLEN, LEN bytes literal DATA*/
+  ucvector vout = ucvector_init(*out, *outsize);
+
+  size_t numdeflateblocks = (insize + 65534u) / 65535u;
+  unsigned datapos = 0;
+
+  for(size_t i = 0; i != numdeflateblocks; ++i) {
+    unsigned BFINAL, BTYPE, LEN, NLEN;
+    unsigned char firstbyte;
+    size_t pos = vout.size;
+
+    BFINAL = (i == numdeflateblocks - 1);
+    BTYPE = 0;
+
+    LEN = 65535;
+    if(insize - datapos < 65535u) LEN = (unsigned)insize - datapos;
+    NLEN = 65535 - LEN;
+
+    ucvector_resize(&vout, vout.size + LEN + 5);
+
+    firstbyte = (unsigned char)(BFINAL + ((BTYPE & 1u) << 1u) + ((BTYPE & 2u) << 1u));
+    vout.data[pos + 0] = firstbyte;
+    vout.data[pos + 1] = (unsigned char)(LEN & 255);
+    vout.data[pos + 2] = (unsigned char)(LEN >> 8u);
+    vout.data[pos + 3] = (unsigned char)(NLEN & 255);
+    vout.data[pos + 4] = (unsigned char)(NLEN >> 8u);
+    lodepng_memcpy(vout.data + pos + 5, in + datapos, LEN);
+
+    datapos += LEN;
+  }
+
+  *out = vout.data;
+  *outsize = vout.size;
+}
 
 /*The input are raw bytes, the output is the stream of zlib compressed data blocks*/
 void lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
-  lodepng_deflate_fixed(out, outsize, in, insize, zlibsettings);
-  //lodepng_deflate_nocompression(out, outsize, in, insize, zlibsettings);
+  if(zlibsettings->btype == 1)
+    lodepng_deflate_fixed(out, outsize, in, insize, zlibsettings);
+  else
+    lodepng_deflate_nocompression(out, outsize, in, insize, zlibsettings);
 }
 
 /*The input are raw bytes, the output is the complete zlib stream*/

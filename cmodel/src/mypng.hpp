@@ -103,6 +103,7 @@ typedef struct cfg_t {
   unsigned windowsize;
   unsigned minmatch;
   unsigned nicematch;
+  unsigned btype;
 } cfg_t;
 
 //*** COMMON TOOL **************************************************************
