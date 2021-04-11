@@ -36,6 +36,8 @@
 #include <stdlib.h>
 #include <cstdlib>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -92,6 +94,16 @@ typedef struct LodePNGState {
   LodePNGEncoderSettings encoder; /*the encoding settings*/
   LodePNGInfo info_png;           /*info of the PNG image obtained after decoding*/
 } LodePNGState;
+
+typedef struct cfg_t {
+  string   input_file;
+  string   output_file;
+  unsigned width;
+  unsigned height;
+  unsigned windowsize;
+  unsigned minmatch;
+  unsigned nicematch;
+} cfg_t;
 
 //*** COMMON TOOL **************************************************************
 static void lodepng_memcpy(void* __restrict dst, const void* __restrict src, size_t size) {
@@ -181,7 +193,8 @@ static unsigned uivector_push_back(uivector* p, unsigned c) {
 
 //*** INTERFACE FUNCTION DECLARATION *******************************************
 // main interface function
-unsigned lodepng_setstate(LodePNGState* state, unsigned char** image, int argc, char **argv);
+unsigned cfgSet(cfg_t* cfg, int argc, char **argv);
+void lodepng_setstate(cfg_t* cfg, LodePNGState* state);
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
 unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
 // encode interface function

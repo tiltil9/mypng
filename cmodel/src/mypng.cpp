@@ -44,18 +44,36 @@ void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* i
 //*** MAIN *********************************************************************
 int main(int argc, char **argv)
 {
-  unsigned char* image;
-  LodePNGState state;
-  lodepng_setstate(&state, &image, argc, argv);
+  // set config from config file or command line interface
+  cfg_t cfg;
+  if (cfgSet(&cfg, argc, argv))
+    return 1;
 
-  /*Encode the image*/
+  // set state from default and config
+  LodePNGState state;
+  lodepng_setstate(&cfg, &state);
+
+  // read RGBA
+  unsigned char* image = (unsigned char*)malloc(cfg.width * cfg.height * 4);
+  FILE *fpt = fopen(cfg.input_file.c_str(), "r");
+  char dat [10];
+  for(unsigned y = 0; y < cfg.height; y++) {
+    for(unsigned x = 0; x < cfg.width; x++) {
+      for(unsigned c = 0; c < 4; c++) {
+        fgets(dat, 10, fpt);
+        image[4 * cfg.width * y + 4 * x + c] = atoi(dat);
+      }
+    }
+  }
+  fclose(fpt); 
+
+  // encode RGBA into png
   unsigned char* buffer;
   size_t buffersize;
   lodepng_encode(&buffer, &buffersize, image, &state);
 
-  string png_path = "./pic_png/";
-  string png_file = png_path  + argv[1] + ".png";
-  lodepng_save_file(buffer, buffersize, png_file.c_str());
+  // write png
+  lodepng_save_file(buffer, buffersize, cfg.output_file.c_str());
 
   free(buffer);
   free(image);
