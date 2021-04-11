@@ -4,13 +4,11 @@ import sys
 import os
 import hashlib
 
-# png to rgba (width , height, r, g, b, a ...)
+# png to rgba (r, g, b, a ...)
 def png2rgba(png_file, rgba_file):
     r = png.Reader(filename=png_file)
     width, height, image_1d, info = r.read_flat()
     with open(rgba_file, "w") as fp:
-        fp.write(str(width)  + "\n")
-        fp.write(str(height) + "\n")
         for item in image_1d:
             fp.write("%3d\n" % item)
 
@@ -19,7 +17,7 @@ def getRgbaAnchor():
     path_src = 'pic_png_anchor/'
     path_dst = 'pic_rgba_anchor/'
 
-    # decode each png to rgba  & compare with anchor 
+    # decode each png to rgba 
     for i, filename_png in enumerate(os.listdir(path_src)):
         # get path for each png
         print(str(i) + "  processing : " + filename_png)
