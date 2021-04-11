@@ -94,8 +94,6 @@ void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, un
        not smaller than 8, then use adaptive filtering heuristic as follows: independently for each row, apply
        all five filters and select the filter that produces the smallest sum of absolute values per row.
     */
-    size_t smallest = 0; // TODO: check if these two stuffs should be moved into y-loop below
-    unsigned char bestType = 0;
 
     const unsigned char* prevline = 0;
     unsigned char* attempt[5]; /*five filtering attempts, one for each filter type*/
@@ -104,6 +102,8 @@ void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, un
     }
 
     for(unsigned y = 0; y != h; ++y) {
+    size_t smallest = 0;
+    unsigned char bestType = 0;
       for(unsigned char type = 0; type != 5; ++type) {
         filterScanline(attempt[type], &in[y * linebytes], prevline, linebytes, bytewidth, type);
 
