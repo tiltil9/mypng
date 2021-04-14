@@ -42,9 +42,24 @@ module crc32(
   reg    [CRC32_WD -1 :0] crc32_nrm_cur_r;
   reg    [CRC32_WD -1 :0] crc32_nrm_nxt_w;
 
+  // crc32 in reversed order
+  wire   [CRC32_WD -1 :0] crc32_rvs_cur_w;
+
   //*** MAIN BODY *************************************************************
 
-  assign din_nrm_w = dat_i;
+  // reversed order dat_i mapped to normal order din_nrm_w
+  assign din_nrm_w = {dat_i[0], dat_i[1], dat_i[2], dat_i[3], dat_i[4], dat_i[5], dat_i[6], dat_i[7]};
+
+  //
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      crc32_nrm_cur_r <= /*CRC32_WD*/32'hffff_ffff;
+    end
+    else if(val_i) begin
+      crc32_nrm_cur_r <= crc32_nrm_nxt_w;
+    end
+  end
+
   // crc32_nrm_nxt_w[31:0] calculated according to crc32_nrm_cur_r[31:0] and din_nrm_w[7:0]
   // ploy 0x04C11DB7
   // these codes are modified according to easics crc generation tool
@@ -83,16 +98,18 @@ module crc32(
     crc32_nrm_nxt_w[31] = crc32_nrm_cur_r[23] ^ crc32_nrm_cur_r[29] ^ din_nrm_w[5];
   end
 
-  always @(posedge clk or negedge rstn) begin
-    if (!rstn) begin
-      crc32_nrm_cur_r <= /*CRC32_WD*/32'hffff_ffff;
-    end
-    else if(val_i) begin
-      crc32_nrm_cur_r <= crc32_nrm_nxt_w;
-    end
-  end
+  // normal order crc32_nrm_cur_r mapped to reversed order crc32_rvs_cur_w
+  assign crc32_rvs_cur_w = {crc32_nrm_cur_r[ 0], crc32_nrm_cur_r[ 1], crc32_nrm_cur_r[ 2], crc32_nrm_cur_r[ 3],
+                            crc32_nrm_cur_r[ 4], crc32_nrm_cur_r[ 5], crc32_nrm_cur_r[ 6], crc32_nrm_cur_r[ 7],
+                            crc32_nrm_cur_r[ 8], crc32_nrm_cur_r[ 9], crc32_nrm_cur_r[10], crc32_nrm_cur_r[11],
+                            crc32_nrm_cur_r[12], crc32_nrm_cur_r[13], crc32_nrm_cur_r[14], crc32_nrm_cur_r[15],
+                            crc32_nrm_cur_r[16], crc32_nrm_cur_r[17], crc32_nrm_cur_r[18], crc32_nrm_cur_r[19],
+                            crc32_nrm_cur_r[20], crc32_nrm_cur_r[21], crc32_nrm_cur_r[22], crc32_nrm_cur_r[23],
+                            crc32_nrm_cur_r[24], crc32_nrm_cur_r[25], crc32_nrm_cur_r[26], crc32_nrm_cur_r[27],
+                            crc32_nrm_cur_r[28], crc32_nrm_cur_r[29], crc32_nrm_cur_r[30], crc32_nrm_cur_r[31] };
 
-  assign dat_o = crc32_nrm_cur_r;
+  // reversed order crc32_rvs_cur_w xor with 0xFFFFFFFF
+  assign dat_o = crc32_rvs_cur_w ^ /*CRC32_WD*/32'hffff_ffff;
 
 
 endmodule

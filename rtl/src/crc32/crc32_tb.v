@@ -40,14 +40,14 @@ begin
     val_i = 1'b1;
     #1 ;
 	repeat(1) @(posedge clk);
-    val_i = 1'b0; // 5d0cc968
+    val_i = 1'b0; // d56f2b94
     #1;
 	repeat(1) @(posedge clk);
     dat_i = 8'h9;
     val_i = 1'b1;
     #1 ;
 	repeat(1) @(posedge clk);
-    val_i = 1'b0; // 675ab5db
+    val_i = 1'b0; // 5c696f5f
 
 end
 
