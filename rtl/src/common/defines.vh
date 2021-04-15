@@ -12,6 +12,18 @@
 `timescale 1ns/1ns
 
 `define SIZE_PIC_X_MAX  'd2048
+`define SIZE_PIC_Y_MAX  'd2048
+`define SIZE_PIC_X_WD   `LOG2(SIZE_PIC_X_MAX)
+`define SIZE_PIC_Y_WD   `LOG2(SIZE_PIC_Y_MAX)
+
+`define DATA_PXL_WD     'd32
+
+`define FILTER_ENUM_WD 'd3
+  `define FILTER_ENUM_NONE  3'd0
+  `define FILTER_ENUM_SUB   3'd1
+  `define FILTER_ENUM_UP    3'd2
+  `define FILTER_ENUM_AVRG  3'd3
+  `define FILTER_ENUM_PAETH 3'd4
 
 
 `define LOG2(x)    ( ((x) <= ('d1<<'d01)) ? 'd01    \
