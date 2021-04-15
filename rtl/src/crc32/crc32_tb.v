@@ -23,7 +23,7 @@ module crc2_tb;
   reg                   rstn   ;
   reg                   start_i;
   reg                   val_i  ;
-  reg  [8       -1 :0]  dat_i  ; // temp
+  reg  [DATA_WD -1 :0]  dat_i  ;
   reg                   lst_i  ;
   wire                  done_o ;
   wire                  val_o  ;
@@ -65,18 +65,11 @@ crc32 dut(.clk    (clk    ),
     #(5 * `CLK_FULL); // !!! this delay is essential.
     #1;
     repeat(1) @(posedge clk);
-    dat_i = 8'h4;
+    dat_i = 32'h04090409; // must last at least four clock now
     val_i = 1'b1;
     #1 ;
     repeat(1) @(posedge clk);
-    val_i = 1'b0; // d56f2b94
-    #1;
-    repeat(1) @(posedge clk);
-    dat_i = 8'h9;
-    val_i = 1'b1;
-    #1 ;
-    repeat(1) @(posedge clk);
-    val_i = 1'b0; // 5c696f5f
+    val_i = 1'b0; // d56f2b94, 5c696f5f, 2ee70e9e, bc470e64
   end
 
 

@@ -22,47 +22,76 @@ module crc32(
   ); // !!! only crc32_core now
 
 //*** PARAMETER ***************************************************************
-  localparam DATA_WD  = 'd32;
-  localparam CRC32_WD = 'd32;
+  localparam DATA_WD    = 'd32;
+  localparam DIN_WD     = 'd8 ;
+  localparam DIN_CNT    = DATA_WD / DIN_WD;
+  localparam DIN_CNT_WD = /*`LOG2(DIN_CNT)*/ 'd2;
+  localparam CRC32_WD   = 'd32;
 
 //*** IN/OUT ******************************************************************
   input                   clk    ;
   input                   rstn   ;
   input                   start_i;
   input                   val_i  ;
-  input  [8       -1 :0]  dat_i  ; // !!! temp width
+  input  [DATA_WD -1 :0]  dat_i  ;
   input                   lst_i  ;
   output                  done_o ;
   output                  val_o  ;
   output [DATA_WD -1 :0]  dat_o  ;
 
 //*** WIRE/REG **************************************************************
+  // din count
+  reg    [DIN_CNT_WD -1 :0] din_cnt_r      ;
+
   // crc32 and din in normal order
-  wire   [8        -1 :0] din_nrm_w      ;
-  reg    [CRC32_WD -1 :0] crc32_nrm_cur_r;
-  wire   [CRC32_WD -1 :0] crc32_nrm_nxt_w;
+  reg    [DIN_WD     -1 :0] din_nrm_w      ;
+  reg    [CRC32_WD   -1 :0] crc32_nrm_cur_r;
+  wire   [CRC32_WD   -1 :0] crc32_nrm_nxt_w;
 
   // crc32 in reversed order
-  wire   [CRC32_WD -1 :0] crc32_rvs_cur_w;
+  wire   [CRC32_WD   -1 :0] crc32_rvs_cur_w;
 
 //*** MAIN BODY *************************************************************
+  // din count
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      din_cnt_r <= 'd0;
+    end
+    else begin
+      if(din_cnt_r == DIN_CNT - 'd1) begin
+        din_cnt_r <= 'd0;
+      end
+      else if(val_i || din_cnt_r != 'd0) begin
+        din_cnt_r <= din_cnt_r + 'd1;
+      end
+    end
+  end
 
-  // reversed order dat_i mapped to normal order din_nrm_w
-  assign din_nrm_w = {dat_i[0], dat_i[1], dat_i[2], dat_i[3], dat_i[4], dat_i[5], dat_i[6], dat_i[7]};
+  // reversed order dat_i[31:24], dat_i[23:16], dat_i[15:8], dat_i[7:0] mapped to normal order din_nrm_w[7:0]
+  always @(*) begin
+    din_nrm_w = 'd0;
+    case(din_cnt_r)
+      'd0    : din_nrm_w = {dat_i[24], dat_i[25], dat_i[26], dat_i[27], dat_i[28], dat_i[29], dat_i[30], dat_i[31]};
+      'd1    : din_nrm_w = {dat_i[16], dat_i[17], dat_i[18], dat_i[19], dat_i[20], dat_i[21], dat_i[22], dat_i[23]};
+      'd2    : din_nrm_w = {dat_i[8 ], dat_i[ 9], dat_i[10], dat_i[11], dat_i[12], dat_i[13], dat_i[14], dat_i[15]};
+      'd3    : din_nrm_w = {dat_i[0 ], dat_i[1 ], dat_i[2 ], dat_i[3 ], dat_i[4 ], dat_i[5 ], dat_i[6 ], dat_i[7 ]};
+      default: din_nrm_w = 'd0;
+    endcase
+  end
 
-  // normal order crc32_nrm_cur_r
+  // normal order crc32_nrm_cur_r[31:0]
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
       crc32_nrm_cur_r <= /*CRC32_WD*/32'hffff_ffff;
     end
-    else if(val_i) begin
+    else if(val_i || din_cnt_r != 'd0) begin
       crc32_nrm_cur_r <= crc32_nrm_nxt_w;
     end
   end
   // crc32_nrm_nxt_w[31:0] calculated according to crc32_nrm_cur_r[31:0] and din_nrm_w[7:0]
   crc32_nrm_8bits crc32_nrm_8bits(.crc32_nrm_cur_i(crc32_nrm_cur_r), .din_nrm_i(din_nrm_w), .crc32_nrm_nxt_o(crc32_nrm_nxt_w));
 
-  // normal order crc32_nrm_cur_r mapped to reversed order crc32_rvs_cur_w
+  // normal order crc32_nrm_cur_r[31:0] mapped to reversed order crc32_rvs_cur_w[31:0]
   assign crc32_rvs_cur_w = {crc32_nrm_cur_r[ 0], crc32_nrm_cur_r[ 1], crc32_nrm_cur_r[ 2], crc32_nrm_cur_r[ 3],
                             crc32_nrm_cur_r[ 4], crc32_nrm_cur_r[ 5], crc32_nrm_cur_r[ 6], crc32_nrm_cur_r[ 7],
                             crc32_nrm_cur_r[ 8], crc32_nrm_cur_r[ 9], crc32_nrm_cur_r[10], crc32_nrm_cur_r[11],
@@ -72,7 +101,7 @@ module crc32(
                             crc32_nrm_cur_r[24], crc32_nrm_cur_r[25], crc32_nrm_cur_r[26], crc32_nrm_cur_r[27],
                             crc32_nrm_cur_r[28], crc32_nrm_cur_r[29], crc32_nrm_cur_r[30], crc32_nrm_cur_r[31] };
 
-  // reversed order crc32_rvs_cur_w xor with 0xFFFFFFFF
+  // reversed order crc32_rvs_cur_w[31:0] xor with 0xFFFFFFFF
   assign dat_o = crc32_rvs_cur_w ^ /*CRC32_WD*/32'hffff_ffff;
 
 
