@@ -36,7 +36,7 @@ module crc32(
   localparam IHDR         = 2'd2;
   localparam IEND         = 2'd3;
 
-  // steps counter for IHDR and IEND chunk
+  // steps counter for chunk
   localparam CNT_STP_IDAT = 'd2; // init, "IDAT", xxxx...
   localparam CNT_STP_IHDR = 'd5; // init, "IHDR", width, height, {bit depth, color type, compression method, filter method}, {interlace method, 0, 0, 0}
   localparam CNT_STP_IEND = 'd1; // init, "IEND"
@@ -208,6 +208,14 @@ module crc32(
                               .dat_o  (chunk_dat_o_w  ) );
 
 //---   OUTPUT   ------------------------------------------
+  // dat_o
+  assign dat_o = chunk_dat_o_w;
+
+  // val_o
+  assign val_o = chunk_done_o_w;
+
+  // done_o
+  assign done_o = (cur_state_r == IEND && chunk_done_o_w);
 
 
 endmodule
