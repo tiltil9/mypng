@@ -37,10 +37,11 @@ module crc32(
   localparam IEND         = 2'd3;
 
   // steps counter for IHDR and IEND chunk
-  localparam CNT_STP_MAX  = 'd5;
+  localparam CNT_STP_IDAT = 'd2; // init, "IDAT", xxxx...
   localparam CNT_STP_IHDR = 'd5; // init, "IHDR", width, height, {bit depth, color type, compression method, filter method}, {interlace method, 0, 0, 0}
   localparam CNT_STP_IEND = 'd1; // init, "IEND"
-  localparam CNT_STP_WD   = /*`LOG2(CNT_MAX)*/'d3;
+  localparam CNT_STP_MAX  = 'd5;
+  localparam CNT_STP_WD   = 'd3; /*`LOG2(CNT_STP_MAX)*/
 
 //***   INPUT / OUTPUT   ******************************************************
   //
@@ -64,12 +65,13 @@ module crc32(
   reg    [FSM_WD     -1 :0] cur_state_r      ;
   reg    [FSM_WD     -1 :0] nxt_state_w      ;
 
-  // steps counter for IHDR and IEND chunk
+  // steps counter for chunk
   reg    [CNT_STP_WD -1 :0] cnt_stp_r        ;
 
-  // chunk crc32 core signals
+  // generate val_i for chunk
   reg                       chunk_val_i_gen_r;
 
+  // chunk crc32 core signals
   wire                      chunk_start_i_w  ;
   wire                      chunk_val_i_w    ;
   reg    [DATA_WD    -1 :0] chunk_dat_i_w    ;
@@ -107,13 +109,19 @@ module crc32(
   end
 
 //---   COUNT   -------------------------------------------
-  // steps counter for IHDR and IEND chunk
+  // steps counter for chunk
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
       cnt_stp_r <= 'd0;
     end
     else begin
       case (cur_state_r)
+        IDAT   : if (cnt_stp_r == CNT_STP_IDAT && chunk_done_o_w) begin
+                   cnt_stp_r <= 'd0;
+                 end
+                 else if (cnt_stp_r == 'd0 || (cnt_stp_r != 'd0 && chunk_val_o_w)) begin
+                   cnt_stp_r <= cnt_stp_r + 'd1;
+                 end
         IHDR   : if (cnt_stp_r == CNT_STP_IHDR && chunk_done_o_w) begin
                    cnt_stp_r <= 'd0;
                  end
@@ -132,13 +140,19 @@ module crc32(
   end
 
 //---   PROC   --------------------------------------------
-  // generate val_i for IHDR and IEND chunk
+  // generate val_i for chunk
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
       chunk_val_i_gen_r <= 'd0;
     end
     else begin
       case (cur_state_r)
+        IDAT   : if (cnt_stp_r == 'd0) begin
+                   chunk_val_i_gen_r <= 'd1;
+                 end
+                 else begin
+                   chunk_val_i_gen_r <= 'd0;
+                 end
         IHDR   : if (cnt_stp_r == 'd0 || (cnt_stp_r != 'd0 && cnt_stp_r != CNT_STP_IHDR && chunk_val_o_w)) begin
                    chunk_val_i_gen_r <= 'd1;
                  end
@@ -157,14 +171,19 @@ module crc32(
   end
 
   // chunk crc32 core signals
-  assign chunk_start_i_w = (cur_state_r == IDLE && start_i) || (cur_state_r == IHDR && cnt_stp_r == 'd0         ) || (cur_state_r == IEND && cnt_stp_r == 'd0         );
-  assign chunk_val_i_w   = (cur_state_r == IDAT && val_i  ) || (cur_state_r == IHDR && chunk_val_i_gen_r        ) || (cur_state_r == IEND && chunk_val_i_gen_r        );
-  assign chunk_lst_i_w   = (cur_state_r == IDAT && lst_i  ) || (cur_state_r == IHDR && cnt_stp_r == CNT_STP_IHDR) || (cur_state_r == IEND && cnt_stp_r == CNT_STP_IEND);
+  assign chunk_start_i_w = (cur_state_r == IDAT && cnt_stp_r == 'd0) || (cur_state_r == IHDR && cnt_stp_r == 'd0) || (cur_state_r == IEND && cnt_stp_r == 'd0);
+  assign chunk_val_i_w   = (cur_state_r == IDAT && cnt_stp_r == 'd1          && chunk_val_i_gen_r)
+                        || (cur_state_r == IDAT && cnt_stp_r == CNT_STP_IDAT && val_i            )  // !!! IDAT data should only appear in this period
+                        || (cur_state_r == IHDR                              && chunk_val_i_gen_r)
+                        || (cur_state_r == IEND                              && chunk_val_i_gen_r); // !!! chunk_val_i_w should valid only a cycle once time
+  assign chunk_lst_i_w   = (cur_state_r == IDAT && cnt_stp_r == CNT_STP_IDAT && lst_i) || (cur_state_r == IHDR && cnt_stp_r == CNT_STP_IHDR) || (cur_state_r == IEND && cnt_stp_r == CNT_STP_IEND);
 
   always @(*) begin
     chunk_dat_i_w = 'd0;
     case (cur_state_r)
-      IDAT   :                            chunk_dat_i_w = dat_i; // !!! need "IDAT"
+      IDAT   : if (cnt_stp_r == 'd1)      chunk_dat_i_w = 32'h49_44_41_54; // "IDAT"
+               else if (cnt_stp_r == 'd2) chunk_dat_i_w = dat_i;
+               else                       chunk_dat_i_w = 'd0;
       IHDR   : if (cnt_stp_r == 'd1)      chunk_dat_i_w = 32'h49_48_44_52; // "IHDR"
                else if (cnt_stp_r == 'd2) chunk_dat_i_w = w_i;             // width
                else if (cnt_stp_r == 'd3) chunk_dat_i_w = h_i;             // height
@@ -187,6 +206,8 @@ module crc32(
                               .done_o (chunk_done_o_w ),
                               .val_o  (chunk_val_o_w  ),
                               .dat_o  (chunk_dat_o_w  ) );
+
+//---   OUTPUT   ------------------------------------------
 
 
 endmodule
