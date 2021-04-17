@@ -59,20 +59,20 @@ module crc32_core(
 
 //***   WIRE / REG   **********************************************************
   // fsm
-  reg         [FSM_WD     -1 :0] cur_state_r    ;
-  reg         [FSM_WD     -1 :0] nxt_state_w    ;
+  reg        [FSM_WD     -1 :0] cur_state_r    ;
+  reg        [FSM_WD     -1 :0] nxt_state_w    ;
 
   // dat_i and num_i buffer
-  reg         [DATA_WD    -1 :0] dat_i_buf_r    ;
-  reg         [NUM_WD     -1 :0] num_i_buf_r    ;
+  reg        [DATA_WD    -1 :0] dat_i_buf_r    ;
+  reg        [NUM_WD     -1 :0] num_i_buf_r    ;
 
   // crc32 and din in normal order
-  reg         [DIN_WD     -1 :0] din_nrm_w      ;
-  reg         [CRC32_WD   -1 :0] crc32_nrm_cur_r;
-  reg         [CRC32_WD   -1 :0] crc32_nrm_nxt_w;
+  reg        [DIN_WD     -1 :0] din_nrm_w      ;
+  reg        [CRC32_WD   -1 :0] crc32_nrm_cur_r;
+  reg        [CRC32_WD   -1 :0] crc32_nrm_nxt_w;
 
   // crc32 in reversed order
-  wire        [CRC32_WD   -1 :0] crc32_rvs_cur_w;
+  wire       [CRC32_WD   -1 :0] crc32_rvs_cur_w;
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------

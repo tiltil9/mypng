@@ -215,7 +215,7 @@ module crc32(
     endcase
   end
 
-  // inst
+  // inst chunk crc32 core
   crc32_core chunk_crc32_core(.clk    (clk            ),
                               .rstn   (rstn           ),
                               .start_i(chunk_start_i_w),

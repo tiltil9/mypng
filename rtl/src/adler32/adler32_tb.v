@@ -16,6 +16,7 @@ module adler32_tb;
 
 //***   PARAMETER   ***********************************************************
   localparam DATA_WD  = 'd32;
+  localparam NUM_WD   = 'd2 ;
 
 //***   INPUT / OUTPUT   ******************************************************
   reg                   clk    ;
@@ -23,6 +24,7 @@ module adler32_tb;
   reg                   start_i;
   reg                   val_i  ;
   reg  [DATA_WD -1 :0]  dat_i  ;
+  reg  [NUM_WD  -1 :0]  num_i  ;
   reg                   lst_i  ;
   wire                  done_o ;
   wire                  val_o  ;
@@ -35,6 +37,7 @@ adler32 dut(.clk    (clk    ),
             .start_i(start_i),
             .val_i  (val_i  ),
             .dat_i  (dat_i  ),
+            .num_i  (num_i  ),
             .lst_i  (lst_i  ),
             .done_o (done_o ),
             .val_o  (val_o  ),
@@ -63,6 +66,7 @@ adler32 dut(.clk    (clk    ),
     val_i = 1'b0;
     start_i = 1'b0;
     lst_i = 1'b0;
+    num_i = 'd0;
     #(5 * `CLK_FULL);
     @(negedge clk); // !!! this delay is essential.
 
@@ -75,10 +79,12 @@ adler32 dut(.clk    (clk    ),
     @(posedge clk);
     dat_i = 32'h04090409;
     val_i = 1'b1;
+    num_i = 'd3;
     @(negedge clk);
     @(posedge clk);
     val_i = 1'b0; // 00050005, 0013000e, 00250012, 0040001b
     dat_i = 32'h0;
+    num_i = 'd0;
   end
 
 
