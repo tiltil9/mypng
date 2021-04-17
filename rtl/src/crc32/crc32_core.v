@@ -8,17 +8,19 @@
   //
 //------------------------------------------------------------------------------
 
-module crc32(
-    clk    ,
-    rstn   ,
-    start_i,
-    val_i  ,
-    dat_i  ,
-    lst_i  ,
-    done_o ,
-    val_o  ,
-    dat_o
-  ); // !!! only crc32_core now
+module crc32_core(
+  clk    ,
+  rstn   ,
+  //
+  start_i,
+  val_i  ,
+  dat_i  ,
+  lst_i  ,
+  //
+  done_o ,
+  val_o  ,
+  dat_o
+  );
 
 //***   PARAMETER   ***********************************************************
   localparam DATA_WD    = 'd32;
@@ -39,12 +41,15 @@ module crc32(
   localparam LAST_4     = 3'd7;
 
 //***   INPUT / OUTPUT   ******************************************************
+  //
   input                         clk            ;
   input                         rstn           ;
+  //
   input                         start_i        ;
   input                         val_i          ;
   input      [DATA_WD    -1 :0] dat_i          ;
   input                         lst_i          ;
+  //
   output reg                    done_o         ;
   output reg                    val_o          ;
   output     [DATA_WD    -1 :0] dat_o          ;

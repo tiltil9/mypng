@@ -30,15 +30,15 @@ module crc32_tb;
 
 //***   MAIN BODY   ***********************************************************
 //---   INST   --------------------------------------------
-crc32 dut(.clk    (clk    ),
-          .rstn   (rstn   ),
-          .start_i(start_i),
-          .val_i  (val_i  ),
-          .dat_i  (dat_i  ),
-          .lst_i  (lst_i  ),
-          .done_o (done_o ),
-          .val_o  (val_o  ),
-          .dat_o  (dat_o  ) );
+crc32_core dut(.clk    (clk    ),
+               .rstn   (rstn   ),
+               .start_i(start_i),
+               .val_i  (val_i  ),
+               .dat_i  (dat_i  ),
+               .lst_i  (lst_i  ),
+               .done_o (done_o ),
+               .val_o  (val_o  ),
+               .dat_o  (dat_o  ) );
 
 //---   PROC   --------------------------------------------
   // clk
