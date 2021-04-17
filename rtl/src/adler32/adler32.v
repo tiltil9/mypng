@@ -24,9 +24,20 @@ module adler32(
   localparam DATA_WD         = 'd32;
   localparam ADLER32_WD      = 'd32;
   localparam ADLER32_HALF_WD = 'd16;
+
+  // din process
   localparam DIN_WD          = 'd8 ;
-  localparam DIN_CNT         = DATA_WD / DIN_WD;
-  localparam DIN_CNT_WD      = /*`LOG2(DIN_CNT)*/ 'd2;
+
+  // fsm
+  localparam FSM_WD          =  'd3;
+  localparam IDLE            = 3'd0;
+  localparam ACTV            = 3'd1;
+  localparam PROC_2          = 3'd2;
+  localparam PROC_3          = 3'd3;
+  localparam PROC_4          = 3'd4;
+  localparam LAST_2          = 3'd5;
+  localparam LAST_3          = 3'd6;
+  localparam LAST_4          = 3'd7;
 
 //***   INPUT / OUTPUT   ******************************************************
   input                            clk             ;
@@ -40,8 +51,9 @@ module adler32(
   output [DATA_WD           -1 :0] dat_o           ;
 
 //***   WIRE / REG   **********************************************************
-  // din count
-  reg    [DIN_CNT_WD        -1 :0] din_cnt_r       ;
+  // fsm
+  reg    [FSM_WD     -1 :0]        cur_state_r     ;
+  reg    [FSM_WD     -1 :0]        nxt_state_w     ;
 
   // din
   reg    [DIN_WD            -1 :0] din_w           ;
@@ -58,32 +70,46 @@ module adler32(
   wire   [ADLER32_HALF_WD   -1 :0] adler32_s1_nxt_w;
 
 //***   MAIN BODY   ***********************************************************
-//---   COUNT   -------------------------------------------
-  // din count
+//---   FSM   ---------------------------------------------
+  // curr state
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
-      din_cnt_r <= 'd0;
+      cur_state_r <= IDLE;
     end
     else begin
-      if(din_cnt_r == DIN_CNT - 'd1) begin
-        din_cnt_r <= 'd0;
-      end
-      else if(val_i || din_cnt_r != 'd0) begin
-        din_cnt_r <= din_cnt_r + 'd1;
-      end
+      cur_state_r <= nxt_state_w;
     end
+  end
+
+  // next state
+  always @(*) begin
+    nxt_state_w = IDLE;
+    case (cur_state_r)
+      IDLE   : if (start_i)             nxt_state_w = ACTV  ;
+               else                     nxt_state_w = IDLE  ;
+      ACTV   : if (val_i && !lst_i)     nxt_state_w = PROC_2;
+               else if (val_i && lst_i) nxt_state_w = LAST_2;
+               else                     nxt_state_w = ACTV  ;
+      PROC_2 :                          nxt_state_w = PROC_3;
+      PROC_3 :                          nxt_state_w = PROC_4;
+      PROC_4 :                          nxt_state_w = ACTV  ;
+      LAST_2 :                          nxt_state_w = LAST_3;
+      LAST_3 :                          nxt_state_w = LAST_4;
+      LAST_4 :                          nxt_state_w = IDLE  ;
+      default:                          nxt_state_w = IDLE  ;
+    endcase
   end
 
 //---   CALC   --------------------------------------------
   // dat_i[31:24], [23:16], [15:8], [7:0] mapped to din_w[7:0]
   always @(*) begin
     din_w = 'd0;
-    case(din_cnt_r)
-      'd0    : din_w = dat_i[31:24];
-      'd1    : din_w = dat_i[23:16];
-      'd2    : din_w = dat_i[15: 8];
-      'd3    : din_w = dat_i[ 7: 0];
-      default: din_w = 'd0;
+    case (cur_state_r)
+      ACTV           : din_w = dat_i[31:24];
+      PROC_2, LAST_2 : din_w = dat_i[23:16];
+      PROC_3, LAST_3 : din_w = dat_i[15: 8];
+      PROC_4, LAST_4 : din_w = dat_i[ 7: 0];
+      default : din_w = 'd0;
     endcase
   end
 
@@ -91,11 +117,35 @@ module adler32(
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
       adler32_s2_cur_r <= 16'h0000;
-      adler32_s1_cur_r <= 16'h0001;
+      adler32_s1_cur_r <= 16'h0000;
     end
-    else if(val_i || din_cnt_r != 'd0) begin
-      adler32_s2_cur_r <= adler32_s2_nxt_w;
-      adler32_s1_cur_r <= adler32_s1_nxt_w;
+    else begin
+      case (cur_state_r)
+        IDLE   : if (start_i) begin
+                   adler32_s2_cur_r <= 16'h0000;
+                   adler32_s1_cur_r <= 16'h0001;
+                 end
+        ACTV   : if (val_i) begin
+                   adler32_s2_cur_r <= adler32_s2_nxt_w;
+                   adler32_s1_cur_r <= adler32_s1_nxt_w;
+                 end
+        PROC_2,
+        LAST_2 : begin
+                   adler32_s2_cur_r <= adler32_s2_nxt_w;
+                   adler32_s1_cur_r <= adler32_s1_nxt_w;
+                 end
+        PROC_3,
+        LAST_3 : begin
+                   adler32_s2_cur_r <= adler32_s2_nxt_w;
+                   adler32_s1_cur_r <= adler32_s1_nxt_w;
+                 end
+        PROC_4,
+        LAST_4 : begin
+                   adler32_s2_cur_r <= adler32_s2_nxt_w;
+                   adler32_s1_cur_r <= adler32_s1_nxt_w;
+                 end
+        default: ;
+      endcase
     end
   end
 
