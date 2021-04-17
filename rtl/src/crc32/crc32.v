@@ -39,31 +39,31 @@ module crc32(
   localparam LAST_4     = 3'd7;
 
 //***   INPUT / OUTPUT   ******************************************************
-  input                     clk            ;
-  input                     rstn           ;
-  input                     start_i        ;
-  input                     val_i          ;
-  input  [DATA_WD    -1 :0] dat_i          ;
-  input                     lst_i          ;
-  output                    done_o         ;
-  output                    val_o          ;
-  output [DATA_WD    -1 :0] dat_o          ;
+  input                         clk            ;
+  input                         rstn           ;
+  input                         start_i        ;
+  input                         val_i          ;
+  input      [DATA_WD    -1 :0] dat_i          ;
+  input                         lst_i          ;
+  output reg                    done_o         ;
+  output reg                    val_o          ;
+  output     [DATA_WD    -1 :0] dat_o          ;
 
 //***   WIRE / REG   **********************************************************
   // fsm
-  reg    [FSM_WD     -1 :0] cur_state_r    ;
-  reg    [FSM_WD     -1 :0] nxt_state_w    ;
+  reg         [FSM_WD     -1 :0] cur_state_r    ;
+  reg         [FSM_WD     -1 :0] nxt_state_w    ;
 
   // dat_i buffer
-  reg    [DATA_WD    -1 :0] dat_i_buf_r    ;
+  reg         [DATA_WD    -1 :0] dat_i_buf_r    ;
 
   // crc32 and din in normal order
-  reg    [DIN_WD     -1 :0] din_nrm_w      ;
-  reg    [CRC32_WD   -1 :0] crc32_nrm_cur_r;
-  wire   [CRC32_WD   -1 :0] crc32_nrm_nxt_w;
+  reg         [DIN_WD     -1 :0] din_nrm_w      ;
+  reg         [CRC32_WD   -1 :0] crc32_nrm_cur_r;
+  wire        [CRC32_WD   -1 :0] crc32_nrm_nxt_w;
 
   // crc32 in reversed order
-  wire   [CRC32_WD   -1 :0] crc32_rvs_cur_w;
+  wire        [CRC32_WD   -1 :0] crc32_rvs_cur_w;
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -152,6 +152,36 @@ module crc32(
 
   // reversed order crc32_rvs_cur_w[31:0] xor with 0xFFFFFFFF
   assign dat_o = crc32_rvs_cur_w ^ 32'hffff_ffff;
+
+  // val_o
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      val_o <= 'd0;
+    end
+    else begin
+      if(cur_state_r == PROC_4 || cur_state_r == LAST_4) begin
+        val_o <= 'd1;
+      end
+      else begin
+        val_o <= 'd0;
+      end
+    end
+  end
+
+  // done_o
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      done_o <= 'd0;
+    end
+    else begin
+      if(cur_state_r == LAST_4) begin
+        done_o <= 'd1;
+      end
+      else begin
+        done_o <= 'd0;
+      end
+    end
+  end
 
 
 endmodule
