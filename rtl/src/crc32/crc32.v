@@ -80,29 +80,29 @@ module crc32(
   // next state
   always @(*) begin
     nxt_state_w = IDLE;
-    case(cur_state_r)
-      IDLE   : if(start_i)             nxt_state_w = ACTV  ;
-               else                    nxt_state_w = IDLE  ;
-      ACTV   : if(val_i && !lst_i)     nxt_state_w = PROC_2;
-               else if(val_i && lst_i) nxt_state_w = LAST_2;
-               else                    nxt_state_w = ACTV  ;
-      PROC_2 :                         nxt_state_w = PROC_3;
-      PROC_3 :                         nxt_state_w = PROC_4;
-      PROC_4 :                         nxt_state_w = ACTV  ;
-      LAST_2 :                         nxt_state_w = LAST_3;
-      LAST_3 :                         nxt_state_w = LAST_4;
-      LAST_4 :                         nxt_state_w = IDLE  ;
-      default:                         nxt_state_w = IDLE  ;
+    case (cur_state_r)
+      IDLE   : if (start_i)             nxt_state_w = ACTV  ;
+               else                     nxt_state_w = IDLE  ;
+      ACTV   : if (val_i && !lst_i)     nxt_state_w = PROC_2;
+               else if (val_i && lst_i) nxt_state_w = LAST_2;
+               else                     nxt_state_w = ACTV  ;
+      PROC_2 :                          nxt_state_w = PROC_3;
+      PROC_3 :                          nxt_state_w = PROC_4;
+      PROC_4 :                          nxt_state_w = ACTV  ;
+      LAST_2 :                          nxt_state_w = LAST_3;
+      LAST_3 :                          nxt_state_w = LAST_4;
+      LAST_4 :                          nxt_state_w = IDLE  ;
+      default:                          nxt_state_w = IDLE  ;
     endcase
   end
 
-//---   CALC   --------------------------------------------
+//---   PREPARE   -----------------------------------------
   // dat_i buffer
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
       dat_i_buf_r <= 'd0;
     end
-    else if(cur_state_r == ACTV && val_i) begin
+    else if (cur_state_r == ACTV && val_i) begin
       dat_i_buf_r <= dat_i;
     end
   end
@@ -110,8 +110,8 @@ module crc32(
   // reversed order dat_i/buf_r[31:24], [23:16], [15:8], [7:0] mapped to normal order din_nrm_w[7:0]
   always @(*) begin
     din_nrm_w = 'd0;
-    case(cur_state_r)
-      ACTV           : din_nrm_w = {dat_i[24]      , dat_i[25]      , dat_i[26]      , dat_i[27]      , dat_i[28]      , dat_i[29]      , dat_i[30]      , dat_i[31]      };
+    case (cur_state_r)
+      ACTV           : din_nrm_w = {dat_i[24]      , dat_i[25]      , dat_i[26]      , dat_i[27]      , dat_i[28]      , dat_i[29]      , dat_i[30]      , dat_i[31]      }; // look ahead
       PROC_2, LAST_2 : din_nrm_w = {dat_i_buf_r[16], dat_i_buf_r[17], dat_i_buf_r[18], dat_i_buf_r[19], dat_i_buf_r[20], dat_i_buf_r[21], dat_i_buf_r[22], dat_i_buf_r[23]};
       PROC_3, LAST_3 : din_nrm_w = {dat_i_buf_r[ 8], dat_i_buf_r[ 9], dat_i_buf_r[10], dat_i_buf_r[11], dat_i_buf_r[12], dat_i_buf_r[13], dat_i_buf_r[14], dat_i_buf_r[15]};
       PROC_4, LAST_4 : din_nrm_w = {dat_i_buf_r[ 0], dat_i_buf_r[ 1], dat_i_buf_r[ 2], dat_i_buf_r[ 3], dat_i_buf_r[ 4], dat_i_buf_r[ 5], dat_i_buf_r[ 6], dat_i_buf_r[ 7]};
@@ -119,18 +119,19 @@ module crc32(
     endcase
   end
 
+//---   CALC   --------------------------------------------
   // normal order crc32_nrm_cur_r[31:0]
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
       crc32_nrm_cur_r <= 32'h0;
     end
     else begin
-      case(cur_state_r)
-        IDLE           : if(start_i) crc32_nrm_cur_r <= 32'hffff_ffff  ;
-        ACTV           : if(val_i)   crc32_nrm_cur_r <= crc32_nrm_nxt_w;
-        PROC_2, LAST_2 :             crc32_nrm_cur_r <= crc32_nrm_nxt_w;
-        PROC_3, LAST_3 :             crc32_nrm_cur_r <= crc32_nrm_nxt_w;
-        PROC_4, LAST_4 :             crc32_nrm_cur_r <= crc32_nrm_nxt_w;
+      case (cur_state_r)
+        IDLE           : if (start_i) crc32_nrm_cur_r <= 32'hffff_ffff  ;
+        ACTV           : if (val_i)   crc32_nrm_cur_r <= crc32_nrm_nxt_w;
+        PROC_2, LAST_2 :              crc32_nrm_cur_r <= crc32_nrm_nxt_w;
+        PROC_3, LAST_3 :              crc32_nrm_cur_r <= crc32_nrm_nxt_w;
+        PROC_4, LAST_4 :              crc32_nrm_cur_r <= crc32_nrm_nxt_w;
         default: ;
       endcase
     end
@@ -193,7 +194,7 @@ module crc32(
       val_o <= 'd0;
     end
     else begin
-      if(cur_state_r == PROC_4 || cur_state_r == LAST_4) begin
+      if (cur_state_r == PROC_4 || cur_state_r == LAST_4) begin
         val_o <= 'd1;
       end
       else begin
@@ -208,7 +209,7 @@ module crc32(
       done_o <= 'd0;
     end
     else begin
-      if(cur_state_r == LAST_4) begin
+      if (cur_state_r == LAST_4) begin
         done_o <= 'd1;
       end
       else begin
