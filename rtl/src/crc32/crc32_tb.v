@@ -73,11 +73,12 @@ crc32 dut(.clk    (clk    ),
     start_i = 1'b0;
     @(negedge clk);
     @(posedge clk);
-    dat_i = 32'h04090409; // must last at least four clock now
+    dat_i = 32'h04090409;
     val_i = 1'b1;
     @(negedge clk);
     @(posedge clk);
     val_i = 1'b0; // d56f2b94, 5c696f5f, 2ee70e9e, bc470e64
+    dat_i = 32'h0;
   end
 
 

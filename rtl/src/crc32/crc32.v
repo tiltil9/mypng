@@ -54,6 +54,9 @@ module crc32(
   reg    [FSM_WD     -1 :0] cur_state_r    ;
   reg    [FSM_WD     -1 :0] nxt_state_w    ;
 
+  // dat_i buffer
+  reg    [DATA_WD    -1 :0] dat_i_buf_r    ;
+
   // crc32 and din in normal order
   reg    [DIN_WD     -1 :0] din_nrm_w      ;
   reg    [CRC32_WD   -1 :0] crc32_nrm_cur_r;
@@ -94,14 +97,24 @@ module crc32(
   end
 
 //---   CALC   --------------------------------------------
-  // reversed order dat_i[31:24], [23:16], [15:8], [7:0] mapped to normal order din_nrm_w[7:0]
+  // dat_i buffer
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      dat_i_buf_r <= 'd0;
+    end
+    else if(cur_state_r == ACTV && val_i) begin
+      dat_i_buf_r <= dat_i;
+    end
+  end
+
+  // reversed order dat_i/buf_r[31:24], [23:16], [15:8], [7:0] mapped to normal order din_nrm_w[7:0]
   always @(*) begin
     din_nrm_w = 'd0;
     case(cur_state_r)
-      ACTV           : din_nrm_w = {dat_i[24], dat_i[25], dat_i[26], dat_i[27], dat_i[28], dat_i[29], dat_i[30], dat_i[31]};
-      PROC_2, LAST_2 : din_nrm_w = {dat_i[16], dat_i[17], dat_i[18], dat_i[19], dat_i[20], dat_i[21], dat_i[22], dat_i[23]};
-      PROC_3, LAST_3 : din_nrm_w = {dat_i[ 8], dat_i[ 9], dat_i[10], dat_i[11], dat_i[12], dat_i[13], dat_i[14], dat_i[15]};
-      PROC_4, LAST_4 : din_nrm_w = {dat_i[ 0], dat_i[ 1], dat_i[ 2], dat_i[ 3], dat_i[ 4], dat_i[ 5], dat_i[ 6], dat_i[ 7]};
+      ACTV           : din_nrm_w = {dat_i[24]      , dat_i[25]      , dat_i[26]      , dat_i[27]      , dat_i[28]      , dat_i[29]      , dat_i[30]      , dat_i[31]      };
+      PROC_2, LAST_2 : din_nrm_w = {dat_i_buf_r[16], dat_i_buf_r[17], dat_i_buf_r[18], dat_i_buf_r[19], dat_i_buf_r[20], dat_i_buf_r[21], dat_i_buf_r[22], dat_i_buf_r[23]};
+      PROC_3, LAST_3 : din_nrm_w = {dat_i_buf_r[ 8], dat_i_buf_r[ 9], dat_i_buf_r[10], dat_i_buf_r[11], dat_i_buf_r[12], dat_i_buf_r[13], dat_i_buf_r[14], dat_i_buf_r[15]};
+      PROC_4, LAST_4 : din_nrm_w = {dat_i_buf_r[ 0], dat_i_buf_r[ 1], dat_i_buf_r[ 2], dat_i_buf_r[ 3], dat_i_buf_r[ 4], dat_i_buf_r[ 5], dat_i_buf_r[ 6], dat_i_buf_r[ 7]};
       default: din_nrm_w = 'd0;
     endcase
   end
