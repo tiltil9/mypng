@@ -43,39 +43,39 @@ module adler32(
 
 //***   INPUT / OUTPUT   ******************************************************
   //
-  input                                clk             ;
-  input                                rstn            ;
+  input                                clk                 ;
+  input                                rstn                ;
   //
-  input                                start_i         ;
-  input                                val_i           ;
-  input      [DATA_WD           -1 :0] dat_i           ;
-  input                                lst_i           ;
+  input                                start_i             ;
+  input                                val_i               ;
+  input      [DATA_WD           -1 :0] dat_i               ;
+  input                                lst_i               ;
   //
-  output reg                           done_o          ;
-  output reg                           val_o           ;
-  output     [DATA_WD           -1 :0] dat_o           ;
+  output reg                           done_o              ;
+  output reg                           val_o               ;
+  output     [DATA_WD           -1 :0] dat_o               ;
 
 //***   WIRE / REG   **********************************************************
   // fsm
-  reg        [FSM_WD     -1 :0]        cur_state_r     ;
-  reg        [FSM_WD     -1 :0]        nxt_state_w     ;
+  reg        [FSM_WD     -1 :0]        cur_state_r         ;
+  reg        [FSM_WD     -1 :0]        nxt_state_w         ;
 
   // dat_i buffer
-  reg        [DATA_WD    -1 :0]        dat_i_buf_r     ;
+  reg        [DATA_WD    -1 :0]        dat_i_buf_r         ;
 
   // din
-  reg        [DIN_WD            -1 :0] din_w           ;
+  reg        [DIN_WD            -1 :0] din_w               ;
 
   // adler32 s2 and s1
-  reg        [ADLER32_HALF_WD   -1 :0] adler32_s2_cur_r;
-  reg        [ADLER32_HALF_WD   -1 :0] adler32_s1_cur_r;
+  reg        [ADLER32_HALF_WD   -1 :0] adler32_s2_cur_r    ;
+  reg        [ADLER32_HALF_WD   -1 :0] adler32_s1_cur_r    ;
 
   // adler32 s2 and s1 calculation
   wire       [ADLER32_HALF_WD+2 -1 :0] adler32_s2_nxt_sum_w;
   wire       [ADLER32_HALF_WD+1 -1 :0] adler32_s1_nxt_sum_w;
 
-  wire       [ADLER32_HALF_WD   -1 :0] adler32_s2_nxt_w;
-  wire       [ADLER32_HALF_WD   -1 :0] adler32_s1_nxt_w;
+  wire       [ADLER32_HALF_WD   -1 :0] adler32_s2_nxt_w    ;
+  wire       [ADLER32_HALF_WD   -1 :0] adler32_s1_nxt_w    ;
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -169,12 +169,14 @@ module adler32(
   end
 
   // sum
-  assign adler32_s2_nxt_sum_w = adler32_s2_cur_r + (adler32_s1_cur_r + din_w);
+  assign adler32_s2_nxt_sum_w = adler32_s2_cur_r + adler32_s1_nxt_sum_w;
   assign adler32_s1_nxt_sum_w = adler32_s1_cur_r + din_w;
 
-  // mod
-  assign adler32_s2_nxt_w = adler32_s2_nxt_sum_w % 16'd65521; // TODO: to remove mod?
-  assign adler32_s1_nxt_w = adler32_s1_nxt_sum_w % 16'd65521;
+  // mod 16'd65521 (implement utilizing range information and minus operation)
+  assign adler32_s2_nxt_w = (adler32_s2_nxt_sum_w >= 'd131042) ? (adler32_s2_nxt_sum_w - 'd131042)
+                          : (adler32_s2_nxt_sum_w >= 'd65521 ) ? (adler32_s2_nxt_sum_w - 'd65521 )
+                          :  adler32_s2_nxt_sum_w;
+  assign adler32_s1_nxt_w = (adler32_s1_nxt_sum_w >= 'd65521 ) ? (adler32_s1_nxt_sum_w - 'd65521 ) : adler32_s1_nxt_sum_w;
 
 //---   OUTPUT   ------------------------------------------
   // adler32 checksum
