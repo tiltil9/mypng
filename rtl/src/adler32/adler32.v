@@ -9,17 +9,17 @@
 //------------------------------------------------------------------------------
 
 module adler32(
-    clk    ,
-    rstn   ,
-    //
-    start_i,
-    val_i  ,
-    dat_i  ,
-    lst_i  ,
-    //
-    done_o ,
-    val_o  ,
-    dat_o
+  clk    ,
+  rstn   ,
+  //
+  start_i,
+  val_i  ,
+  dat_i  ,
+  lst_i  ,
+  //
+  done_o ,
+  val_o  ,
+  dat_o
   );
 
 //***   PARAMETER   ***********************************************************
@@ -76,6 +76,9 @@ module adler32(
 
   wire       [ADLER32_HALF_WD   -1 :0] adler32_s2_nxt_w    ;
   wire       [ADLER32_HALF_WD   -1 :0] adler32_s1_nxt_w    ;
+
+  // adler32 checksum
+  wire       [ADLER32_WD        -1 :0] adler32_cur_w       ;
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -180,7 +183,10 @@ module adler32(
 
 //---   OUTPUT   ------------------------------------------
   // adler32 checksum
-  assign dat_o = (adler32_s2_cur_r << 'd16) | adler32_s1_cur_r;
+  assign adler32_cur_w = {adler32_s2_cur_r, adler32_s1_cur_r};
+
+  // dat_o
+  assign dat_o = adler32_cur_w;
 
   // val_o
   always @(posedge clk or negedge rstn) begin
