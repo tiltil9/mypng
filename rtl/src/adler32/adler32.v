@@ -11,10 +11,12 @@
 module adler32(
     clk    ,
     rstn   ,
+    //
     start_i,
     val_i  ,
     dat_i  ,
     lst_i  ,
+    //
     done_o ,
     val_o  ,
     dat_o
@@ -40,12 +42,15 @@ module adler32(
   localparam LAST_4          = 3'd7;
 
 //***   INPUT / OUTPUT   ******************************************************
+  //
   input                            clk             ;
   input                            rstn            ;
+  //
   input                            start_i         ;
   input                            val_i           ;
   input  [DATA_WD           -1 :0] dat_i           ;
   input                            lst_i           ;
+  //
   output                           done_o          ;
   output                           val_o           ;
   output [DATA_WD           -1 :0] dat_o           ;
@@ -54,6 +59,9 @@ module adler32(
   // fsm
   reg    [FSM_WD     -1 :0]        cur_state_r     ;
   reg    [FSM_WD     -1 :0]        nxt_state_w     ;
+
+  // dat_i buffer
+  reg    [DATA_WD    -1 :0]        dat_i_buf_r     ;
 
   // din
   reg    [DIN_WD            -1 :0] din_w           ;
@@ -100,19 +108,30 @@ module adler32(
     endcase
   end
 
-//---   CALC   --------------------------------------------
+//---   PREPARE   -----------------------------------------
+  // dat_i buffer
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      dat_i_buf_r <= 'd0;
+    end
+    else if (cur_state_r == ACTV && val_i) begin
+      dat_i_buf_r <= dat_i;
+    end
+  end
+
   // dat_i[31:24], [23:16], [15:8], [7:0] mapped to din_w[7:0]
   always @(*) begin
     din_w = 'd0;
     case (cur_state_r)
-      ACTV           : din_w = dat_i[31:24];
-      PROC_2, LAST_2 : din_w = dat_i[23:16];
-      PROC_3, LAST_3 : din_w = dat_i[15: 8];
-      PROC_4, LAST_4 : din_w = dat_i[ 7: 0];
+      ACTV           : din_w = dat_i[31:24]      ; // look ahead
+      PROC_2, LAST_2 : din_w = dat_i_buf_r[23:16];
+      PROC_3, LAST_3 : din_w = dat_i_buf_r[15: 8];
+      PROC_4, LAST_4 : din_w = dat_i_buf_r[ 7: 0];
       default : din_w = 'd0;
     endcase
   end
 
+//---   CALC   --------------------------------------------
   // adler32 s2 and s1
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
@@ -158,7 +177,7 @@ module adler32(
   assign adler32_s1_nxt_w = adler32_s1_nxt_sum_w % 16'd65521;
 
 //---   OUTPUT   ------------------------------------------
-  // adler32
+  // adler32 checksum
   assign dat_o = (adler32_s2_cur_r << 'd16) | adler32_s1_cur_r;
 
 

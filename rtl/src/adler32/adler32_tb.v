@@ -73,11 +73,12 @@ adler32 dut(.clk    (clk    ),
     start_i = 1'b0;
     @(negedge clk);
     @(posedge clk);
-    dat_i = 32'h04090409; // must last at least four clock now
+    dat_i = 32'h04090409;
     val_i = 1'b1;
     @(negedge clk);
     @(posedge clk);
     val_i = 1'b0; // 00050005, 0013000e, 00250012, 0040001b
+    dat_i = 32'h0;
   end
 
 
