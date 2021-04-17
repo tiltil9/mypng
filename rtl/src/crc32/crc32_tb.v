@@ -12,7 +12,7 @@
 `define CLK_FULL    10
 `define CLK_HALF    (`CLK_FULL / 2)
 
-module crc2_tb;
+module crc32_tb;
 
 //***   PARAMETER   ***********************************************************
   localparam DATA_WD  = 'd32;
@@ -61,13 +61,22 @@ crc32 dut(.clk    (clk    ),
   // main
   initial begin
     val_i = 1'b0;
-    #(5 * `CLK_FULL); // !!! this delay is essential.
-    #1;
-    repeat(1) @(posedge clk);
+    start_i = 1'b0;
+    lst_i = 1'b0;
+    #(5 * `CLK_FULL);
+    @(negedge clk); // !!! this delay is essential.
+
+    @(posedge clk);
+    start_i = 1'b1;
+    @(negedge clk);
+    @(posedge clk);
+    start_i = 1'b0;
+    @(negedge clk);
+    @(posedge clk);
     dat_i = 32'h04090409; // must last at least four clock now
     val_i = 1'b1;
-    #1 ;
-    repeat(1) @(posedge clk);
+    @(negedge clk);
+    @(posedge clk);
     val_i = 1'b0; // d56f2b94, 5c696f5f, 2ee70e9e, bc470e64
   end
 
