@@ -15,6 +15,7 @@ module crc32_core(
   start_i,
   val_i  ,
   dat_i  ,
+  num_i  ,
   lst_i  ,
   //
   done_o ,
@@ -24,6 +25,7 @@ module crc32_core(
 
 //***   PARAMETER   ***********************************************************
   localparam DATA_WD    = 'd32;
+  localparam NUM_WD     = 'd2 ;
   localparam CRC32_WD   = 'd32;
 
   // din process
@@ -48,6 +50,7 @@ module crc32_core(
   input                         start_i        ;
   input                         val_i          ;
   input      [DATA_WD    -1 :0] dat_i          ;
+  input      [NUM_WD     -1 :0] num_i          ; // means 1/2/3/4 most significant bytes are valid
   input                         lst_i          ;
   //
   output reg                    done_o         ;
@@ -59,8 +62,9 @@ module crc32_core(
   reg         [FSM_WD     -1 :0] cur_state_r    ;
   reg         [FSM_WD     -1 :0] nxt_state_w    ;
 
-  // dat_i buffer
+  // dat_i and num_i buffer
   reg         [DATA_WD    -1 :0] dat_i_buf_r    ;
+  reg         [NUM_WD     -1 :0] num_i_buf_r    ;
 
   // crc32 and din in normal order
   reg         [DIN_WD     -1 :0] din_nrm_w      ;
@@ -102,13 +106,15 @@ module crc32_core(
   end
 
 //---   PREPARE   -----------------------------------------
-  // dat_i buffer
+  // dat_i and num_i buffer
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
       dat_i_buf_r <= 'd0;
+      num_i_buf_r <= 'd0;
     end
     else if (cur_state_r == ACTV && val_i) begin
       dat_i_buf_r <= dat_i;
+      num_i_buf_r <= num_i;
     end
   end
 
@@ -132,11 +138,11 @@ module crc32_core(
     end
     else begin
       case (cur_state_r)
-        IDLE           : if (start_i) crc32_nrm_cur_r <= 32'hffff_ffff  ;
-        ACTV           : if (val_i)   crc32_nrm_cur_r <= crc32_nrm_nxt_w;
-        PROC_2, LAST_2 :              crc32_nrm_cur_r <= crc32_nrm_nxt_w;
-        PROC_3, LAST_3 :              crc32_nrm_cur_r <= crc32_nrm_nxt_w;
-        PROC_4, LAST_4 :              crc32_nrm_cur_r <= crc32_nrm_nxt_w;
+        IDLE           : if (start_i)               crc32_nrm_cur_r <= 32'hffff_ffff  ;
+        ACTV           : if (val_i && num_i >= 'd0) crc32_nrm_cur_r <= crc32_nrm_nxt_w; // look ahead
+        PROC_2, LAST_2 : if (num_i_buf_r >= 'd1)    crc32_nrm_cur_r <= crc32_nrm_nxt_w;
+        PROC_3, LAST_3 : if (num_i_buf_r >= 'd2)    crc32_nrm_cur_r <= crc32_nrm_nxt_w;
+        PROC_4, LAST_4 : if (num_i_buf_r >= 'd3)    crc32_nrm_cur_r <= crc32_nrm_nxt_w;
         default: ;
       endcase
     end

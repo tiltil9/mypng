@@ -18,6 +18,7 @@ module crc32(
   start_i,
   val_i  ,
   dat_i  ,
+  num_i  ,
   lst_i  ,
   //
   done_o ,
@@ -27,6 +28,7 @@ module crc32(
 
 //***   PARAMETER   ***********************************************************
   localparam DATA_WD      = 'd32;
+  localparam NUM_WD       = 'd2 ;
   localparam SIZE_PIC_WD  = 'd32;
 
   // fsm
@@ -54,6 +56,7 @@ module crc32(
   input                      start_i          ;
   input                      val_i            ;
   input  [DATA_WD     -1 :0] dat_i            ;
+  input  [NUM_WD      -1 :0] num_i            ;
   input                      lst_i            ;
   //
   output                     done_o           ;
@@ -75,6 +78,7 @@ module crc32(
   wire                      chunk_start_i_w  ;
   wire                      chunk_val_i_w    ;
   reg    [DATA_WD    -1 :0] chunk_dat_i_w    ;
+  reg    [NUM_WD     -1 :0] chunk_num_i_w    ;
   wire                      chunk_lst_i_w    ;
   wire                      chunk_done_o_w   ;
   wire                      chunk_val_o_w    ;
@@ -196,12 +200,28 @@ module crc32(
     endcase
   end
 
+  always @(*) begin
+    chunk_num_i_w = 'd0;
+    case (cur_state_r)
+      IDAT   : if (cnt_stp_r == 'd1)      chunk_num_i_w = 'd3;
+               else if (cnt_stp_r == 'd2) chunk_num_i_w = num_i;
+               else                       chunk_num_i_w = 'd0;
+      IHDR   : if (cnt_stp_r == 'd5)      chunk_num_i_w = 'd0;
+               else if (cnt_stp_r != 'd0) chunk_num_i_w = 'd3;
+               else                       chunk_num_i_w = 'd0;
+      IEND   : if (cnt_stp_r == 'd1)      chunk_num_i_w = 'd3;
+               else                       chunk_num_i_w = 'd0;
+      default:                            chunk_num_i_w = 'd0;
+    endcase
+  end
+
   // inst
   crc32_core chunk_crc32_core(.clk    (clk            ),
                               .rstn   (rstn           ),
                               .start_i(chunk_start_i_w),
                               .val_i  (chunk_val_i_w  ),
                               .dat_i  (chunk_dat_i_w  ),
+                              .num_i  (chunk_num_i_w  ),
                               .lst_i  (chunk_lst_i_w  ),
                               .done_o (chunk_done_o_w ),
                               .val_o  (chunk_val_o_w  ),

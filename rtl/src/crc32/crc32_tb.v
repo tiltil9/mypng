@@ -16,6 +16,7 @@ module crc32_tb;
 
 //***   PARAMETER   ***********************************************************
   localparam DATA_WD     = 'd32;
+  localparam NUM_WD      = 'd2 ;
   localparam SIZE_PIC_WD = 'd32;
 
 //***   INPUT / OUTPUT   ******************************************************
@@ -25,11 +26,12 @@ module crc32_tb;
   reg  [SIZE_PIC_WD -1 :0] h_i    ;
   reg                      start_i;
   reg                      val_i  ;
-  reg  [DATA_WD -1 :0]     dat_i  ;
+  reg  [DATA_WD     -1 :0] dat_i  ;
+  reg  [NUM_WD      -1 :0] num_i  ;
   reg                      lst_i  ;
   wire                     done_o ;
   wire                     val_o  ;
-  wire [DATA_WD -1 :0]     dat_o  ;
+  wire [DATA_WD     -1 :0] dat_o  ;
 
 //***   MAIN BODY   ***********************************************************
 //---   INST   --------------------------------------------
@@ -40,6 +42,7 @@ crc32 dut(.clk    (clk    ),
           .start_i(start_i),
           .val_i  (val_i  ),
           .dat_i  (dat_i  ),
+          .num_i  (num_i  ),
           .lst_i  (lst_i  ),
           .done_o (done_o ),
           .val_o  (val_o  ),
@@ -68,6 +71,7 @@ crc32 dut(.clk    (clk    ),
     val_i = 1'b0;
     start_i = 1'b0;
     lst_i = 1'b0;
+    num_i = 'd0;
     w_i = 32'd256;
     h_i = 32'd256;
     #(5 * `CLK_FULL);
@@ -79,17 +83,19 @@ crc32 dut(.clk    (clk    ),
     @(posedge clk);
     start_i = 1'b0;
 
-    @(negedge dut.chunk_val_o_w); // waiting for "IDAT" calculated
+    @(negedge dut.chunk_val_o_w); // !!! waiting for "IDAT" calculated
     @(negedge clk);
     @(posedge clk);
     dat_i = 32'h04090409;
     val_i = 1'b1;
     lst_i = 1'b1;
+    num_i = 'd3;
     @(negedge clk);
     @(posedge clk);
     val_i = 1'b0;
     dat_i = 32'h0;
     lst_i = 1'b0;
+    num_i = 'd0; // , 5c72a866, ae426082
   end
 
 
