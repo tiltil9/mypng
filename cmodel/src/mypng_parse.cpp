@@ -10,7 +10,18 @@
 ******************************************************************************/
 #include "mypng.hpp"
 
-//*** CORE *********************************************************************
+//*** SAVE *********************************************************************
+unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename)
+{
+  FILE* file;
+  file = fopen(filename, "wb");
+  if(!file) return 79;
+  fwrite(buffer, 1, buffersize, file);
+  fclose(file);
+  return 0;
+}
+
+//*** CONFIG *******************************************************************
 void cfgHelp()
 {
   cout << endl;
@@ -26,7 +37,6 @@ void cfgHelp()
   cout << "--nicematch          / -n   nice match size for lz77; stop searching if >= this length found " << endl;
   cout << "--btype              / -b   the block type for lz77                                          " << endl;
 }
-
 
 void cfgInit(cfg_t *cfg)
 {
@@ -165,17 +175,7 @@ unsigned cfgSet(cfg_t *cfg, int argc, char **argv)
   return 0;
 }
 
-unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename)
-{
-  FILE* file;
-  file = fopen(filename, "wb" );
-  if(!file) return 79;
-  fwrite(buffer, 1, buffersize, file);
-  fclose(file);
-  return 0;
-}
-
-
+//*** STATE ********************************************************************
 void lodepng_setstate_32bitRGBA(cfg_t* cfg, LodePNGState* state)
 {
   // init encoding settings
@@ -196,15 +196,14 @@ void lodepng_setstate_32bitRGBA(cfg_t* cfg, LodePNGState* state)
   state->info_png.filter_method = 0;
 
   // set state from cfg
+  state->info_png.width                  = cfg->width;
+  state->info_png.height                 = cfg->height;
   state->encoder.zlibsettings.windowsize = cfg->windowsize;
   state->encoder.zlibsettings.minmatch   = cfg->minmatch;    
   state->encoder.zlibsettings.nicematch  = cfg->nicematch; 
-  state->info_png.width                  = cfg->width;
-  state->info_png.height                 = cfg->height;
   state->encoder.zlibsettings.btype      = cfg->btype;
 }
 
-/*The input are command line arguments, the output are setted state and image*/
 void lodepng_setstate(cfg_t *cfg, LodePNGState* state)
 {
   lodepng_setstate_32bitRGBA(cfg, state);
