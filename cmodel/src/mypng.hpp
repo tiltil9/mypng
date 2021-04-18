@@ -119,11 +119,6 @@ static void lodepng_set32bitInt(unsigned char* buffer, unsigned value) {
   buffer[3] = (unsigned char)((value      ) & 0xff);
 }
 
-static unsigned lodepng_read32bitInt(const unsigned char* buffer) {
-  return (((unsigned)buffer[0] << 24u) | ((unsigned)buffer[1] << 16u) |
-         ((unsigned)buffer[2] << 8u) | (unsigned)buffer[3]);
-}
-
 //*** DYNAMIC VECTOR ***********************************************************
 /*dynamic vector of unsigned chars*/
 typedef struct ucvector {

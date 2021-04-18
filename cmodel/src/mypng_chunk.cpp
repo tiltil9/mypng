@@ -11,20 +11,6 @@
 #include "mypng.hpp"
 
 //*** CHUNK TOOL ***************************************************************
-unsigned lodepng_chunk_init(unsigned char** chunk, ucvector* out, unsigned length, const char* type)
-{
-  size_t pos = out->size;
-  ucvector_resize(out, out->size + (4 + 4 + length + 4));
-  *chunk = out->data + pos;
-
-  /*1: length*/
-  lodepng_set32bitInt(*chunk, length);
-  /*2: chunk name (4 letters)*/
-  lodepng_memcpy(*chunk + 4, type, 4);
-
-  return 0;
-}
-
 /* CRC polynomial: 0xedb88320 */
 static unsigned lodepng_crc32_table[256] = {
            0u, 1996959894u, 3993919788u, 2567524794u,  124634137u, 1886057615u, 3915621685u, 2657392035u,
@@ -72,51 +58,59 @@ unsigned lodepng_crc32(const unsigned char* data, size_t length)
   return r ^ 0xffffffffu;
 }
 
-void lodepng_chunk_generate_crc(unsigned char* chunk)
-{
-  unsigned length = lodepng_read32bitInt(&chunk[0]);
-
-  unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
-  lodepng_set32bitInt(chunk + 8 + length, CRC);
-}
-
 //*** CORE *********************************************************************
 void writeSignature(ucvector* out)
 {
   size_t pos = out->size;
-  const unsigned char signature[] = {137, 80, 78, 71, 13, 10, 26, 10}; /*8 bytes PNG signature, aka the magic bytes*/
+  const unsigned char signature[] = {137, 80, 78, 71, 13, 10, 26, 10}; // 8 bytes PNG signature, aka the magic bytes
   ucvector_resize(out, out->size + 8);
   lodepng_memcpy(out->data + pos, signature, 8);
 }
 
 void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method)
 {
-  unsigned char *chunk, *data;
+  unsigned length = 13;
+  const char type[] = "IHDR";
 
-  lodepng_chunk_init(&chunk, out, 13, "IHDR");
+  size_t pos = out->size;
+  ucvector_resize(out, out->size + (4 + 4 + length + 4));
 
-  data = chunk + 8;
-  lodepng_set32bitInt(data + 0, w);   /*width*/
-  lodepng_set32bitInt(data + 4, h);   /*height*/
-  data[8] = (unsigned char)bitdepth;  /*bit depth*/
-  data[9] = (unsigned char)colortype; /*color type*/
-  data[10] = 0;                       /*compression method*/
-  data[11] = 0;                       /*filter method*/
-  data[12] = interlace_method;        /*interlace method*/
-
-  lodepng_chunk_generate_crc(chunk);
+  unsigned char *chunk = out->data + pos;
+  // 1: length
+  lodepng_set32bitInt(chunk, length);
+  // 2: chunk type
+  lodepng_memcpy(chunk + 4, type, 4);
+  // 3: chunk data
+  unsigned char *data = chunk + 8;
+  lodepng_set32bitInt(data + 0, w);   // width
+  lodepng_set32bitInt(data + 4, h);   // height
+  data[8] = (unsigned char)bitdepth;  // bit depth
+  data[9] = (unsigned char)colortype; // color type
+  data[10] = 0;                       // compression method
+  data[11] = 0;                       // filter method
+  data[12] = interlace_method;        // interlace method
+  // 4: crc
+  unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
+  lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
 void addChunk_IEND(ucvector* out)
 {
-  unsigned char* chunk;
+  unsigned length = 0;
+  const char type[] = "IEND";
 
-  lodepng_chunk_init(&chunk, out, 0, "IEND");
+  size_t pos = out->size;
+  ucvector_resize(out, out->size + (4 + 4 + length + 4));
 
-  /*3: the data*/
-  lodepng_memcpy(chunk + 8, NULL, 0);
-  /*4: CRC (of the chunkname characters and the data)*/
-  lodepng_chunk_generate_crc(chunk);
+  unsigned char *chunk = out->data + pos;
+  // 1: length
+  lodepng_set32bitInt(chunk, length);
+  // 2: chunk type
+  lodepng_memcpy(chunk + 4, type, 4);
+  // 3: chunk data
+  // 4: crc
+  unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
+  lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
 void addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
@@ -126,14 +120,23 @@ void addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, Lo
   lodepng_zlib_compress(&zlib, &zlibsize, data, datasize, zlibsettings);
 
   {
-    unsigned char* chunk;
+    unsigned length = zlibsize;
+    const char type[] = "IDAT";
 
-    lodepng_chunk_init(&chunk, out, zlibsize, "IDAT");
+    size_t pos = out->size;
+    ucvector_resize(out, out->size + (4 + 4 + length + 4));
 
-    /*3: the data*/
-    lodepng_memcpy(chunk + 8, zlib, zlibsize);
-    /*4: CRC (of the chunkname characters and the data)*/
-    lodepng_chunk_generate_crc(chunk);
+    unsigned char *chunk = out->data + pos;
+    // 1: length
+    lodepng_set32bitInt(chunk, length);
+    // 2: chunk type
+    lodepng_memcpy(chunk + 4, type, 4);
+    // 3: chunk data
+    unsigned char *data = chunk + 8;
+    lodepng_memcpy(data, zlib, zlibsize);
+    // 4: crc
+    unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
+    lodepng_set32bitInt(chunk + 8 + length, CRC);
   }
 
   free(zlib);
