@@ -13,30 +13,26 @@
 /*The input are setted state and image, the output are full PNG stream and its size*/
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state)
 {
-  /*provide some proper output values if error will happen*/
   *out = 0;
   *outsize = 0;
 
-  unsigned char* data = 0; /*uncompressed version of the IDAT chunk data*/
+  unsigned char* data = 0; // uncompressed version of the IDAT chunk data
   size_t datasize = 0;
   ucvector outv = ucvector_init(NULL, 0);
 
-  /* compute scanline filter types */
+  // compute scanline filter types
   preProcessScanlines(&data, &datasize, image, state->info_png.width, state->info_png.height, state->encoder.filter_strategy);
 
-  /* output all PNG chunks */
+  // output all PNG chunks
   {
-    /*write signature and chunks*/
     writeSignature(&outv);
-    /*IHDR*/
     addChunk_IHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.bitdepth, state->info_png.colortype, state->info_png.interlace_method);
-    /*IDAT (multiple IDAT chunks must be consecutive)*/
-    addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings);
+    addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings); // multiple IDAT chunks must be consecutive
     addChunk_IEND(&outv);
   }
 
   free(data);
-  /*instead of cleaning the vector up, give it to the output*/
+  // instead of cleaning the vector up, give it to the output
   *out = outv.data;
   *outsize = outv.size;
 }

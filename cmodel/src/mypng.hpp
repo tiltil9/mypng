@@ -47,20 +47,17 @@ typedef enum LodePNGColorType {
   //LCT_RGB = 2,
   //LCT_PALETTE = 3,
   //LCT_GREY_ALPHA = 4,
-  LCT_RGBA = 6, /*RGB with alpha: 8,16 bit*/
+  LCT_RGBA = 6,
   //LCT_MAX_OCTET_VALUE = 255
 } LodePNGColorType;
 
 typedef enum LodePNGFilterStrategy {
-  /*every filter at zero*/
   LFS_ZERO = 0,
-  /*every filter at 1, 2, 3 or 4 (paeth), unlike LFS_ZERO not a good choice, but for testing*/
   LFS_ONE = 1,
   LFS_TWO = 2,
   LFS_THREE = 3,
   LFS_FOUR = 4,
-  /*Use filter that gives minimum sum, as described in the official PNG filter heuristic.*/
-  LFS_MINSUM,
+  LFS_MINSUM, // Use filter that gives minimum sum, as described in the official PNG filter heuristic
   //LFS_ENTROPY,
   //LFS_BRUTE_FORCE,
   //LFS_PREDEFINED
@@ -70,29 +67,29 @@ typedef struct LodePNGInfo {
   /*header (IHDR)*/
   unsigned width;
   unsigned height;
-  unsigned bitdepth;          /*bits per sample, see PNG standard or documentation further in this header file*/
-  LodePNGColorType colortype; /*color type, see PNG standard or documentation further in this header file*/
-  unsigned compression_method;/*compression method of the original file. Always 0.*/
-  unsigned filter_method;     /*filter method of the original file*/
-  unsigned interlace_method;  /*interlace method of the original file: 0=none, 1=Adam7*/
+  unsigned bitdepth;           // bits per sample, see PNG standard
+  LodePNGColorType colortype;  // color type
+  unsigned compression_method; // compression method of the original file
+  unsigned filter_method;      // filter method of the original file
+  unsigned interlace_method;   // interlace method of the original file: 0 = none, 1 = Adam7
 } LodePNGInfo;
 
-typedef struct LodePNGCompressSettings /*deflate = compress*/ {
-  unsigned btype;        /*the block type for LZ (0, 1, 2 or 3, see zlib standard). Should be 2 for proper compression.*/
+typedef struct LodePNGCompressSettings {
+  unsigned btype;      // the block type for LZ (0, 1, 2 or 3, see zlib standard). Should be 2 for proper compression
   /*LZ77 related settings*/
-  unsigned windowsize;   /*must be a power of two <= 32768. higher compresses more but is slower. Default value: 2048.*/
-  unsigned minmatch;     /*minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 0*/
-  unsigned nicematch;    /*stop searching if >= this length found. Set to 258 for best compression. Default: 128*/
+  unsigned windowsize; // must be a power of two <= 32768. higher compresses more but is slower. Default value: 2048
+  unsigned minmatch;   // minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 0
+  unsigned nicematch;  // stop searching if >= this length found. Set to 258 for best compression. Default: 128
 } LodePNGCompressSettings;
 
 typedef struct LodePNGEncoderSettings {
-  LodePNGCompressSettings zlibsettings; /*settings for the zlib encoder, such as window size, ...*/
-  LodePNGFilterStrategy filter_strategy;/*Which filter strategy to use. Default: LFS_MINSUM*/
+  LodePNGCompressSettings zlibsettings;  // settings for the zlib encoder
+  LodePNGFilterStrategy filter_strategy; // Which filter strategy to use. Default: LFS_MINSUM
 } LodePNGEncoderSettings;
 
 typedef struct LodePNGState {
-  LodePNGEncoderSettings encoder; /*the encoding settings*/
-  LodePNGInfo info_png;           /*info of the PNG image obtained after decoding*/
+  LodePNGEncoderSettings encoder; // the encoding settings
+  LodePNGInfo info_png;           // info of the PNG image obtained after decoding
 } LodePNGState;
 
 typedef struct cfg_t {
@@ -123,8 +120,8 @@ static void lodepng_set32bitInt(unsigned char* buffer, unsigned value) {
 /*dynamic vector of unsigned chars*/
 typedef struct ucvector {
   unsigned char* data;
-  size_t size;      /*used size*/
-  size_t allocsize; /*allocated size*/
+  size_t size;      // used size
+  size_t allocsize; // allocated size
 } ucvector;
 
 static ucvector ucvector_init(unsigned char* buffer, size_t size) {
@@ -151,8 +148,8 @@ static unsigned ucvector_resize(ucvector* p, size_t size) {
 /*dynamic vector of unsigned ints*/
 typedef struct uivector {
   unsigned* data;
-  size_t size;      /*size in number of unsigned longs*/
-  size_t allocsize; /*allocated size in bytes*/
+  size_t size;      // size in number of unsigned longs
+  size_t allocsize; // allocated size in bytes
 } uivector;
 
 static void uivector_init(uivector* p) {
