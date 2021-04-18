@@ -206,8 +206,11 @@ module crc32(
       IDAT   : if (cnt_stp_r == 'd1)      chunk_num_i_w = 'd3;
                else if (cnt_stp_r == 'd2) chunk_num_i_w = num_i;
                else                       chunk_num_i_w = 'd0;
-      IHDR   : if (cnt_stp_r == 'd5)      chunk_num_i_w = 'd0;
-               else if (cnt_stp_r != 'd0) chunk_num_i_w = 'd3;
+      IHDR   : if (cnt_stp_r == 'd5)      chunk_num_i_w = 'd0; // only 1 most significant byte is valid
+               else if (cnt_stp_r == 'd1
+                     || cnt_stp_r == 'd2
+                     || cnt_stp_r == 'd3
+                     || cnt_stp_r == 'd4) chunk_num_i_w = 'd3;
                else                       chunk_num_i_w = 'd0;
       IEND   : if (cnt_stp_r == 'd1)      chunk_num_i_w = 'd3;
                else                       chunk_num_i_w = 'd0;
