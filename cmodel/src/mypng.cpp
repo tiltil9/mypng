@@ -68,6 +68,14 @@ int main(int argc, char **argv)
   size_t buffersize;
   lodepng_encode(&buffer, &buffersize, image, &state);
 
+  // print result
+  if(0) {
+    cout << "Original size: " << (cfg.width * cfg.height * 4) << " bytes, "
+         << "Encoded size: " << (buffersize) << " bytes." << endl;
+    cout << "Compression ratio: " << (double)(buffersize) / (double)(cfg.width * cfg.height * 4) << endl;
+    cout << endl;
+  }
+
   // write png
   lodepng_save_file(buffer, buffersize, cfg.output_file.c_str());
 
