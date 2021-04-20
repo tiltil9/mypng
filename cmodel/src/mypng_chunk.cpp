@@ -64,7 +64,7 @@ void writeSignature(ucvector* out)
   size_t pos = out->size;
   const unsigned char signature[] = {137, 80, 78, 71, 13, 10, 26, 10}; // 8 bytes PNG signature, aka the magic bytes
   ucvector_resize(out, out->size + 8);
-  lodepng_memcpy(out->data + pos, signature, 8);
+  memcpy(out->data + pos, signature, 8);
 }
 
 void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method)
@@ -79,7 +79,7 @@ void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, Lod
   // 1: length
   lodepng_set32bitInt(chunk, length);
   // 2: chunk type
-  lodepng_memcpy(chunk + 4, type, 4);
+  memcpy(chunk + 4, type, 4);
   // 3: chunk data
   unsigned char *data = chunk + 8;
   lodepng_set32bitInt(data + 0, w);   // width
@@ -106,7 +106,7 @@ void addChunk_IEND(ucvector* out)
   // 1: length
   lodepng_set32bitInt(chunk, length);
   // 2: chunk type
-  lodepng_memcpy(chunk + 4, type, 4);
+  memcpy(chunk + 4, type, 4);
   // 3: chunk data
   // 4: crc
   unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
@@ -130,10 +130,10 @@ void addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, Lo
     // 1: length
     lodepng_set32bitInt(chunk, length);
     // 2: chunk type
-    lodepng_memcpy(chunk + 4, type, 4);
+    memcpy(chunk + 4, type, 4);
     // 3: chunk data
     unsigned char *data = chunk + 8;
-    lodepng_memcpy(data, zlib, zlibsize);
+    memcpy(data, zlib, zlibsize);
     // 4: crc
     unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
     lodepng_set32bitInt(chunk + 8 + length, CRC);

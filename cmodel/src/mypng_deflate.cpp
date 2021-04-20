@@ -460,7 +460,7 @@ void lodepng_deflate_nocompression(unsigned char** out, size_t* outsize, const u
     vout.data[pos + 2] = (unsigned char)(LEN >> 8u);
     vout.data[pos + 3] = (unsigned char)(NLEN & 255);
     vout.data[pos + 4] = (unsigned char)(NLEN >> 8u);
-    lodepng_memcpy(vout.data + pos + 5, in + datapos, LEN);
+    memcpy(vout.data + pos + 5, in + datapos, LEN);
 
     datapos += LEN;
   }

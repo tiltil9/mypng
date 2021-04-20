@@ -31,9 +31,7 @@
 #ifndef __MY_PNG_HPP__
 #define __MY_PNG_HPP__
 
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <cstdlib>
 #include <string>
 #include <iostream>
@@ -104,11 +102,6 @@ typedef struct cfg_t {
 } cfg_t;
 
 //*** COMMON TOOL **************************************************************
-static void lodepng_memcpy(void* __restrict dst, const void* __restrict src, size_t size) {
-  size_t i;
-  for(i = 0; i < size; i++) ((char*)dst)[i] = ((const char*)src)[i];
-}
-
 static void lodepng_set32bitInt(unsigned char* buffer, unsigned value) {
   buffer[0] = (unsigned char)((value >> 24) & 0xff);
   buffer[1] = (unsigned char)((value >> 16) & 0xff);
