@@ -12,7 +12,7 @@
 
 //*** CHUNK TOOL ***************************************************************
 /* CRC polynomial: 0xedb88320 */
-static unsigned lodepng_crc32_table[256] = {
+static unsigned crc32Table[256] = {
            0u, 1996959894u, 3993919788u, 2567524794u,  124634137u, 1886057615u, 3915621685u, 2657392035u,
    249268274u, 2044508324u, 3772115230u, 2547177864u,  162941995u, 2125561021u, 3887607047u, 2428444049u,
    498536548u, 1789927666u, 4089016648u, 2227061214u,  450548861u, 1843258603u, 4107580753u, 2211677639u,
@@ -48,12 +48,12 @@ static unsigned lodepng_crc32_table[256] = {
 };
 
 /*Return the CRC of the bytes buf[0..len-1].*/
-unsigned lodepng_crc32(const unsigned char* data, size_t length)
+unsigned crc32Calc(const unsigned char* data, size_t length)
 {
   unsigned r = 0xffffffffu;
   size_t i;
   for(i = 0; i < length; ++i) {
-    r = lodepng_crc32_table[(r ^ data[i]) & 0xffu] ^ (r >> 8u);
+    r = crc32Table[(r ^ data[i]) & 0xffu] ^ (r >> 8u);
   }
   return r ^ 0xffffffffu;
 }
@@ -90,7 +90,7 @@ void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, Lod
   data[11] = 0;                       // filter method
   data[12] = interlace_method;        // interlace method
   // 4: crc
-  unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
+  unsigned CRC = crc32Calc(&chunk[4], length + 4);
   lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
@@ -109,7 +109,7 @@ void addChunk_IEND(ucvector* out)
   memcpy(chunk + 4, type, 4);
   // 3: chunk data
   // 4: crc
-  unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
+  unsigned CRC = crc32Calc(&chunk[4], length + 4);
   lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
@@ -135,7 +135,7 @@ void addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, Lo
     unsigned char *data = chunk + 8;
     memcpy(data, zlib, zlibsize);
     // 4: crc
-    unsigned CRC = lodepng_crc32(&chunk[4], length + 4);
+    unsigned CRC = crc32Calc(&chunk[4], length + 4);
     lodepng_set32bitInt(chunk + 8 + length, CRC);
   }
 
