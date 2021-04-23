@@ -11,19 +11,20 @@
 
 `timescale 1ns/1ns
 
-`define SIZE_PIC_X_MAX  'd2048
-`define SIZE_PIC_Y_MAX  'd2048
-`define SIZE_PIC_X_WD   `LOG2(SIZE_PIC_X_MAX)
-`define SIZE_PIC_Y_WD   `LOG2(SIZE_PIC_Y_MAX)
+`define SIZE_W_MAX  'd1024
+`define SIZE_H_MAX  'd1024
+`define SIZE_W_WD   `LOG2(`SIZE_W_MAX)
+`define SIZE_H_WD   `LOG2(`SIZE_H_MAX)
 
-`define DATA_PXL_WD     'd32
+`define DATA_PXL_WD     'd32  // RGBA: 4 chanels
+`define DATA_CHN_WD     'd8   // single chanel
 
 `define FILTER_ENUM_WD 'd3
-  `define FILTER_ENUM_NONE  3'd0
-  `define FILTER_ENUM_SUB   3'd1
-  `define FILTER_ENUM_UP    3'd2
-  `define FILTER_ENUM_AVRG  3'd3
-  `define FILTER_ENUM_PAETH 3'd4
+  // `define FILTER_ENUM_NONE  3'd0
+  // `define FILTER_ENUM_SUB   3'd1
+  // `define FILTER_ENUM_UP    3'd2
+  // `define FILTER_ENUM_AVRG  3'd3
+  // `define FILTER_ENUM_PAETH 3'd4
 
 
 `define LOG2(x)    ( ((x) <= ('d1<<'d01)) ? 'd01    \
