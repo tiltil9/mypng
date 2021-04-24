@@ -10,6 +10,49 @@
 ******************************************************************************/
 #include "mypng.hpp"
 
+//*** BIT WRITER ***************************************************************
+typedef struct {
+  ucvector* data;
+  unsigned char bp; /*ok to overflow, indicates bit pos inside byte*/
+} LodePNGBitWriter;
+
+void LodePNGBitWriter_init(LodePNGBitWriter* writer, ucvector* data)
+{
+  writer->data = data;
+  writer->bp = 0;
+}
+
+#define WRITEBIT(writer, bit){\
+  /* append new byte */\
+  if(((writer->bp) & 7u) == 0) {\
+    ucvector_resize(writer->data, writer->data->size + 1);\
+    writer->data->data[writer->data->size - 1] = 0;\
+  }\
+  (writer->data->data[writer->data->size - 1]) |= (bit << ((writer->bp) & 7u));\
+  ++writer->bp;\
+}
+
+/* LSB of value is written first, and LSB of bytes is used first */
+void writeBits(LodePNGBitWriter* writer, unsigned value, size_t nbits)
+{
+  if(nbits == 1) { /* compiler should statically compile this case if nbits == 1 */
+    WRITEBIT(writer, value);
+  }
+  else {
+    for(size_t i = 0; i != nbits; ++i) {
+      WRITEBIT(writer, (unsigned char)((value >> i) & 1));
+    }
+  }
+}
+
+/* This one is to use for adding huffman symbol, the value bits are written MSB first */
+void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t nbits)
+{
+  for(size_t i = 0; i != nbits; ++i) {
+    WRITEBIT(writer, (unsigned char)((value >> (nbits - 1u - i)) & 1u));
+  }
+}
+
 //*** HASH *********************************************************************
 typedef struct Hash {
   int* head;             /*hash value to head circular pos - can be outdated if went around window*/
@@ -63,49 +106,6 @@ void updateHashChain(Hash* hash, size_t wpos, unsigned hashval)
   hash->val[wpos] = (int)hashval;
   if(hash->head[hashval] != -1) hash->chain[wpos] = hash->head[hashval];
   hash->head[hashval] = (int)wpos;
-}
-
-//*** BIT WRITER ***************************************************************
-typedef struct {
-  ucvector* data;
-  unsigned char bp; /*ok to overflow, indicates bit pos inside byte*/
-} LodePNGBitWriter;
-
-void LodePNGBitWriter_init(LodePNGBitWriter* writer, ucvector* data)
-{
-  writer->data = data;
-  writer->bp = 0;
-}
-
-#define WRITEBIT(writer, bit){\
-  /* append new byte */\
-  if(((writer->bp) & 7u) == 0) {\
-    ucvector_resize(writer->data, writer->data->size + 1);\
-    writer->data->data[writer->data->size - 1] = 0;\
-  }\
-  (writer->data->data[writer->data->size - 1]) |= (bit << ((writer->bp) & 7u));\
-  ++writer->bp;\
-}
-
-/* LSB of value is written first, and LSB of bytes is used first */
-void writeBits(LodePNGBitWriter* writer, unsigned value, size_t nbits)
-{
-  if(nbits == 1) { /* compiler should statically compile this case if nbits == 1 */
-    WRITEBIT(writer, value);
-  }
-  else {
-    for(size_t i = 0; i != nbits; ++i) {
-      WRITEBIT(writer, (unsigned char)((value >> i) & 1));
-    }
-  }
-}
-
-/* This one is to use for adding huffman symbol, the value bits are written MSB first */
-void writeBitsReversed(LodePNGBitWriter* writer, unsigned value, size_t nbits)
-{
-  for(size_t i = 0; i != nbits; ++i) {
-    WRITEBIT(writer, (unsigned char)((value >> (nbits - 1u - i)) & 1u));
-  }
 }
 
 //*** HUFFMAN TREE *************************************************************
