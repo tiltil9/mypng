@@ -1,26 +1,24 @@
 //------------------------------------------------------------------------------
 //
 //  Filename      : ram.v
-//  Description   : register-based single-port ram
+//  Description   : register-based simple dual-port ram
 //  Author        : Tingting Li
 //  Email         : 1107319548@qq.com
 //  Created       : 2021-04-14
 //
 //------------------------------------------------------------------------------
 
-`include "defines.vh"
-
 module ram(
   // global
   clk         ,
   rstn        ,
-  // common
-  adr_i       ,
   // write
   wr_val_i    ,
   wr_dat_i    ,
+  wr_adr_i    ,
   // read
   rd_val_i    ,
+  rd_adr_i    ,
   rd_val_o    ,
   rd_dat_o
 );
@@ -40,15 +38,14 @@ module ram(
   input                           clk       ;
   input                           rstn      ;
 
-  // common
-  input         [SIZE_WD-1 :0]    adr_i     ;
-
   // write
   input                           wr_val_i  ;
   input         [DATA_WD-1 :0]    wr_dat_i  ;
+  input         [SIZE_WD-1 :0]    wr_adr_i  ;
   
   // read
   input                           rd_val_i  ;
+  input         [SIZE_WD-1 :0]    rd_adr_i  ;
   output reg                      rd_val_o  ;
   output reg    [DATA_WD-1 :0]    rd_dat_o  ;
 
@@ -62,7 +59,7 @@ module ram(
   // mem_array
   always @(posedge clk) begin
     if( wr_val_i ) begin
-      mem_array[adr_i] <= wr_dat_i ;
+      mem_array[wr_adr_i] <= wr_dat_i ;
     end  
   end
 
@@ -84,7 +81,7 @@ module ram(
       rd_dat_o <= 'd0 ;
     end
     else if( rd_val_i ) begin
-      rd_dat_o <= mem_array[adr_i] ;
+      rd_dat_o <= mem_array[rd_adr_i] ;
     end
   end
 
