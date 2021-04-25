@@ -191,7 +191,7 @@ void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned ch
   preProcessScanlines32bitRGBA(out, outsize, in, w, h, strategy);
 
   // dump
-  if (1) {
+  if (0) {
     dumpFilter(out, in, w, h);
   }
 }
