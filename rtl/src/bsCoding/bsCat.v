@@ -39,11 +39,24 @@ module bsCat(
   output     [DATA_WD        -1 :0] dat_o        ;
 
 //***   WIRE / REG   **********************************************************
+  // numb plus 1
+  wire       [NUMB_WD+1      -1 :0] numb_pls1_w  ;
+
+  // dat_i mask
+  wire       [DATA_WD        -1 :0] dat_i_msk_w  ;
+
   // output buffer
   reg        [DATA_WD*2      -1 :0] dat_out_buf_r;
   reg        [PTR_OUT_BUF_WD -1 :0] ptr_out_buf_r;
 
 //***   MAIN BODY   ***********************************************************
+//---   MISC   --------------------------------------------
+  // numb plus 1
+  assign numb_pls1_w = numb_i + 'd1;
+
+  // dat_i mask
+  assign dat_i_msk_w = (1'b1 << numb_pls1_w) - 'd1;
+
 //---   CAT   ---------------------------------------------
   // data output buffer
   always @(posedge clk or negedge rstn) begin
@@ -51,7 +64,7 @@ module bsCat(
       dat_out_buf_r <= 'd0;
     end
     else if (val_i) begin
-      dat_out_buf_r <= (dat_out_buf_r << (numb_i + 'd1)) | dat_i; // precede 0 of dat_i does not matter
+      dat_out_buf_r <= (dat_out_buf_r << numb_pls1_w) | (dat_i & dat_i_msk_w); // mask precede bit of dat_i with 0 so that precede bit does not matter
     end
   end
 
@@ -61,7 +74,7 @@ module bsCat(
       ptr_out_buf_r <= 'd0;
     end
     else if (val_i) begin
-      ptr_out_buf_r <= (ptr_out_buf_r + (numb_i + 'd1) >= DATA_WD) ? (ptr_out_buf_r + (numb_i + 'd1) - DATA_WD) : (ptr_out_buf_r + (numb_i + 'd1));
+      ptr_out_buf_r <= (ptr_out_buf_r + numb_pls1_w >= DATA_WD) ? (ptr_out_buf_r + numb_pls1_w - DATA_WD) : (ptr_out_buf_r + numb_pls1_w);
     end
   end
 
@@ -72,7 +85,7 @@ module bsCat(
       val_o <= 'd0;
     end
     else begin
-      if (val_i && ptr_out_buf_r + (numb_i + 'd1) >= DATA_WD) begin
+      if (val_i && ptr_out_buf_r + numb_pls1_w >= DATA_WD) begin
         val_o <= 'd1;
       end
       else begin
@@ -82,7 +95,7 @@ module bsCat(
   end
 
   // dat_o
-  assign dat_o = (dat_out_buf_r >> ptr_out_buf_r); // [DATA_WD -1 :0] // TODO: reverse per byte
+  assign dat_o = (dat_out_buf_r >> ptr_out_buf_r); // least significant [DATA_WD -1 :0] // TODO: reverse per byte
 
 
 endmodule
