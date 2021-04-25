@@ -8,7 +8,7 @@
   //
 //------------------------------------------------------------------------------
 
-module huffmanFixed(
+module huffmanFixedAndCat(
   clk      ,
   rstn     ,
   //
