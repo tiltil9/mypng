@@ -8,7 +8,7 @@
   //
 //------------------------------------------------------------------------------
 
-module huffmanFixedCore(
+module huffmanFixed(
   lit_dat_i,
   len_dat_i,
   dis_dat_i,
