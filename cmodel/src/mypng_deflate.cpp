@@ -378,6 +378,59 @@ void encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos
   } /*end of the loop through each character of input*/
 }
 
+/*The input are raw bytes, the output is in the form of unsigned integers
+with codes representing for example literal bytes, or length/distance pairs.*/
+void encodeLZ77Hardware(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
+{
+  // init
+  size_t windowPos = inpos;
+  size_t inputPos = inpos;
+  // iter
+  while(inputPos < inposend) {
+    // search
+    unsigned bestLength = 0;                // less than min
+    unsigned bestDistance = windowsize + 1; // greater than max
+    for(size_t searchPos = windowPos; searchPos < inputPos; ++searchPos) { // search the window
+      unsigned searchLength = 0;
+      unsigned searchDistance = inputPos - searchPos;
+
+      const unsigned char *backptr = &in[searchPos];
+      const unsigned char *foreptr = &in[inputPos];
+      const unsigned char *lastptr = &in[inposend < inputPos + nicematch ? inposend : inputPos + nicematch]; // in[inposend] may exceed the memory space of in
+      while(foreptr != lastptr && *backptr == *foreptr) {
+        ++backptr;
+        ++foreptr;
+        ++searchLength;
+      }
+
+      if(searchLength > bestLength || (searchLength == bestLength && searchDistance < bestDistance)) {
+        bestLength = searchLength;
+        bestDistance = searchDistance;
+      }
+    }
+    // output
+    if(bestLength < minmatch) {
+      uivector_push_back(out, in[inputPos]); // literal one byte
+    }
+    else {
+      addLengthDistance(out, bestLength, bestDistance);
+    }
+    // update
+    if(bestLength < minmatch) {
+      inputPos = inputPos + 1; // next input position
+      if(inputPos - windowPos > windowsize) { // maintain the window
+        windowPos = inputPos - windowsize;
+      }
+    }
+    else {
+      inputPos = inputPos + bestLength; // next input position
+      if(inputPos - windowPos > windowsize) { // maintain the window
+        windowPos = inputPos - windowsize;
+      }
+    }
+  }
+}
+
 /*The input are raw bytes, the output is LZ77-compressed data encoded with fixed Huffman codes*/
 void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
@@ -414,6 +467,7 @@ void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned 
     uivector lz77_encoded;
     uivector_init(&lz77_encoded);
     encodeLZ77(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
+    //encodeLZ77Hardware(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
     writeLZ77data(&writer, &lz77_encoded, &tree_ll, &tree_d);
     uivector_cleanup(&lz77_encoded);
     /*add END code*/
