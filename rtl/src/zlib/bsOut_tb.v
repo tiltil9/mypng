@@ -12,7 +12,7 @@
 `define CLK_FULL    10
 `define CLK_HALF    (`CLK_FULL / 2)
 
-module bsCat_tb;
+module bsOut_tb;
 
 //***   PARAMETER   ***********************************************************
   localparam DATA_WD  = 'd32;
@@ -29,7 +29,7 @@ module bsCat_tb;
 
 //***   MAIN BODY   ***********************************************************
 //---   INST   --------------------------------------------
-bsCat dut(.clk    (clk    ),
+bsOut dut(.clk    (clk    ),
           .rstn   (rstn   ),
           .val_i  (val_i  ),
           .dat_i  (dat_i  ),
