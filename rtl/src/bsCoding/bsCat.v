@@ -28,26 +28,29 @@ module bsCat(
 
 //***   INPUT / OUTPUT   ******************************************************
   //
-  input                             clk          ;
-  input                             rstn         ;
+  input                             clk                ;
+  input                             rstn               ;
   //
-  input                             val_i        ;
-  input      [DATA_WD        -1 :0] dat_i        ;
-  input      [NUMB_WD        -1 :0] numb_i       ; // means 1~32 least significant bits are valid
+  input                             val_i              ;
+  input      [DATA_WD        -1 :0] dat_i              ;
+  input      [NUMB_WD        -1 :0] numb_i             ; // means 1~32 least significant bits are valid
   //
-  output reg                        val_o        ;
-  output     [DATA_WD        -1 :0] dat_o        ;
+  output reg                        val_o              ;
+  output     [DATA_WD        -1 :0] dat_o              ;
 
 //***   WIRE / REG   **********************************************************
   // numb plus 1
-  wire       [NUMB_WD+1      -1 :0] numb_pls1_w  ;
+  wire       [NUMB_WD+1      -1 :0] numb_pls1_w        ;
 
   // dat_i mask
-  wire       [DATA_WD        -1 :0] dat_i_msk_w  ;
+  wire       [DATA_WD        -1 :0] dat_i_msk_w        ;
 
   // output buffer
-  reg        [DATA_WD*2      -1 :0] dat_out_buf_r;
-  reg        [PTR_OUT_BUF_WD -1 :0] ptr_out_buf_r;
+  reg        [DATA_WD*2      -1 :0] dat_out_buf_r      ;
+  reg        [PTR_OUT_BUF_WD -1 :0] ptr_out_buf_r      ;
+
+  // align output buffer
+  wire       [DATA_WD*2      -1 :0] dat_out_buf_align_w;
 
 //***   MAIN BODY   ***********************************************************
 //---   MISC   --------------------------------------------
@@ -107,8 +110,11 @@ module bsCat(
     end
   end
 
+  // align output buffer
+  assign dat_out_buf_align_w = (dat_out_buf_r >> ptr_out_buf_r); // current output aligned with least significant bits
+
   // dat_o
-  assign dat_o = (dat_out_buf_r >> ptr_out_buf_r); // use least significant [DATA_WD -1 :0] // TODO: reverse per byte
+  assign dat_o = dat_out_buf_align_w[DATA_WD -1 :0]; // TODO: reverse per byte
 
 
 endmodule
