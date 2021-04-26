@@ -44,27 +44,35 @@ module bsZlib(
   localparam BLK_3       = 3'd6; // flush 0
   localparam ADLER32     = 3'd7; // TODO: may merge adler32 bs
 
+  // huffman fixed
+  localparam HUF_CODE_WD = 'd19;
+  localparam HUFC_W_D_WD = 'd5 ;
+
 //***   INPUT / OUTPUT   ******************************************************
   //
-  input                      clk        ;
-  input                      rstn       ;
+  input                      clk           ;
+  input                      rstn          ;
   //
-  input                      start_i    ;
-  input                      val_i      ;
-  input                      flg_lit_i  ;
-  input  [LIT_DAT_WD  -1 :0] lit_dat_i  ;
-  input  [LEN_DAT_WD  -1 :0] len_dat_i  ;
-  input  [DIS_DAT_WD  -1 :0] dis_dat_i  ;
-  input                      lst_i      ;
+  input                      start_i       ;
+  input                      val_i         ;
+  input                      flg_lit_i     ;
+  input  [LIT_DAT_WD  -1 :0] lit_dat_i     ;
+  input  [LEN_DAT_WD  -1 :0] len_dat_i     ;
+  input  [DIS_DAT_WD  -1 :0] dis_dat_i     ;
+  input                      lst_i         ;
   //
-  output                     done_o     ;
-  output                     val_o      ;
-  output [DATA_WD     -1 :0] dat_o      ;
+  output                     done_o        ;
+  output                     val_o         ;
+  output [DATA_WD     -1 :0] dat_o         ;
 
 //***   WIRE / REG   **********************************************************
   // fsm
-  reg    [FSM_WD      -1 :0] cur_state_r;
-  reg    [FSM_WD      -1 :0] nxt_state_w;
+  reg    [FSM_WD      -1 :0] cur_state_r   ;
+  reg    [FSM_WD      -1 :0] nxt_state_w   ;
+
+  // huffman fixed
+  wire   [HUF_CODE_WD -1 :0] huf_code_w    ;
+  wire   [HUFC_W_D_WD -1 :0] huf_code_w_d_w;
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -95,6 +103,15 @@ module bsZlib(
       default:              nxt_state_w = IDLE   ;
     endcase
   end
+
+//---   HUFFMAN FIXED   -----------------------------------
+  // inst huffman fixed
+  huffmanFixed huffmanFixed(.flg_lit_i     (flg_lit_i     ),
+                            .lit_dat_i     (lit_dat_i     ),
+                            .len_dat_i     (len_dat_i     ),
+                            .dis_dat_i     (dis_dat_i     ),
+                            .huf_code_o    (huf_code_w    ),
+                            .huf_code_w_d_o(huf_code_w_d_w) );
 
 
 endmodule
