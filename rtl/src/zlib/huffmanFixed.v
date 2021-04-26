@@ -16,34 +16,34 @@ module huffmanFixed(
   lit_code_o,
   len_code_o,
   dis_code_o,
-  lit_code_wd_o,
-  len_code_wd_o,
-  dis_code_wd_o
+  lit_code_w_d_o,
+  len_code_w_d_o,
+  dis_code_w_d_o
   );
 
 //***   PARAMETER   ***********************************************************
   // !!! assume `NICE_MATCH and `WINDOW_SIZE are both no more than 64 yet
-  localparam LIT_DAT_WD  = 'd8; /*`LOG2(256)*/
-  localparam LEN_DAT_WD  = 'd7; /*`LOG2(`NICE_MATCH)!!!+1*/
-  localparam DIS_DAT_WD  = 'd7; /*`LOG2(`WINDOW_SIZE)!!!+1*/
+  localparam LIT_DAT_WD  = 'd8 ; /*`LOG2(256)*/
+  localparam LEN_DAT_WD  = 'd7 ; /*`LOG2(`NICE_MATCH)!!!+1*/
+  localparam DIS_DAT_WD  = 'd7 ; /*`LOG2(`WINDOW_SIZE)!!!+1*/
 
-  localparam LIT_CODE_WD = 'd9;
+  localparam LIT_CODE_WD = 'd9 ;
   localparam LEN_CODE_WD = 'd10; // huffman 7 bits + extra 3 bits
-  localparam DIS_CODE_WD = 'd9;  // huffman 5 bits + extra 4 bits
-  localparam CODE_WD_WD  = 'd4;  /*`LOG2(CODE_WD_MAX)*/
+  localparam DIS_CODE_WD = 'd9 ; // huffman 5 bits + extra 4 bits
+  localparam CODE_W_D_WD = 'd4 ;
 
 //***   INPUT / OUTPUT   ******************************************************
   //
-  input      [LIT_DAT_WD  -1 :0] lit_dat_i    ;
-  input      [LEN_DAT_WD  -1 :0] len_dat_i    ;
-  input      [DIS_DAT_WD  -1 :0] dis_dat_i    ;
+  input      [LIT_DAT_WD  -1 :0] lit_dat_i     ;
+  input      [LEN_DAT_WD  -1 :0] len_dat_i     ;
+  input      [DIS_DAT_WD  -1 :0] dis_dat_i     ;
   //
-  output reg [LIT_CODE_WD -1 :0] lit_code_o   ;
-  output reg [LEN_CODE_WD -1 :0] len_code_o   ;
-  output reg [DIS_CODE_WD -1 :0] dis_code_o   ;
-  output reg [CODE_WD_WD  -1 :0] lit_code_wd_o;
-  output reg [CODE_WD_WD  -1 :0] len_code_wd_o;
-  output reg [CODE_WD_WD  -1 :0] dis_code_wd_o;
+  output reg [LIT_CODE_WD -1 :0] lit_code_o    ;
+  output reg [LEN_CODE_WD -1 :0] len_code_o    ;
+  output reg [DIS_CODE_WD -1 :0] dis_code_o    ;
+  output reg [CODE_W_D_WD -1 :0] lit_code_w_d_o;
+  output reg [CODE_W_D_WD -1 :0] len_code_w_d_o;
+  output reg [CODE_W_D_WD -1 :0] dis_code_w_d_o;
 
 //***   WIRE / REG   **********************************************************
 
@@ -316,12 +316,12 @@ module huffmanFixed(
 
   // literal code width
   always @(*) begin
-    lit_code_wd_o = 'd0;
+    lit_code_w_d_o = 'd0;
     if (lit_dat_i <= 'd143) begin
-      lit_code_wd_o = 'd8;
+      lit_code_w_d_o = 'd8;
     end
     else begin
-      lit_code_wd_o = 'd9; 
+      lit_code_w_d_o = 'd9; 
     end
   end
 
@@ -398,18 +398,18 @@ module huffmanFixed(
 
   // length code width
   always @(*) begin
-    len_code_wd_o = 'd0;
+    len_code_w_d_o = 'd0;
     if (len_dat_i <= 'd10) begin
-      len_code_wd_o = 'd7;
+      len_code_w_d_o = 'd7;
     end
     else if (len_dat_i <= 'd18) begin
-      len_code_wd_o = 'd7 + 'd1; 
+      len_code_w_d_o = 'd7 + 'd1; 
     end
     else if (len_dat_i <= 'd34) begin
-      len_code_wd_o = 'd7 + 'd2;
+      len_code_w_d_o = 'd7 + 'd2;
     end
     else begin
-      len_code_wd_o = 'd7 + 'd3;
+      len_code_w_d_o = 'd7 + 'd3;
     end
   end
 
@@ -488,21 +488,21 @@ module huffmanFixed(
 
   // distance code width
   always @(*) begin
-    dis_code_wd_o = 'd0;
+    dis_code_w_d_o = 'd0;
     if (dis_dat_i <= 'd4) begin
-      dis_code_wd_o = 'd5;
+      dis_code_w_d_o = 'd5;
     end
     else if (dis_dat_i <= 'd8) begin
-      dis_code_wd_o = 'd5 + 'd1; 
+      dis_code_w_d_o = 'd5 + 'd1; 
     end
     else if (dis_dat_i <= 'd16) begin
-      dis_code_wd_o = 'd5 + 'd2;
+      dis_code_w_d_o = 'd5 + 'd2;
     end
     else if (dis_dat_i <= 'd32) begin
-      dis_code_wd_o = 'd5 + 'd3;
+      dis_code_w_d_o = 'd5 + 'd3;
     end
     else begin
-      dis_code_wd_o = 'd5 + 'd4;
+      dis_code_w_d_o = 'd5 + 'd4;
     end
   end
 

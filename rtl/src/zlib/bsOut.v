@@ -24,6 +24,7 @@ module bsOut(
   localparam DATA_WD         = 'd32;
   localparam NUMB_WD         = 'd5 ;
 
+  localparam DAT_OUT_BUF_WD  = DATA_WD + DATA_WD;
   localparam PTR_OUT_BUF_WD  = 'd5 ; /*`LOG2(DATA_WD)*/
 
 //***   INPUT / OUTPUT   ******************************************************
@@ -46,11 +47,11 @@ module bsOut(
   wire       [DATA_WD        -1 :0] dat_i_msk_w        ;
 
   // output buffer
-  reg        [DATA_WD*2      -1 :0] dat_out_buf_r      ;
+  reg        [DAT_OUT_BUF_WD -1 :0] dat_out_buf_r      ;
   reg        [PTR_OUT_BUF_WD -1 :0] ptr_out_buf_r      ;
 
   // align output buffer
-  wire       [DATA_WD*2      -1 :0] dat_out_buf_align_w;
+  wire       [DAT_OUT_BUF_WD -1 :0] dat_out_buf_align_w;
 
 //***   MAIN BODY   ***********************************************************
 //---   MISC   --------------------------------------------
