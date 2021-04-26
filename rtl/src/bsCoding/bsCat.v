@@ -58,6 +58,19 @@ module bsCat(
   assign dat_i_msk_w = (1'b1 << numb_pls1_w) - 'd1;
 
 //---   CAT   ---------------------------------------------
+  //
+  // *** OUT: 32 bits, REM: 0 ~ 31 bits, INP: 1 ~ 32 bits
+  // ***      +-------------------+ +--------+
+  // *** last | .. | OUT    | REM | | INP    |
+  // ***      +-------------------+ +--------+
+  // ***                   ptr
+  // ***                    |                |
+  // ***               +----------- ---------+
+  // *** curr          | .. | OUT     | REM  |
+  // ***               +----------- ---------+
+  // ***                             ptr
+  //
+
   // data output buffer
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
@@ -95,7 +108,7 @@ module bsCat(
   end
 
   // dat_o
-  assign dat_o = (dat_out_buf_r >> ptr_out_buf_r); // least significant [DATA_WD -1 :0] // TODO: reverse per byte
+  assign dat_o = (dat_out_buf_r >> ptr_out_buf_r); // use least significant [DATA_WD -1 :0] // TODO: reverse per byte
 
 
 endmodule
