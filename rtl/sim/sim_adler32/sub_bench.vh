@@ -74,7 +74,7 @@
         // wait
         @(negedge clk);
 
-        if(dut.val_o) begin
+        if(dut.done_o) begin
           dut_dat = dut.dat_o;
           tmp     = $fscanf(fpt, "%x", sim_dat);
 

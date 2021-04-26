@@ -562,4 +562,60 @@ void lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned 
   }
 
   free(deflatedata);
+
+  // dump
+  if (0) {
+    FILE* fpt;
+ 
+    // dump uncompressed
+    fpt = fopen("../../rtl/sim/sim_adler32/adler32_i_uncompressed.dat","w");
+    size_t i = 0;
+    size_t len = insize;
+    while(len > 0) {
+      if(len > 4) {
+        fprintf(fpt, "%x\n", 0); // lst_i
+        fprintf(fpt, "%x\n", 3); // num_i
+        fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, in[i + 1] & 0xff, in[i + 2] & 0xff, in[i + 3] & 0xff); // dat_i
+        i = i + 4;
+        len = len - 4;
+      }
+      else {
+        if(len == 4) {
+          fprintf(fpt, "%x\n", 1); // lst_i
+          fprintf(fpt, "%x\n", 3); // num_i
+          fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, in[i + 1] & 0xff, in[i + 2] & 0xff, in[i + 3] & 0xff); // dat_i
+          i = i + 4;
+          len = len - 4;
+        }
+        else if(len == 3) {
+          fprintf(fpt, "%x\n", 1); // lst_i
+          fprintf(fpt, "%x\n", 2); // num_i
+          fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, in[i + 1] & 0xff, in[i + 2] & 0xff, 0 & 0xff); // dat_i
+          i = i + 3;
+          len = len - 3;
+        }
+        else if(len == 2) {
+          fprintf(fpt, "%x\n", 1); // lst_i
+          fprintf(fpt, "%x\n", 1); // num_i
+          fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, in[i + 1] & 0xff, 0 & 0xff, 0 & 0xff); // dat_i
+          i = i + 2;
+          len = len - 2;
+        }
+        else if(len == 1) {
+          fprintf(fpt, "%x\n", 1); // lst_i
+          fprintf(fpt, "%x\n", 0); // num_i
+          fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, 0 & 0xff, 0 & 0xff, 0 & 0xff); // dat_i
+          i = i + 1;
+          len = len - 1;
+        }
+      }
+    }
+    fclose(fpt); 
+
+    // dump value
+    fpt = fopen("../../rtl/sim/sim_adler32/adler32_o_value.dat","w");
+    fprintf(fpt, "%x\n", adler32(in, (unsigned)insize));
+    fclose(fpt); 
+  }
+
 }
