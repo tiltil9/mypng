@@ -40,8 +40,9 @@ module bsZlib(
   localparam BLK_0       = 3'd2; // BFINAL, BTYPE
   localparam BLK_1       = 3'd3; // compressed data block
   localparam BLK_2       = 3'd4; // end of block
-  localparam BLK_3       = 3'd5; // flush 0 // TODO: check the flush 0 behavior
+  localparam BLK_3       = 3'd5; // flush 0 to align with byte boundary
   localparam ADLER32     = 3'd6; // TODO: may merge adler32 bs
+  localparam FLUSH       = 3'd7; // flush 0 to output remain // TODO: may add num_o
 
   // huffman fixed
   localparam HUF_CODE_WD = 'd19;
@@ -76,6 +77,9 @@ module bsZlib(
   wire   [HUF_CODE_WD -1 :0] huf_code_w     ;
   wire   [HUFC_W_D_WD -1 :0] huf_code_w_d_w ;
 
+  // flush 0 numb accumulator
+  reg    [NUMB_WD     -1 :0] bs_flush_numb_r;
+
   // bitstream output signals
   wire                       bs_out_val_i_w ;
   reg    [DATA_WD     -1 :0] bs_out_dat_i_w ;
@@ -99,16 +103,19 @@ module bsZlib(
   always @(*) begin
     nxt_state_w = IDLE;
     case (cur_state_r)
-      IDLE   : if (start_i) nxt_state_w = CMF_FLG;
-               else         nxt_state_w = IDLE   ;
-      CMF_FLG:              nxt_state_w = BLK_0  ;
-      BLK_0  :              nxt_state_w = BLK_1  ;
-      BLK_1  : if (lst_i)   nxt_state_w = BLK_2  ;
-               else         nxt_state_w = BLK_1  ;
-      BLK_2  :              nxt_state_w = BLK_3  ;
-      BLK_3  :              nxt_state_w = ADLER32;
-      ADLER32:              nxt_state_w = IDLE   ;
-      default:              nxt_state_w = IDLE   ;
+      IDLE   : if (start_i)                     nxt_state_w = CMF_FLG;
+               else                             nxt_state_w = IDLE   ;
+      CMF_FLG:                                  nxt_state_w = BLK_0  ;
+      BLK_0  :                                  nxt_state_w = BLK_1  ;
+      BLK_1  : if (lst_i)                       nxt_state_w = BLK_2  ;
+               else                             nxt_state_w = BLK_1  ;
+      BLK_2  : if (bs_flush_numb_r[2:0] != 'd0) nxt_state_w = BLK_3  ;
+               else                             nxt_state_w = ADLER32;
+      BLK_3  :                                  nxt_state_w = ADLER32;
+      ADLER32: if (bs_flush_numb_r != 'd0)      nxt_state_w = FLUSH  ;
+               else                             nxt_state_w = IDLE   ;
+      FLUSH  :                                  nxt_state_w = IDLE   ;
+      default:                                  nxt_state_w = IDLE   ;
     endcase
   end
 
@@ -122,10 +129,20 @@ module bsZlib(
                             .huf_code_w_d_o(huf_code_w_d_w) );
 
 //---   BITSTREAM OUTPUT  ---------------------------------
+  // flush 0 numb accumulator
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      bs_flush_numb_r <= 'd0;
+    end
+    else if (bs_out_val_i_w) begin
+      bs_flush_numb_r <= bs_flush_numb_r + (bs_out_numb_i_w + 'd1); // mod 32 acc
+    end
+  end
+
   // bitstream output signals
   assign bs_out_val_i_w = (cur_state_r == CMF_FLG || cur_state_r == BLK_0)
                        || (cur_state_r == BLK_1 && val_i)  // !!! LZ77 data should only appear in this period
-                       || (cur_state_r == BLK_2 || cur_state_r == BLK_3 || cur_state_r == ADLER32);
+                       || (cur_state_r == BLK_2 || cur_state_r == BLK_3 || cur_state_r == ADLER32 || cur_state_r == FLUSH);
 
   always @(*) begin
     bs_out_dat_i_w = 'd0;
@@ -136,6 +153,7 @@ module bsZlib(
       BLK_2  : bs_out_dat_i_w = 'b0000000; // end of block huffman fixed code
       BLK_3  : bs_out_dat_i_w = 'b0;
       ADLER32: bs_out_dat_i_w = 'b0; //TODO: may merge adler32 bs
+      FLUSH  : bs_out_dat_i_w = 'b0;
       default: bs_out_dat_i_w = 'b0;
     endcase
   end
@@ -147,8 +165,9 @@ module bsZlib(
       BLK_0  : bs_out_numb_i_w = 'd3 - 'd1;
       BLK_1  : bs_out_numb_i_w = huf_code_w_d_w - 'd1;
       BLK_2  : bs_out_numb_i_w = 'd7 - 'd1;
-      BLK_3  : bs_out_numb_i_w = 'd32 - 'd1;
+      BLK_3  : bs_out_numb_i_w = ('d8 - bs_flush_numb_r[2:0] -'d1);
       ADLER32: bs_out_numb_i_w = 'd32 - 'd1;
+      FLUSH  : bs_out_numb_i_w = ('d32 - bs_flush_numb_r - 'd1);
       default: bs_out_numb_i_w = 'd0;
     endcase
   end
@@ -170,7 +189,7 @@ module bsZlib(
   assign val_o = bs_out_val_o_w;
 
   // done_o
-  assign done_o = (cur_state_r == ADLER32 && bs_out_val_o_w);
+  assign done_o = (cur_state_r != IDLE && nxt_state_w == IDLE);
 
 
 endmodule
