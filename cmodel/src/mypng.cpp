@@ -57,18 +57,8 @@ int main(int argc, char **argv)
   lodepng_setstate(&cfg, &state);
 
   // read RGBA
-  unsigned char* image = (unsigned char*)malloc(cfg.width * cfg.height * 4);
-  FILE *fpt = fopen(cfg.input_file.c_str(), "r");
-  char dat [10];
-  for(unsigned y = 0; y < cfg.height; y++) {
-    for(unsigned x = 0; x < cfg.width; x++) {
-      for(unsigned c = 0; c < 4; c++) {
-        fgets(dat, 10, fpt);
-        image[4 * cfg.width * y + 4 * x + c] = atoi(dat);
-      }
-    }
-  }
-  fclose(fpt); 
+  unsigned char* image;
+  readFile(&image, cfg.width, cfg.height, cfg.input_file.c_str());
 
   // encode RGBA into png
   unsigned char* buffer;
@@ -84,7 +74,7 @@ int main(int argc, char **argv)
   }
 
   // write png
-  lodepng_save_file(buffer, buffersize, cfg.output_file.c_str());
+  saveFile(buffer, buffersize, cfg.output_file.c_str());
 
   free(buffer);
   free(image);

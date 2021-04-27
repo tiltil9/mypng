@@ -181,8 +181,9 @@ static unsigned uivector_push_back(uivector* p, unsigned c) {
 // main interface function
 unsigned cfgSet(cfg_t* cfg, int argc, char **argv);
 void lodepng_setstate(cfg_t* cfg, LodePNGState* state);
+unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
-unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename);
+unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // encode interface function
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 void lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);

@@ -10,14 +10,30 @@
 ******************************************************************************/
 #include "mypng.hpp"
 
-//*** SAVE *********************************************************************
-unsigned lodepng_save_file(const unsigned char* buffer, size_t buffersize, const char* filename)
+//*** FILE I/O *****************************************************************
+unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName)
 {
-  FILE* file;
-  file = fopen(filename, "wb");
-  if(!file) return 79;
-  fwrite(buffer, 1, buffersize, file);
-  fclose(file);
+  *image = (unsigned char*)malloc(w * h * 4);
+  FILE *fpt = fopen(fileName, "r");
+  for(unsigned y = 0; y < h; y++) {
+    for(unsigned x = 0; x < w; x++) {
+      for(unsigned c = 0; c < 4; c++) {
+        char dat[10];
+        fgets(dat, 10, fpt);
+        (*image)[4 * w * y + 4 * x + c] = atoi(dat);
+      }
+    }
+  }
+  fclose(fpt);
+  return 0;
+}
+
+unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName)
+{
+  FILE* fpt = fopen(fileName, "wb");
+  if(!fpt) return 1;
+  fwrite(buffer, 1, bufferSize, fpt);
+  fclose(fpt);
   return 0;
 }
 
