@@ -115,7 +115,17 @@ module bsOut(
   assign dat_out_buf_align_w = (dat_out_buf_r >> ptr_out_buf_r); // current output aligned with least significant bits
 
   // dat_o
-  assign dat_o = dat_out_buf_align_w[DATA_WD -1 :0]; // TODO: reverse per byte
+  assign dat_o = {dat_out_buf_align_w[24], dat_out_buf_align_w[25], dat_out_buf_align_w[26], dat_out_buf_align_w[27],
+                  dat_out_buf_align_w[28], dat_out_buf_align_w[29], dat_out_buf_align_w[30], dat_out_buf_align_w[31],
+
+                  dat_out_buf_align_w[16], dat_out_buf_align_w[17], dat_out_buf_align_w[18], dat_out_buf_align_w[19],
+                  dat_out_buf_align_w[20], dat_out_buf_align_w[21], dat_out_buf_align_w[22], dat_out_buf_align_w[23],
+
+                  dat_out_buf_align_w[ 8], dat_out_buf_align_w[ 9], dat_out_buf_align_w[10], dat_out_buf_align_w[11],
+                  dat_out_buf_align_w[12], dat_out_buf_align_w[13], dat_out_buf_align_w[14], dat_out_buf_align_w[15],
+
+                  dat_out_buf_align_w[ 0], dat_out_buf_align_w[ 1], dat_out_buf_align_w[ 2], dat_out_buf_align_w[ 3],
+                  dat_out_buf_align_w[ 4], dat_out_buf_align_w[ 5], dat_out_buf_align_w[ 6], dat_out_buf_align_w[ 7] };
 
 
 endmodule

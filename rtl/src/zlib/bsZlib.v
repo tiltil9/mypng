@@ -36,43 +36,52 @@ module bsZlib(
   // fsm
   localparam FSM_WD      =  'd3;
   localparam IDLE        = 3'd0;
-  localparam CMF         = 3'd1;
-  localparam FLG         = 3'd2;
-  localparam BLK_0       = 3'd3; // BFINAL, BTYPE
-  localparam BLK_1       = 3'd4; // compressed data block
-  localparam BLK_2       = 3'd5; // end of block
-  localparam BLK_3       = 3'd6; // flush 0
-  localparam ADLER32     = 3'd7; // TODO: may merge adler32 bs
+  localparam CMF_FLG     = 3'd1; // CMF, FLG
+  localparam BLK_0       = 3'd2; // BFINAL, BTYPE
+  localparam BLK_1       = 3'd3; // compressed data block
+  localparam BLK_2       = 3'd4; // end of block
+  localparam BLK_3       = 3'd5; // flush 0 // TODO: check the flush 0 behavior
+  localparam ADLER32     = 3'd6; // TODO: may merge adler32 bs
 
   // huffman fixed
   localparam HUF_CODE_WD = 'd19;
   localparam HUFC_W_D_WD = 'd5 ;
 
+  // bitstream output
+  localparam NUMB_WD     = 'd5 ;
+
 //***   INPUT / OUTPUT   ******************************************************
   //
-  input                      clk           ;
-  input                      rstn          ;
+  input                      clk            ;
+  input                      rstn           ;
   //
-  input                      start_i       ;
-  input                      val_i         ;
-  input                      flg_lit_i     ;
-  input  [LIT_DAT_WD  -1 :0] lit_dat_i     ;
-  input  [LEN_DAT_WD  -1 :0] len_dat_i     ;
-  input  [DIS_DAT_WD  -1 :0] dis_dat_i     ;
-  input                      lst_i         ;
+  input                      start_i        ;
+  input                      val_i          ;
+  input                      flg_lit_i      ;
+  input  [LIT_DAT_WD  -1 :0] lit_dat_i      ;
+  input  [LEN_DAT_WD  -1 :0] len_dat_i      ;
+  input  [DIS_DAT_WD  -1 :0] dis_dat_i      ;
+  input                      lst_i          ;
   //
-  output                     done_o        ;
-  output                     val_o         ;
-  output [DATA_WD     -1 :0] dat_o         ;
+  output                     done_o         ;
+  output                     val_o          ;
+  output [DATA_WD     -1 :0] dat_o          ;
 
 //***   WIRE / REG   **********************************************************
   // fsm
-  reg    [FSM_WD      -1 :0] cur_state_r   ;
-  reg    [FSM_WD      -1 :0] nxt_state_w   ;
+  reg    [FSM_WD      -1 :0] cur_state_r    ;
+  reg    [FSM_WD      -1 :0] nxt_state_w    ;
 
   // huffman fixed
-  wire   [HUF_CODE_WD -1 :0] huf_code_w    ;
-  wire   [HUFC_W_D_WD -1 :0] huf_code_w_d_w;
+  wire   [HUF_CODE_WD -1 :0] huf_code_w     ;
+  wire   [HUFC_W_D_WD -1 :0] huf_code_w_d_w ;
+
+  // bitstream output signals
+  wire                       bs_out_val_i_w ;
+  reg    [DATA_WD     -1 :0] bs_out_dat_i_w ;
+  reg    [NUMB_WD     -1 :0] bs_out_numb_i_w;
+  wire                       bs_out_val_o_w ;
+  wire   [DATA_WD     -1 :0] bs_out_dat_o_w ;
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -90,10 +99,9 @@ module bsZlib(
   always @(*) begin
     nxt_state_w = IDLE;
     case (cur_state_r)
-      IDLE   : if (start_i) nxt_state_w = CMF    ;
+      IDLE   : if (start_i) nxt_state_w = CMF_FLG;
                else         nxt_state_w = IDLE   ;
-      CMF    :              nxt_state_w = FLG    ;
-      FLG    :              nxt_state_w = BLK_0  ;
+      CMF_FLG:              nxt_state_w = BLK_0  ;
       BLK_0  :              nxt_state_w = BLK_1  ;
       BLK_1  : if (lst_i)   nxt_state_w = BLK_2  ;
                else         nxt_state_w = BLK_1  ;
@@ -112,6 +120,57 @@ module bsZlib(
                             .dis_dat_i     (dis_dat_i     ),
                             .huf_code_o    (huf_code_w    ),
                             .huf_code_w_d_o(huf_code_w_d_w) );
+
+//---   BITSTREAM OUTPUT  ---------------------------------
+  // bitstream output signals
+  assign bs_out_val_i_w = (cur_state_r == CMF_FLG || cur_state_r == BLK_0)
+                       || (cur_state_r == BLK_1 && val_i)  // !!! LZ77 data should only appear in this period
+                       || (cur_state_r == BLK_2 || cur_state_r == BLK_3 || cur_state_r == ADLER32);
+
+  always @(*) begin
+    bs_out_dat_i_w = 'd0;
+    case (cur_state_r)
+      CMF_FLG: bs_out_dat_i_w = 'b00011110_10000000; // !!! should reverse per byte
+      BLK_0  : bs_out_dat_i_w = 'b1_10;
+      BLK_1  : bs_out_dat_i_w = huf_code_w;
+      BLK_2  : bs_out_dat_i_w = 'b0000000; // end of block huffman fixed code
+      BLK_3  : bs_out_dat_i_w = 'b0;
+      ADLER32: bs_out_dat_i_w = 'b0; //TODO: may merge adler32 bs
+      default: bs_out_dat_i_w = 'b0;
+    endcase
+  end
+
+  always @(*) begin
+    bs_out_numb_i_w = 'd0;
+    case (cur_state_r)
+      CMF_FLG: bs_out_numb_i_w = 'd16 - 'd1;
+      BLK_0  : bs_out_numb_i_w = 'd3 - 'd1;
+      BLK_1  : bs_out_numb_i_w = huf_code_w_d_w - 'd1;
+      BLK_2  : bs_out_numb_i_w = 'd7 - 'd1;
+      BLK_3  : bs_out_numb_i_w = 'd32 - 'd1;
+      ADLER32: bs_out_numb_i_w = 'd32 - 'd1;
+      default: bs_out_numb_i_w = 'd0;
+    endcase
+  end
+
+  // inst bitstream output
+  bsOut bsOut(.clk   (clk            ),
+              .rstn  (rstn           ),
+              .val_i (bs_out_val_i_w ),
+              .dat_i (bs_out_dat_i_w ),
+              .numb_i(bs_out_numb_i_w),
+              .val_o (bs_out_val_o_w ),
+              .dat_o (bs_out_dat_o_w ) );
+
+//---   OUTPUT   ------------------------------------------
+  // dat_o
+  assign dat_o = bs_out_dat_o_w;
+
+  // val_o
+  assign val_o = bs_out_val_o_w;
+
+  // done_o
+  assign done_o = (cur_state_r == ADLER32 && bs_out_val_o_w);
 
 
 endmodule
