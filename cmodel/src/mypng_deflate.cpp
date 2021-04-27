@@ -434,7 +434,6 @@ void encodeLZ77Hardware(uivector* out, Hash* hash, const unsigned char* in, size
 /*The input are raw bytes, the output is LZ77-compressed data encoded with fixed Huffman codes*/
 void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
-  //zlibsettings->btype = 1;
   ucvector vout = ucvector_init(*out, *outsize);
 
   LodePNGBitWriter writer;
@@ -484,32 +483,26 @@ void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned 
   *outsize = vout.size;
 }
 
-/*The input are raw bytes, the output is no-compressed data*/
+/*The input are raw bytes, the output is non-compressed data*/
 void lodepng_deflate_nocompression(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
-  //zlibsettings->btype = 0;
-  /*non compressed deflate block data: 1 bit BFINAL,2 bits BTYPE,(5 bits): it jumps to start of next byte, 2 bytes LEN, 2 bytes NLEN, LEN bytes literal DATA*/
+  // non compressed deflate block data: 1 bit BFINAL,2 bits BTYPE,(5 bits): it jumps to start of next byte,
+  //                                    2 bytes LEN, 2 bytes NLEN, LEN bytes literal DATA
   ucvector vout = ucvector_init(*out, *outsize);
 
   size_t numdeflateblocks = (insize + 65534u) / 65535u;
   unsigned datapos = 0;
 
   for(size_t i = 0; i != numdeflateblocks; ++i) {
-    unsigned BFINAL, BTYPE, LEN, NLEN;
-    unsigned char firstbyte;
+    unsigned BFINAL = (i == numdeflateblocks - 1);
+    unsigned BTYPE = 0;
+    unsigned LEN = (insize - datapos < 65535u) ? (unsigned)insize - datapos : 65535;
+    unsigned NLEN = 65535 - LEN;
+
     size_t pos = vout.size;
-
-    BFINAL = (i == numdeflateblocks - 1);
-    BTYPE = 0;
-
-    LEN = 65535;
-    if(insize - datapos < 65535u) LEN = (unsigned)insize - datapos;
-    NLEN = 65535 - LEN;
-
     ucvector_resize(&vout, vout.size + LEN + 5);
 
-    firstbyte = (unsigned char)(BFINAL + ((BTYPE & 1u) << 1u) + ((BTYPE & 2u) << 1u));
-    vout.data[pos + 0] = firstbyte;
+    vout.data[pos + 0] = (unsigned char)(BFINAL + ((BTYPE & 1u) << 1u) + ((BTYPE & 2u) << 1u));
     vout.data[pos + 1] = (unsigned char)(LEN & 255);
     vout.data[pos + 2] = (unsigned char)(LEN >> 8u);
     vout.data[pos + 3] = (unsigned char)(NLEN & 255);
