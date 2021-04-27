@@ -195,12 +195,12 @@ unsigned cfgSet(cfg_t *cfg, int argc, char **argv)
 void lodepng_setstate_32bitRGBA(cfg_t* cfg, LodePNGState* state)
 {
   // init encoding settings
-  state->encoder.zlibsettings.btype = 1;         // changeable
-  state->encoder.zlibsettings.windowsize = 2048; // changeable
-  state->encoder.zlibsettings.minmatch = 3;      // changeable
-  state->encoder.zlibsettings.nicematch = 128;   // changeable
+  state->encoder.zlibsettings.btype = 1;
+  state->encoder.zlibsettings.windowsize = 2048;
+  state->encoder.zlibsettings.minmatch = 3;
+  state->encoder.zlibsettings.nicematch = 128;
 
-  state->encoder.filter_strategy = LFS_MINSUM;   // changeable
+  state->encoder.filter_strategy = LFS_MINSUM;
 
   // init PNG image info
   state->info_png.width = 1;

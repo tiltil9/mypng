@@ -45,8 +45,7 @@ typedef enum LodePNGColorType {
   //LCT_RGB = 2,
   //LCT_PALETTE = 3,
   //LCT_GREY_ALPHA = 4,
-  LCT_RGBA = 6,
-  //LCT_MAX_OCTET_VALUE = 255
+  LCT_RGBA = 6
 } LodePNGColorType;
 
 typedef enum LodePNGFilterStrategy {
@@ -55,10 +54,7 @@ typedef enum LodePNGFilterStrategy {
   LFS_TWO = 2,
   LFS_THREE = 3,
   LFS_FOUR = 4,
-  LFS_MINSUM, // Use filter that gives minimum sum, as described in the official PNG filter heuristic
-  //LFS_ENTROPY,
-  //LFS_BRUTE_FORCE,
-  //LFS_PREDEFINED
+  LFS_MINSUM // Use filter that gives minimum sum, as described in the official PNG filter heuristic
 } LodePNGFilterStrategy;
 
 typedef struct LodePNGInfo {
@@ -76,7 +72,7 @@ typedef struct LodePNGCompressSettings {
   unsigned btype;      // the block type for LZ (0, 1, 2 or 3, see zlib standard). Should be 2 for proper compression
   /*LZ77 related settings*/
   unsigned windowsize; // must be a power of two <= 32768. higher compresses more but is slower. Default value: 2048
-  unsigned minmatch;   // minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 0
+  unsigned minmatch;   // minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 3
   unsigned nicematch;  // stop searching if >= this length found. Set to 258 for best compression. Default: 128
 } LodePNGCompressSettings;
 
@@ -102,7 +98,7 @@ typedef struct cfg_t {
 } cfg_t;
 
 //*** COMMON TOOL **************************************************************
-static void lodepng_set32bitInt(unsigned char* buffer, unsigned value) {
+static void set32bitInt(unsigned char* buffer, unsigned value) {
   buffer[0] = (unsigned char)((value >> 24) & 0xff);
   buffer[1] = (unsigned char)((value >> 16) & 0xff);
   buffer[2] = (unsigned char)((value >>  8) & 0xff);
@@ -186,7 +182,7 @@ void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* i
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // encode interface function
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
-void lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);
+void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);
 // chunk interface function
 void writeSignature(ucvector* out);
 void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, LodePNGColorType colorType, unsigned interlaceMethod);

@@ -13,17 +13,15 @@
 /*The input are setted state and image, the output are full PNG stream and its size*/
 void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state)
 {
-  // uncompressed version of the IDAT chunk data
+  // original image data to filtered data
   unsigned char* dataFiltered = 0;
   size_t dataFilteredSize = 0;
-  // compute scanline filter types
   preProcessScanlines(&dataFiltered, &dataFilteredSize, image, state->info_png.width, state->info_png.height, state->encoder.filter_strategy);
 
-  // compressed version of the IDAT chunk data
+  // filtered data to compressed zlib data
   unsigned char* dataZlib = 0;
   size_t dataZlibSize = 0;
-  // compress and package into zlib stream
-  lodepng_zlib_compress(&dataZlib, &dataZlibSize, dataFiltered, dataFilteredSize, &state->encoder.zlibsettings);
+  zlibCompress(&dataZlib, &dataZlibSize, dataFiltered, dataFilteredSize, &state->encoder.zlibsettings);
 
   // output all PNG chunks
   ucvector outv = ucvector_init(NULL, 0);

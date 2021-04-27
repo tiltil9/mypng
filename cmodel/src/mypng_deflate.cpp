@@ -533,7 +533,7 @@ void lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* 
 }
 
 /*The input are raw bytes, the output is the complete zlib stream*/
-void lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
   *out = NULL;
   *outsize = 0;
@@ -558,7 +558,7 @@ void lodepng_zlib_compress(unsigned char** out, size_t* outsize, const unsigned 
     (*out)[0] = (unsigned char)(CMFFLG >> 8);
     (*out)[1] = (unsigned char)(CMFFLG & 255);
     for(size_t i = 0; i != deflatesize; ++i) (*out)[i + 2] = deflatedata[i];
-    lodepng_set32bitInt(&(*out)[*outsize - 4], ADLER32);
+    set32bitInt(&(*out)[*outsize - 4], ADLER32);
   }
 
   free(deflatedata);

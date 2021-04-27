@@ -76,13 +76,13 @@ void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, Lode
 
   unsigned char *chunk = out->data + pos;
   // 1: length
-  lodepng_set32bitInt(chunk, length);
+  set32bitInt(chunk, length);
   // 2: chunk type
   memcpy(chunk + 4, type, 4);
   // 3: chunk data
   unsigned char *data = chunk + 8;
-  lodepng_set32bitInt(data + 0, w);   // width
-  lodepng_set32bitInt(data + 4, h);   // height
+  set32bitInt(data + 0, w);   // width
+  set32bitInt(data + 4, h);   // height
   data[8] = (unsigned char)bitDepth;  // bit depth
   data[9] = (unsigned char)colorType; // color type
   data[10] = 0;                       // compression method
@@ -90,7 +90,7 @@ void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, Lode
   data[12] = interlaceMethod;         // interlace method
   // 4: crc
   unsigned CRC = crc32Calc(&chunk[4], length + 4);
-  lodepng_set32bitInt(chunk + 8 + length, CRC);
+  set32bitInt(chunk + 8 + length, CRC);
 }
 
 void addChunkIEND(ucvector* out)
@@ -103,13 +103,13 @@ void addChunkIEND(ucvector* out)
 
   unsigned char *chunk = out->data + pos;
   // 1: length
-  lodepng_set32bitInt(chunk, length);
+  set32bitInt(chunk, length);
   // 2: chunk type
   memcpy(chunk + 4, type, 4);
   // 3: chunk data
   // 4: crc
   unsigned CRC = crc32Calc(&chunk[4], length + 4);
-  lodepng_set32bitInt(chunk + 8 + length, CRC);
+  set32bitInt(chunk + 8 + length, CRC);
 }
 
 void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibSize)
@@ -122,7 +122,7 @@ void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibS
 
   unsigned char *chunk = out->data + pos;
   // 1: length
-  lodepng_set32bitInt(chunk, length);
+  set32bitInt(chunk, length);
   // 2: chunk type
   memcpy(chunk + 4, type, 4);
   // 3: chunk data
@@ -130,5 +130,5 @@ void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibS
   memcpy(data, dataZlib, dataZlibSize);
   // 4: crc
   unsigned CRC = crc32Calc(&chunk[4], length + 4);
-  lodepng_set32bitInt(chunk + 8 + length, CRC);
+  set32bitInt(chunk + 8 + length, CRC);
 }
