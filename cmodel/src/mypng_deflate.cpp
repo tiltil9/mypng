@@ -437,8 +437,9 @@ void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned 
   ucvector vout = ucvector_init(*out, *outsize);
 
   LodePNGBitWriter writer;
-  Hash hash;
   LodePNGBitWriter_init(&writer, &vout);
+
+  Hash hash;
   hash_init(&hash, zlibsettings->windowsize);
 
   HuffmanTree tree_ll; /*tree for literal values and length codes*/
@@ -454,8 +455,7 @@ void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned 
 
   for(size_t i = 0; i != numdeflateblocks; ++i) {
     size_t start = i * blocksize;
-    size_t end = start + blocksize;
-    if(end > insize) end = insize;
+    size_t end = (start + blocksize > insize) ? insize : start + blocksize;
     unsigned final = (i == numdeflateblocks - 1);
 
     unsigned BFINAL = final;
@@ -468,9 +468,8 @@ void lodepng_deflate_fixed(unsigned char** out, size_t* outsize, const unsigned 
     encodeLZ77(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
     //encodeLZ77Hardware(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
     writeLZ77data(&writer, &lz77_encoded, &tree_ll, &tree_d);
+    writeBitsReversed(&writer,tree_ll.codes[256], tree_ll.lengths[256]); /*add END code*/
     uivector_cleanup(&lz77_encoded);
-    /*add END code*/
-    writeBitsReversed(&writer,tree_ll.codes[256], tree_ll.lengths[256]);
   }
 
   /*cleanup*/
