@@ -301,8 +301,6 @@ with codes representing for example literal bytes, or length/distance pairs.
 It uses a hash table technique to let it encode faster. */
 void encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
 {
-  //unsigned usezeros = 0;     // unchangeable
-  //unsigned lazymatching = 0; // unchangeable
   /*for large window lengths, assume the user wants no compression loss. Otherwise, max hash chain length speedup.*/
   unsigned maxchainlength = windowsize >= 8192 ? windowsize : windowsize / 8u;
 
@@ -311,23 +309,20 @@ void encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos
     unsigned hashval = getHash(in, inposend, pos);
     updateHashChain(hash, wpos, hashval);
 
-
-    const unsigned char * lastptr = &in[inposend < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? inposend : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
-
+    //
     unsigned chainlength = 0;
     unsigned hashpos = hash->chain[wpos];
+    /*search for the longest string*/
+    unsigned prev_offset = 0;
 
     /*the length and offset found for the current position*/
     unsigned length = 0;
     unsigned offset = 0; /*the offset represents the distance in LZ77 terminology*/
 
-    /*search for the longest string*/
-    unsigned prev_offset = 0;
-
     for(;;) {
       if(chainlength++ >= maxchainlength) break;
-      unsigned current_offset = (unsigned)(hashpos <= wpos ? wpos - hashpos : wpos - hashpos + windowsize);
 
+      unsigned current_offset = (unsigned)(hashpos <= wpos ? wpos - hashpos : wpos - hashpos + windowsize);
       if(current_offset < prev_offset) break; /*stop when went completely around the circular buffer*/
       prev_offset = current_offset;
 
@@ -335,13 +330,13 @@ void encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos
         /*test the next characters*/
         const unsigned char * foreptr = &in[pos];
         const unsigned char * backptr = &in[pos - current_offset];
-
+        const unsigned char * lastptr = &in[inposend < pos + MAX_SUPPORTED_DEFLATE_LENGTH ? inposend : pos + MAX_SUPPORTED_DEFLATE_LENGTH];
         while(foreptr != lastptr && *backptr == *foreptr) /*maximum supported length by deflate is max length*/ {
           ++backptr;
           ++foreptr;
         }
-        unsigned current_length = (unsigned)(foreptr - &in[pos]);
 
+        unsigned current_length = (unsigned)(foreptr - &in[pos]);
         if(current_length > length) {
           length = current_length; /*the longest length*/
           offset = current_offset; /*the offset that is related to this longest length*/
@@ -362,8 +357,7 @@ void encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos
       uivector_push_back(out, in[pos]);
     }
     else if(length < minmatch || (length == 3 && offset > 4096)) {
-      /*compensate for the fact that longer offsets have more extra bits, a
-      length of only 3 may be not worth it then*/
+      /*compensate for the fact that longer offsets have more extra bits, a length of only 3 may be not worth it then*/
       uivector_push_back(out, in[pos]);
     }
     else {
