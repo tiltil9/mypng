@@ -535,87 +535,32 @@ void lodepng_deflate(unsigned char** out, size_t* outsize, const unsigned char* 
 /*The input are raw bytes, the output is the complete zlib stream*/
 void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
 {
-  *out = NULL;
-  *outsize = 0;
-
+  // compress
   unsigned char* deflatedata = 0;
   size_t deflatesize = 0;
   lodepng_deflate(&deflatedata, &deflatesize, in, insize, zlibsettings);
 
+  // zlib data: 1 byte CMF (CM+CINFO), 1 byte FLG, deflate data, 4 byte ADLER32 checksum of the Decompressed data
   *outsize = 1 + 1 + deflatesize + 4;
   *out = (unsigned char*)malloc(*outsize);
 
-  {
-    /*zlib data: 1 byte CMF (CM+CINFO), 1 byte FLG, deflate data, 4 byte ADLER32 checksum of the Decompressed data*/
-    unsigned CMF = 120; /*0b01111000: CM 8, CINFO 7. With CINFO 7, any window size up to 32768 can be used.*/
-    unsigned FLEVEL = 0;
-    unsigned FDICT = 0;
-    unsigned CMFFLG = 256 * CMF + FDICT * 32 + FLEVEL * 64;
-    unsigned FCHECK = 31 - CMFFLG % 31;
-    CMFFLG += FCHECK;
-    unsigned ADLER32 = adler32(in, (unsigned)insize);
+  unsigned CMF = 120; // 0b01111000: CM 8, CINFO 7. With CINFO 7, any window size up to 32768 can be used
+  unsigned FLEVEL = 0;
+  unsigned FDICT = 0;
+  unsigned CMFFLG = 256 * CMF + FDICT * 32 + FLEVEL * 64;
+  unsigned FCHECK = 31 - CMFFLG % 31;
+  CMFFLG += FCHECK;
+  unsigned ADLER32 = adler32(in, (unsigned)insize);
 
-    (*out)[0] = (unsigned char)(CMFFLG >> 8);
-    (*out)[1] = (unsigned char)(CMFFLG & 255);
-    for(size_t i = 0; i != deflatesize; ++i) (*out)[i + 2] = deflatedata[i];
-    set32bitInt(&(*out)[*outsize - 4], ADLER32);
-  }
+  (*out)[0] = (unsigned char)(CMFFLG >> 8);
+  (*out)[1] = (unsigned char)(CMFFLG & 255);
+  for(size_t i = 0; i < deflatesize; ++i) (*out)[i + 2] = deflatedata[i];
+  set32bitInt(&(*out)[*outsize - 4], ADLER32);
 
   free(deflatedata);
 
   // dump
   if (0) {
-    FILE* fpt;
- 
-    // dump uncompressed
-    fpt = fopen("../../rtl/sim/sim_adler32/adler32_i_uncompressed.dat","w");
-    size_t i = 0;
-    size_t len = insize;
-    while(len > 0) {
-      if(len > 4) {
-        fprintf(fpt, "%x\n", 0); // lst_i
-        fprintf(fpt, "%x\n", 3); // num_i
-        fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, in[i + 1] & 0xff, in[i + 2] & 0xff, in[i + 3] & 0xff); // dat_i
-        i = i + 4;
-        len = len - 4;
-      }
-      else {
-        if(len == 4) {
-          fprintf(fpt, "%x\n", 1); // lst_i
-          fprintf(fpt, "%x\n", 3); // num_i
-          fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, in[i + 1] & 0xff, in[i + 2] & 0xff, in[i + 3] & 0xff); // dat_i
-          i = i + 4;
-          len = len - 4;
-        }
-        else if(len == 3) {
-          fprintf(fpt, "%x\n", 1); // lst_i
-          fprintf(fpt, "%x\n", 2); // num_i
-          fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, in[i + 1] & 0xff, in[i + 2] & 0xff, 0 & 0xff); // dat_i
-          i = i + 3;
-          len = len - 3;
-        }
-        else if(len == 2) {
-          fprintf(fpt, "%x\n", 1); // lst_i
-          fprintf(fpt, "%x\n", 1); // num_i
-          fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, in[i + 1] & 0xff, 0 & 0xff, 0 & 0xff); // dat_i
-          i = i + 2;
-          len = len - 2;
-        }
-        else if(len == 1) {
-          fprintf(fpt, "%x\n", 1); // lst_i
-          fprintf(fpt, "%x\n", 0); // num_i
-          fprintf(fpt, "%02x%02x%02x%02x\n", in[i] & 0xff, 0 & 0xff, 0 & 0xff, 0 & 0xff); // dat_i
-          i = i + 1;
-          len = len - 1;
-        }
-      }
-    }
-    fclose(fpt); 
-
-    // dump value
-    fpt = fopen("../../rtl/sim/sim_adler32/adler32_o_value.dat","w");
-    fprintf(fpt, "%x\n", adler32(in, (unsigned)insize));
-    fclose(fpt); 
+    dumpAdler32(in, insize, ADLER32);
   }
-
 }

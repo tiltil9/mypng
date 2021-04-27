@@ -188,6 +188,8 @@ void writeSignature(ucvector* out);
 void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, LodePNGColorType colorType, unsigned interlaceMethod);
 void addChunkIEND(ucvector* out);
 void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibSize);
+// dump interface function
+void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32);
 
 
 #endif /*__MY_PNG_HPP__*/
