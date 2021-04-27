@@ -53,39 +53,40 @@ module bsZlib(
 
 //***   INPUT / OUTPUT   ******************************************************
   //
-  input                      clk            ;
-  input                      rstn           ;
+  input                      clk                ;
+  input                      rstn               ;
   //
-  input                      start_i        ;
-  input                      val_i          ;
-  input                      flg_lit_i      ;
-  input  [LIT_DAT_WD  -1 :0] lit_dat_i      ;
-  input  [LEN_DAT_WD  -1 :0] len_dat_i      ;
-  input  [DIS_DAT_WD  -1 :0] dis_dat_i      ;
-  input                      lst_i          ;
+  input                      start_i            ;
+  input                      val_i              ;
+  input                      flg_lit_i          ;
+  input  [LIT_DAT_WD  -1 :0] lit_dat_i          ;
+  input  [LEN_DAT_WD  -1 :0] len_dat_i          ;
+  input  [DIS_DAT_WD  -1 :0] dis_dat_i          ;
+  input                      lst_i              ;
   //
-  output                     done_o         ;
-  output                     val_o          ;
-  output [DATA_WD     -1 :0] dat_o          ;
+  output                     done_o             ;
+  output                     val_o              ;
+  output [DATA_WD     -1 :0] dat_o              ;
 
 //***   WIRE / REG   **********************************************************
   // fsm
-  reg    [FSM_WD      -1 :0] cur_state_r    ;
-  reg    [FSM_WD      -1 :0] nxt_state_w    ;
+  reg    [FSM_WD      -1 :0] cur_state_r        ;
+  reg    [FSM_WD      -1 :0] nxt_state_w        ;
 
   // huffman fixed
-  wire   [HUF_CODE_WD -1 :0] huf_code_w     ;
-  wire   [HUFC_W_D_WD -1 :0] huf_code_w_d_w ;
+  wire   [HUF_CODE_WD -1 :0] huf_code_w         ;
+  wire   [HUFC_W_D_WD -1 :0] huf_code_w_d_w     ;
 
   // flush 0 numb accumulator
-  reg    [NUMB_WD     -1 :0] bs_flush_numb_r;
+  wire   [NUMB_WD     -1 :0] bs_flush_numb_nxt_w;
+  reg    [NUMB_WD     -1 :0] bs_flush_numb_r    ;
 
   // bitstream output signals
-  wire                       bs_out_val_i_w ;
-  reg    [DATA_WD     -1 :0] bs_out_dat_i_w ;
-  reg    [NUMB_WD     -1 :0] bs_out_numb_i_w;
-  wire                       bs_out_val_o_w ;
-  wire   [DATA_WD     -1 :0] bs_out_dat_o_w ;
+  wire                       bs_out_val_i_w     ;
+  reg    [DATA_WD     -1 :0] bs_out_dat_i_w     ;
+  reg    [NUMB_WD     -1 :0] bs_out_numb_i_w    ;
+  wire                       bs_out_val_o_w     ;
+  wire   [DATA_WD     -1 :0] bs_out_dat_o_w     ;
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -103,19 +104,19 @@ module bsZlib(
   always @(*) begin
     nxt_state_w = IDLE;
     case (cur_state_r)
-      IDLE   : if (start_i)                     nxt_state_w = CMF_FLG;
-               else                             nxt_state_w = IDLE   ;
-      CMF_FLG:                                  nxt_state_w = BLK_0  ;
-      BLK_0  :                                  nxt_state_w = BLK_1  ;
-      BLK_1  : if (lst_i)                       nxt_state_w = BLK_2  ;
-               else                             nxt_state_w = BLK_1  ;
-      BLK_2  : if (bs_flush_numb_r[2:0] != 'd0) nxt_state_w = BLK_3  ;
-               else                             nxt_state_w = ADLER32;
-      BLK_3  :                                  nxt_state_w = ADLER32;
-      ADLER32: if (bs_flush_numb_r != 'd0)      nxt_state_w = FLUSH  ;
-               else                             nxt_state_w = IDLE   ;
-      FLUSH  :                                  nxt_state_w = IDLE   ;
-      default:                                  nxt_state_w = IDLE   ;
+      IDLE   : if (start_i)                         nxt_state_w = CMF_FLG;
+               else                                 nxt_state_w = IDLE   ;
+      CMF_FLG:                                      nxt_state_w = BLK_0  ;
+      BLK_0  :                                      nxt_state_w = BLK_1  ;
+      BLK_1  : if (lst_i)                           nxt_state_w = BLK_2  ;
+               else                                 nxt_state_w = BLK_1  ;
+      BLK_2  : if (bs_flush_numb_nxt_w[2:0] != 'd0) nxt_state_w = BLK_3  ;
+               else                                 nxt_state_w = ADLER32;
+      BLK_3  :                                      nxt_state_w = ADLER32;
+      ADLER32: if (bs_flush_numb_nxt_w != 'd0)      nxt_state_w = FLUSH  ;
+               else                                 nxt_state_w = IDLE   ;
+      FLUSH  :                                      nxt_state_w = IDLE   ;
+      default:                                      nxt_state_w = IDLE   ;
     endcase
   end
 
@@ -130,12 +131,14 @@ module bsZlib(
 
 //---   BITSTREAM OUTPUT  ---------------------------------
   // flush 0 numb accumulator
+  assign bs_flush_numb_nxt_w = bs_flush_numb_r + (bs_out_numb_i_w + 'd1); // mod 32 acc
+
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
       bs_flush_numb_r <= 'd0;
     end
     else if (bs_out_val_i_w) begin
-      bs_flush_numb_r <= bs_flush_numb_r + (bs_out_numb_i_w + 'd1); // mod 32 acc
+      bs_flush_numb_r <= bs_flush_numb_nxt_w;
     end
   end
 
@@ -152,7 +155,7 @@ module bsZlib(
       BLK_1  : bs_out_dat_i_w = huf_code_w;
       BLK_2  : bs_out_dat_i_w = 'b0000000; // end of block huffman fixed code
       BLK_3  : bs_out_dat_i_w = 'b0;
-      ADLER32: bs_out_dat_i_w = 'b0; //TODO: may merge adler32 bs
+      ADLER32: bs_out_dat_i_w = 'h482c6a1e; //TODO: may merge adler32 bs
       FLUSH  : bs_out_dat_i_w = 'b0;
       default: bs_out_dat_i_w = 'b0;
     endcase
@@ -189,7 +192,7 @@ module bsZlib(
   assign val_o = bs_out_val_o_w;
 
   // done_o
-  assign done_o = (cur_state_r != IDLE && nxt_state_w == IDLE);
+  assign done_o = (cur_state_r == IDLE && bs_out_val_o_w); // last bs_out_val_o_w
 
 
 endmodule

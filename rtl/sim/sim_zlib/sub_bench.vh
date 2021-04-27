@@ -9,14 +9,14 @@
 //------------------------------------------------------------------------------
 
 //***   INIT   ****************************************************************
-//---   INIT_ADLER32_I   ----------------------------------
-  event init_adler32_i_event;
+//---   INIT_ZLIB_I   -------------------------------------
+  event init_zlib_i_event;
 
   initial begin
-    INIT_ADLER32_I;
+    INIT_ZLIB_I;
   end
 
-  task INIT_ADLER32_I;
+  task INIT_ZLIB_I;
     // variables
     integer fpt;
     integer tmp;
@@ -24,20 +24,29 @@
     // main body
     begin
       // open file
-      fpt = $fopen(`ADLER32_I_FILE, "r");
+      fpt = $fopen(`ZLIB_I_FILE, "r");
 
       // core
       forever begin
         // wait
-        @(init_adler32_i_event);
+        @(init_zlib_i_event);
 
         // active
         // lst
         tmp = $fscanf(fpt, "%x", lst_i);
-        // num
-        tmp = $fscanf(fpt, "%x", num_i);
+        // flg lit
+        tmp = $fscanf(fpt, "%x", flg_lit_i);
         // dat
-        tmp = $fscanf(fpt, "%x", dat_i);
+        if (flg_lit_i == 'd1) begin
+          // lit dat
+          tmp = $fscanf(fpt, "%x", lit_dat_i); 
+        end
+        else begin
+          // len dat
+          tmp = $fscanf(fpt, "%x", len_dat_i); 
+          // dis dat
+          tmp = $fscanf(fpt, "%x", dis_dat_i); 
+        end
 
         // set last
         if (lst_i == 'd1) begin
@@ -48,12 +57,12 @@
   endtask
 
 //***   CHKO   ****************************************************************
-//---   CHKO_ADLER32_O   ----------------------------------
+//---   CHKO_ZLIB_O   -------------------------------------
   initial begin
-    CHKO_ADLER32_O;
+    CHKO_ZLIB_O;
   end
 
-  task CHKO_ADLER32_O;
+  task CHKO_ZLIB_O;
     // variables
     integer                  fpt     ;
     integer                  tmp     ;
@@ -64,23 +73,23 @@
     begin
       // log
       #(10 * `CLK_FULL);
-      $display( "\t\t function check to adler32 is on!");
+      $display( "\t\t function check to zlib is on!");
 
       // open file
-      fpt = $fopen(`ADLER32_O_FILE, "r");
+      fpt = $fopen(`ZLIB_O_FILE, "r");
 
       // core
       forever begin
         // wait
         @(negedge clk);
 
-        if(dut.done_o) begin
+        if(dut.val_o) begin
           dut_dat = dut.dat_o;
           tmp     = $fscanf(fpt, "%x", sim_dat);
 
           // check
           if(dut_dat != sim_dat) begin
-            $display ("\n\t ADLER32 ERROR: at %10d ns, adler(data count %10d) should be %08x, however is %08x \n"
+            $display ("\n\t ZLIB ERROR: at %10d ns, zlib(data count %10d) should be %08x, however is %08x \n"
                           , $time
                           , cnt_dat_r
                           , sim_dat
