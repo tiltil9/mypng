@@ -51,8 +51,7 @@ static unsigned crc32Table[256] = {
 unsigned crc32Calc(const unsigned char* data, size_t length)
 {
   unsigned r = 0xffffffffu;
-  size_t i;
-  for(i = 0; i < length; ++i) {
+  for(size_t i = 0; i < length; ++i) {
     r = crc32Table[(r ^ data[i]) & 0xffu] ^ (r >> 8u);
   }
   return r ^ 0xffffffffu;
@@ -61,13 +60,13 @@ unsigned crc32Calc(const unsigned char* data, size_t length)
 //*** CORE *********************************************************************
 void writeSignature(ucvector* out)
 {
+  const unsigned char signature[] = {137, 80, 78, 71, 13, 10, 26, 10}; // 8 bytes PNG signature
   size_t pos = out->size;
-  const unsigned char signature[] = {137, 80, 78, 71, 13, 10, 26, 10}; // 8 bytes PNG signature, aka the magic bytes
   ucvector_resize(out, out->size + 8);
   memcpy(out->data + pos, signature, 8);
 }
 
-void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, LodePNGColorType colortype, unsigned interlace_method)
+void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, LodePNGColorType colorType, unsigned interlaceMethod)
 {
   unsigned length = 13;
   const char type[] = "IHDR";
@@ -84,17 +83,17 @@ void addChunk_IHDR(ucvector* out, unsigned w, unsigned h, unsigned bitdepth, Lod
   unsigned char *data = chunk + 8;
   lodepng_set32bitInt(data + 0, w);   // width
   lodepng_set32bitInt(data + 4, h);   // height
-  data[8] = (unsigned char)bitdepth;  // bit depth
-  data[9] = (unsigned char)colortype; // color type
+  data[8] = (unsigned char)bitDepth;  // bit depth
+  data[9] = (unsigned char)colorType; // color type
   data[10] = 0;                       // compression method
   data[11] = 0;                       // filter method
-  data[12] = interlace_method;        // interlace method
+  data[12] = interlaceMethod;         // interlace method
   // 4: crc
   unsigned CRC = crc32Calc(&chunk[4], length + 4);
   lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
-void addChunk_IEND(ucvector* out)
+void addChunkIEND(ucvector* out)
 {
   unsigned length = 0;
   const char type[] = "IEND";
@@ -113,7 +112,7 @@ void addChunk_IEND(ucvector* out)
   lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
-void addChunk_IDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
+void addChunkIDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
 {
   unsigned char* zlib = 0;
   size_t zlibsize = 0;

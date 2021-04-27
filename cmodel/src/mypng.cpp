@@ -26,9 +26,9 @@ void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* i
   // output all PNG chunks
   {
     writeSignature(&outv);
-    addChunk_IHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.bitdepth, state->info_png.colortype, state->info_png.interlace_method);
-    addChunk_IDAT(&outv, data, datasize, &state->encoder.zlibsettings); // multiple IDAT chunks must be consecutive
-    addChunk_IEND(&outv);
+    addChunkIHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.bitdepth, state->info_png.colortype, state->info_png.interlace_method);
+    addChunkIDAT(&outv, data, datasize, &state->encoder.zlibsettings); // multiple IDAT chunks must be consecutive
+    addChunkIEND(&outv);
   }
 
   free(data);
