@@ -112,31 +112,23 @@ void addChunkIEND(ucvector* out)
   lodepng_set32bitInt(chunk + 8 + length, CRC);
 }
 
-void addChunkIDAT(ucvector* out, const unsigned char* data, size_t datasize, LodePNGCompressSettings* zlibsettings)
+void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibSize)
 {
-  unsigned char* zlib = 0;
-  size_t zlibsize = 0;
-  lodepng_zlib_compress(&zlib, &zlibsize, data, datasize, zlibsettings);
+  unsigned length = dataZlibSize;
+  const char type[] = "IDAT";
 
-  {
-    unsigned length = zlibsize;
-    const char type[] = "IDAT";
+  size_t pos = out->size;
+  ucvector_resize(out, out->size + (4 + 4 + length + 4));
 
-    size_t pos = out->size;
-    ucvector_resize(out, out->size + (4 + 4 + length + 4));
-
-    unsigned char *chunk = out->data + pos;
-    // 1: length
-    lodepng_set32bitInt(chunk, length);
-    // 2: chunk type
-    memcpy(chunk + 4, type, 4);
-    // 3: chunk data
-    unsigned char *data = chunk + 8;
-    memcpy(data, zlib, zlibsize);
-    // 4: crc
-    unsigned CRC = crc32Calc(&chunk[4], length + 4);
-    lodepng_set32bitInt(chunk + 8 + length, CRC);
-  }
-
-  free(zlib);
+  unsigned char *chunk = out->data + pos;
+  // 1: length
+  lodepng_set32bitInt(chunk, length);
+  // 2: chunk type
+  memcpy(chunk + 4, type, 4);
+  // 3: chunk data
+  unsigned char *data = chunk + 8;
+  memcpy(data, dataZlib, dataZlibSize);
+  // 4: crc
+  unsigned CRC = crc32Calc(&chunk[4], length + 4);
+  lodepng_set32bitInt(chunk + 8 + length, CRC);
 }

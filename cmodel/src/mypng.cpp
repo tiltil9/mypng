@@ -16,22 +16,29 @@ void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* i
   *out = 0;
   *outsize = 0;
 
-  unsigned char* data = 0; // uncompressed version of the IDAT chunk data
-  size_t datasize = 0;
-  ucvector outv = ucvector_init(NULL, 0);
-
+  // uncompressed version of the IDAT chunk data
+  unsigned char* dataFiltered = 0;
+  size_t dataFilteredSize = 0;
   // compute scanline filter types
-  preProcessScanlines(&data, &datasize, image, state->info_png.width, state->info_png.height, state->encoder.filter_strategy);
+  preProcessScanlines(&dataFiltered, &dataFilteredSize, image, state->info_png.width, state->info_png.height, state->encoder.filter_strategy);
+
+  // compressed version of the IDAT chunk data
+  unsigned char* dataZlib = 0;
+  size_t dataZlibSize = 0;
+  // compress and package into zlib stream
+  lodepng_zlib_compress(&dataZlib, &dataZlibSize, dataFiltered, dataFilteredSize, &state->encoder.zlibsettings);
 
   // output all PNG chunks
+  ucvector outv = ucvector_init(NULL, 0);
   {
     writeSignature(&outv);
     addChunkIHDR(&outv, state->info_png.width, state->info_png.height, state->info_png.bitdepth, state->info_png.colortype, state->info_png.interlace_method);
-    addChunkIDAT(&outv, data, datasize, &state->encoder.zlibsettings); // multiple IDAT chunks must be consecutive
+    addChunkIDAT(&outv, dataZlib, dataZlibSize); // multiple IDAT chunks must be consecutive
     addChunkIEND(&outv);
   }
 
-  free(data);
+  free(dataZlib);
+  free(dataFiltered);
   // instead of cleaning the vector up, give it to the output
   *out = outv.data;
   *outsize = outv.size;
