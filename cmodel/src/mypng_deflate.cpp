@@ -522,12 +522,12 @@ void deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size
 void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
 {
   // compress
-  unsigned char* deflatedata = 0;
-  size_t deflatesize = 0;
-  deflate(&deflatedata, &deflatesize, in, insize, zlibsettings);
+  unsigned char* dataDeflate = 0;
+  size_t dataDeflateSize = 0;
+  deflate(&dataDeflate, &dataDeflateSize, in, insize, zlibsettings);
 
   // zlib data: 1 byte CMF (CM+CINFO), 1 byte FLG, deflate data, 4 byte ADLER32 checksum of the Decompressed data
-  *outsize = 1 + 1 + deflatesize + 4;
+  *outsize = 1 + 1 + dataDeflateSize + 4;
   *out = (unsigned char*)malloc(*outsize);
 
   unsigned CMF = 120; // 0b01111000: CM 8, CINFO 7. With CINFO 7, any window size up to 32768 can be used
@@ -540,10 +540,10 @@ void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in,
 
   (*out)[0] = (unsigned char)(CMFFLG >> 8);
   (*out)[1] = (unsigned char)(CMFFLG & 255);
-  for(size_t i = 0; i < deflatesize; ++i) (*out)[i + 2] = deflatedata[i];
+  for(size_t i = 0; i < dataDeflateSize; ++i) (*out)[i + 2] = dataDeflate[i];
   set32bitInt(&(*out)[*outsize - 4], ADLER32);
 
-  free(deflatedata);
+  free(dataDeflate);
 
   // dump
   if (0) {
