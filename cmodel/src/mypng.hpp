@@ -176,18 +176,17 @@ static unsigned uivector_push_back(uivector* p, unsigned c) {
 //*** INTERFACE FUNCTION DECLARATION *******************************************
 // main interface function
 unsigned cfgSet(cfg_t* cfg, int argc, char **argv);
-void lodepng_setstate(cfg_t* cfg, LodePNGState* state);
-unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
-void lodepng_encode(unsigned char** out, size_t* outsize, const unsigned char* image, LodePNGState* state);
-unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
+void oneShot(const cfg_t* cfg);
 // encode interface function
+void lodepng_setstate(const cfg_t* cfg, LodePNGState* state);
+unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);
-// chunk interface function
 void writeSignature(ucvector* out);
 void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, LodePNGColorType colorType, unsigned interlaceMethod);
 void addChunkIEND(ucvector* out);
 void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibSize);
+unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function
 void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32);
 
