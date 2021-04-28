@@ -192,7 +192,7 @@ unsigned cfgSet(cfg_t *cfg, int argc, char **argv)
 }
 
 //*** STATE ********************************************************************
-void lodepng_setstate_32bitRGBA(const cfg_t* cfg, LodePNGState* state)
+void setState32bitRGBA(const cfg_t* cfg, LodePNGState* state)
 {
   // init encoding settings
   state->encoder.zlibsettings.btype = 1;
@@ -220,7 +220,7 @@ void lodepng_setstate_32bitRGBA(const cfg_t* cfg, LodePNGState* state)
   state->encoder.zlibsettings.btype      = cfg->btype;
 }
 
-void lodepng_setstate(const cfg_t* cfg, LodePNGState* state)
+void setState(const cfg_t* cfg, LodePNGState* state)
 {
-  lodepng_setstate_32bitRGBA(cfg, state);
+  setState32bitRGBA(cfg, state);
 }

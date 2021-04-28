@@ -15,7 +15,7 @@ void oneShot(const cfg_t* cfg)
 {
   // set state from default and config
   LodePNGState state;
-  lodepng_setstate(cfg, &state);
+  setState(cfg, &state);
 
   // read RGBA
   unsigned char* image = 0;
