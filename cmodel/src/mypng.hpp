@@ -26,6 +26,7 @@
 //                         state.encoder.zlibsettings.lazymatching = 0;
 //                         state.encoder.auto_convert = 0;
 //                         usezeros = 0;
+//                         may replace encodeLZ77() with encodeLZ77Hardware();
 //
 //
 #ifndef __MY_PNG_HPP__
