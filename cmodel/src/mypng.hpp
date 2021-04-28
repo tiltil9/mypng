@@ -81,10 +81,10 @@ typedef struct LodePNGEncoderSettings {
   LodePNGFilterStrategy filter_strategy; // Which filter strategy to use. Default: LFS_MINSUM
 } LodePNGEncoderSettings;
 
-typedef struct LodePNGState {
+typedef struct PNGState {
   LodePNGEncoderSettings encoder; // the encoding settings
   LodePNGInfo info_png;           // info of the PNG image obtained after decoding
-} LodePNGState;
+} PNGState;
 
 typedef struct cfg_t {
   string   input_file;
@@ -178,7 +178,7 @@ static unsigned uivector_push_back(uivector* p, unsigned c) {
 unsigned cfgSet(cfg_t* cfg, int argc, char **argv);
 void oneShot(const cfg_t* cfg);
 // encode interface function
-void setState(const cfg_t* cfg, LodePNGState* state);
+void setState(const cfg_t* cfg, PNGState* state);
 unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);

@@ -14,7 +14,7 @@
 void oneShot(const cfg_t* cfg)
 {
   // set state from default and config
-  LodePNGState state;
+  PNGState state;
   setState(cfg, &state);
 
   // read RGBA
