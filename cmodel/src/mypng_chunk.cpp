@@ -66,7 +66,7 @@ void writeSignature(ucvector* out)
   memcpy(out->data + pos, signature, 8);
 }
 
-void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, LodePNGColorType colorType, unsigned interlaceMethod)
+void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, PNGColorType colorType, unsigned interlaceMethod)
 {
   unsigned length = 13;
   const char type[] = "IHDR";
@@ -134,7 +134,7 @@ void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibS
 }
 
 /*The input are zlib and state, the output is all PNG chunks stream*/
-void pngPackage(unsigned char** dataPNG, size_t* dataPNGSize, const unsigned char* dataZlib, size_t dataZlibSize, const LodePNGInfo* info)
+void pngPackage(unsigned char** dataPNG, size_t* dataPNGSize, const unsigned char* dataZlib, size_t dataZlibSize, const PNGInfo* info)
 {
   ucvector outv = ucvector_init(NULL, 0);
 

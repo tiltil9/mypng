@@ -67,7 +67,7 @@ void filterScanline(unsigned char* out, const unsigned char* scanline, const uns
   }
 }
 
-void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy)
 {
   unsigned colorChannels = 4; /*RGBA*/
   unsigned bitdepth = 8;
@@ -140,7 +140,7 @@ void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, un
   }
 }
 
-void preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+void preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy)
 {
   unsigned colorChannels = 4; /*RGBA*/
   unsigned bitdepth = 8;
@@ -186,7 +186,7 @@ void dumpFilter(unsigned char** out, const unsigned char* in, unsigned w, unsign
 }
 
 /*The input is image, the output is filtered stream*/
-void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy)
+void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy)
 {
   preProcessScanlines32bitRGBA(out, outsize, in, w, h, strategy);
 

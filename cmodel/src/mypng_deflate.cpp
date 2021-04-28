@@ -426,7 +426,7 @@ void encodeLZ77Hardware(uivector* out, Hash* hash, const unsigned char* in, size
 }
 
 /*The input are raw bytes, the output is LZ77-compressed data encoded with fixed Huffman codes*/
-void deflateFixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+void deflateFixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
 {
   ucvector vout = ucvector_init(*out, *outsize);
 
@@ -477,7 +477,7 @@ void deflateFixed(unsigned char** out, size_t* outsize, const unsigned char* in,
 }
 
 /*The input are raw bytes, the output is non-compressed data*/
-void deflateNoCompression(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+void deflateNoCompression(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
 {
   // non compressed deflate block data: 1 bit BFINAL,2 bits BTYPE,(5 bits): it jumps to start of next byte,
   //                                    2 bytes LEN, 2 bytes NLEN, LEN bytes literal DATA
@@ -510,7 +510,7 @@ void deflateNoCompression(unsigned char** out, size_t* outsize, const unsigned c
 }
 
 /*The input are raw bytes, the output is the stream of zlib compressed data blocks*/
-void deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+void deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
 {
   if(zlibsettings->btype == 1)
     deflateFixed(out, outsize, in, insize, zlibsettings);
@@ -519,7 +519,7 @@ void deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size
 }
 
 /*The input are raw bytes, the output is the complete zlib stream*/
-void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings)
+void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
 {
   // compress
   unsigned char* deflatedata = 0;

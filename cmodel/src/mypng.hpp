@@ -40,50 +40,50 @@
 using namespace std;
 
 //*** ENUM AND STRUCT **********************************************************
-typedef enum LodePNGColorType {
+typedef enum PNGColorType {
   //LCT_GREY = 0,
   //LCT_RGB = 2,
   //LCT_PALETTE = 3,
   //LCT_GREY_ALPHA = 4,
   LCT_RGBA = 6
-} LodePNGColorType;
+} PNGColorType;
 
-typedef enum LodePNGFilterStrategy {
+typedef enum PNGFilterStrategy {
   LFS_ZERO = 0,
   LFS_ONE = 1,
   LFS_TWO = 2,
   LFS_THREE = 3,
   LFS_FOUR = 4,
-  LFS_MINSUM // Use filter that gives minimum sum, as described in the official PNG filter heuristic
-} LodePNGFilterStrategy;
+  LFS_MINSUM
+} PNGFilterStrategy;
 
-typedef struct LodePNGInfo {
+typedef struct PNGInfo {
   /*header (IHDR)*/
   unsigned width;
   unsigned height;
   unsigned bitdepth;           // bits per sample, see PNG standard
-  LodePNGColorType colortype;  // color type
+  PNGColorType colortype;      // color type
   unsigned compression_method; // compression method of the original file
   unsigned filter_method;      // filter method of the original file
   unsigned interlace_method;   // interlace method of the original file: 0 = none, 1 = Adam7
-} LodePNGInfo;
+} PNGInfo;
 
-typedef struct LodePNGCompressSettings {
+typedef struct PNGCompressSettings {
   unsigned btype;      // the block type for LZ (0, 1, 2 or 3, see zlib standard). Should be 2 for proper compression
   /*LZ77 related settings*/
   unsigned windowsize; // must be a power of two <= 32768. higher compresses more but is slower. Default value: 2048
   unsigned minmatch;   // minimum lz77 length. 3 is normally best, 6 can be better for some PNGs. Default: 3
   unsigned nicematch;  // stop searching if >= this length found. Set to 258 for best compression. Default: 128
-} LodePNGCompressSettings;
+} PNGCompressSettings;
 
-typedef struct LodePNGEncoderSettings {
-  LodePNGCompressSettings zlibsettings;  // settings for the zlib encoder
-  LodePNGFilterStrategy filter_strategy; // Which filter strategy to use. Default: LFS_MINSUM
-} LodePNGEncoderSettings;
+typedef struct PNGEncoderSettings {
+  PNGCompressSettings zlibsettings;  // settings for the zlib encoder
+  PNGFilterStrategy filter_strategy; // Which filter strategy to use. Default: LFS_MINSUM
+} PNGEncoderSettings;
 
 typedef struct PNGState {
-  LodePNGEncoderSettings encoder; // the encoding settings
-  LodePNGInfo info_png;           // info of the PNG image obtained after decoding
+  PNGInfo info_png;           // info of the PNG image obtained after decoding
+  PNGEncoderSettings encoder; // the encoding settings
 } PNGState;
 
 typedef struct cfg_t {
@@ -180,9 +180,9 @@ void oneShot(const cfg_t* cfg);
 // encode interface function
 void setState(const cfg_t* cfg, PNGState* state);
 unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
-void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
-void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);
-void pngPackage(unsigned char** dataPNG, size_t* dataPNGSize, const unsigned char* dataZlib, size_t dataZlibSize, const LodePNGInfo* info);
+void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy);
+void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings);
+void pngPackage(unsigned char** dataPNG, size_t* dataPNGSize, const unsigned char* dataZlib, size_t dataZlibSize, const PNGInfo* info);
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function
 void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32);
