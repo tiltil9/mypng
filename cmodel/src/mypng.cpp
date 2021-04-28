@@ -34,22 +34,22 @@ void oneShot(const cfg_t* cfg)
   free(dataFiltered);
 
   // output all PNG chunks stream
-  unsigned char* dataPNG = 0;
-  size_t dataPNGSize = 0;
-  pngPackage(&dataPNG, &dataPNGSize, dataZlib, dataZlibSize, &state.info_png);
+  unsigned char* buffer = 0;
+  size_t bufferSize = 0;
+  pngPackage(&buffer, &bufferSize, dataZlib, dataZlibSize, &state.info_png);
   free(dataZlib);
 
   // print encode result
   if(0) {
     cout << "Original size: " << (cfg->width * cfg->height * 4) << " bytes, "
-         << "Encoded size: "  << (dataPNGSize)                  << " bytes." << endl;
-    cout << "Compression ratio: " << (double)(dataPNGSize) / (double)(cfg->width * cfg->height * 4) << endl;
+         << "Encoded size: "  << (bufferSize)                   << " bytes." << endl;
+    cout << "Compression ratio: " << (double)(bufferSize) / (double)(cfg->width * cfg->height * 4) << endl;
     cout << endl;
   }
 
   // write PNG
-  saveFile(dataPNG, dataPNGSize, cfg->output_file.c_str());
-  free(dataPNG);
+  saveFile(buffer, bufferSize, cfg->output_file.c_str());
+  free(buffer);
 }
 
 //*** MAIN *********************************************************************

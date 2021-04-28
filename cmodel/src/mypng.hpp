@@ -183,7 +183,7 @@ void setState(const cfg_t* cfg, PNGState* state);
 unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy);
 void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings);
-void pngPackage(unsigned char** dataPNG, size_t* dataPNGSize, const unsigned char* dataZlib, size_t dataZlibSize, const PNGInfo* info);
+void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info);
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function
 void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32);

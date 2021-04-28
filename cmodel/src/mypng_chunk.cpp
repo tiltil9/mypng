@@ -112,9 +112,9 @@ void addChunkIEND(ucvector* out)
   set32bitInt(chunk + 8 + length, CRC);
 }
 
-void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibSize)
+void addChunkIDAT(ucvector* out, const unsigned char* in, size_t insize)
 {
-  unsigned length = dataZlibSize;
+  unsigned length = insize;
   const char type[] = "IDAT";
 
   size_t pos = out->size;
@@ -127,22 +127,22 @@ void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibS
   memcpy(chunk + 4, type, 4);
   // 3: chunk data
   unsigned char *data = chunk + 8;
-  memcpy(data, dataZlib, dataZlibSize);
+  memcpy(data, in, insize);
   // 4: crc
   unsigned CRC = crc32Calc(&chunk[4], length + 4);
   set32bitInt(chunk + 8 + length, CRC);
 }
 
 /*The input are zlib and state, the output is all PNG chunks stream*/
-void pngPackage(unsigned char** dataPNG, size_t* dataPNGSize, const unsigned char* dataZlib, size_t dataZlibSize, const PNGInfo* info)
+void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info)
 {
   ucvector outv = ucvector_init(NULL, 0);
 
   writeSignature(&outv);
   addChunkIHDR(&outv, info->width, info->height, info->bitdepth, info->colortype, info->interlace_method);
-  addChunkIDAT(&outv, dataZlib, dataZlibSize); // multiple IDAT chunks must be consecutive
+  addChunkIDAT(&outv, in, insize); // multiple IDAT chunks must be consecutive
   addChunkIEND(&outv);
 
-  *dataPNG = outv.data;
-  *dataPNGSize = outv.size;
+  *out = outv.data;
+  *outsize = outv.size;
 }
