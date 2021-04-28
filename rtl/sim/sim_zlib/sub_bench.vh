@@ -83,7 +83,7 @@
         // wait
         @(negedge clk);
 
-        if(dut.val_o) begin
+        if(dut.val_o) begin// !!! val_o could be valid during several successively cycles
           dut_dat = dut.dat_o;
           tmp     = $fscanf(fpt, "%x", sim_dat);
 
