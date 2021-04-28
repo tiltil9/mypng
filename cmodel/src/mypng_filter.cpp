@@ -87,13 +87,11 @@ void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, un
     }
   }
   else if(strategy == LFS_MINSUM) {
-    /*adaptive filtering*/
-    /*
-    There is a heuristic called the minimum sum of absolute differences heuristic, suggested by the PNG standard:
-       If the image type is Grayscale or RGB (with or without Alpha), and the bit depth is
-       not smaller than 8, then use adaptive filtering heuristic as follows: independently for each row, apply
-       all five filters and select the filter that produces the smallest sum of absolute values per row.
-    */
+    /*adaptive filtering:
+      There is a heuristic called the minimum sum of absolute differences heuristic, suggested by the PNG standard:
+         If the image type is Grayscale or RGB (with or without Alpha), and the bit depth is
+         not smaller than 8, then use adaptive filtering heuristic as follows: independently for each row, apply
+         all five filters and select the filter that produces the smallest sum of absolute values per row.*/
 
     const unsigned char* prevline = 0;
     unsigned char* attempt[5]; /*five filtering attempts, one for each filter type*/
@@ -102,8 +100,8 @@ void filter32bitRGBA(unsigned char* out, const unsigned char* in, unsigned w, un
     }
 
     for(unsigned y = 0; y != h; ++y) {
-    size_t smallest = 0;
-    unsigned char bestType = 0;
+      size_t smallest = 0;
+      unsigned char bestType = 0;
       for(unsigned char type = 0; type != 5; ++type) {
         filterScanline(attempt[type], &in[y * linebytes], prevline, linebytes, bytewidth, type);
 
@@ -150,13 +148,15 @@ void preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const un
   *out = (unsigned char*)malloc(*outsize);
 
   if(bpp < 8 && w * bpp != ((w * bpp + 7u) / 8u) * 8u) {
+    //
   }
   else {
     filter32bitRGBA(*out, in, w, h, strategy);
   }
 }
 
-void dumpFilter(unsigned char** out, const unsigned char* in, unsigned w, unsigned h){
+void dumpFilter(unsigned char** out, const unsigned char* in, unsigned w, unsigned h)
+{
   FILE* fpt;
  
   // dump ori rgba
