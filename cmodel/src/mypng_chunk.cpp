@@ -132,3 +132,17 @@ void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibS
   unsigned CRC = crc32Calc(&chunk[4], length + 4);
   set32bitInt(chunk + 8 + length, CRC);
 }
+
+/*The input are zlib and state, the output is all PNG chunks stream*/
+void pngPackage(unsigned char** dataPNG, size_t* dataPNGSize, const unsigned char* dataZlib, size_t dataZlibSize, const LodePNGInfo* info)
+{
+  ucvector outv = ucvector_init(NULL, 0);
+
+  writeSignature(&outv);
+  addChunkIHDR(&outv, info->width, info->height, info->bitdepth, info->colortype, info->interlace_method);
+  addChunkIDAT(&outv, dataZlib, dataZlibSize); // multiple IDAT chunks must be consecutive
+  addChunkIEND(&outv);
+
+  *dataPNG = outv.data;
+  *dataPNGSize = outv.size;
+}

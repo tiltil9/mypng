@@ -182,10 +182,7 @@ void setState(const cfg_t* cfg, LodePNGState* state);
 unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, LodePNGFilterStrategy strategy);
 void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const LodePNGCompressSettings* zlibsettings);
-void writeSignature(ucvector* out);
-void addChunkIHDR(ucvector* out, unsigned w, unsigned h, unsigned bitDepth, LodePNGColorType colorType, unsigned interlaceMethod);
-void addChunkIEND(ucvector* out);
-void addChunkIDAT(ucvector* out, const unsigned char* dataZlib, size_t dataZlibSize);
+void pngPackage(unsigned char** dataPNG, size_t* dataPNGSize, const unsigned char* dataZlib, size_t dataZlibSize, const LodePNGInfo* info);
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function
 void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32);

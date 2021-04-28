@@ -34,28 +34,22 @@ void oneShot(const cfg_t* cfg)
   free(dataFiltered);
 
   // output all PNG chunks stream
-  unsigned char* buffer = 0;
-  size_t buffersize = 0;
-  ucvector outv = ucvector_init(NULL, 0);
-  writeSignature(&outv);
-  addChunkIHDR(&outv, state.info_png.width, state.info_png.height, state.info_png.bitdepth, state.info_png.colortype, state.info_png.interlace_method);
-  addChunkIDAT(&outv, dataZlib, dataZlibSize); // multiple IDAT chunks must be consecutive
-  addChunkIEND(&outv);
-  buffer = outv.data;
-  buffersize = outv.size;
+  unsigned char* dataPNG = 0;
+  size_t dataPNGSize = 0;
+  pngPackage(&dataPNG, &dataPNGSize, dataZlib, dataZlibSize, &state.info_png);
   free(dataZlib);
 
   // print encode result
   if(0) {
     cout << "Original size: " << (cfg->width * cfg->height * 4) << " bytes, "
-         << "Encoded size: "  << (buffersize)                 << " bytes." << endl;
-    cout << "Compression ratio: " << (double)(buffersize) / (double)(cfg->width * cfg->height * 4) << endl;
+         << "Encoded size: "  << (dataPNGSize)                  << " bytes." << endl;
+    cout << "Compression ratio: " << (double)(dataPNGSize) / (double)(cfg->width * cfg->height * 4) << endl;
     cout << endl;
   }
 
   // write PNG
-  saveFile(buffer, buffersize, cfg->output_file.c_str());
-  free(buffer);
+  saveFile(dataPNG, dataPNGSize, cfg->output_file.c_str());
+  free(dataPNG);
 }
 
 //*** MAIN *********************************************************************
