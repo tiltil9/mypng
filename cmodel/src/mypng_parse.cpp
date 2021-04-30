@@ -52,6 +52,7 @@ void cfgHelp()
   cout << "--minmatch           / -m   minimal match size / length for lz77                             " << endl;
   cout << "--nicematch          / -n   nice match size for lz77; stop searching if >= this length found " << endl;
   cout << "--btype              / -b   the block type for lz77                                          " << endl;
+  cout << "--dumpFilter                dump file knob for filter simulation                             " << endl;
 }
 
 void cfgInit(cfg_t *cfg)
@@ -64,6 +65,7 @@ void cfgInit(cfg_t *cfg)
   cfg->minmatch     = 3;
   cfg->nicematch    = 128;
   cfg->btype        = 1;
+  cfg->dumpFilter   = 0;
 }
 
 void cfgMap(cfg_t *cfg, string datKey, string datCfg)
@@ -71,6 +73,7 @@ void cfgMap(cfg_t *cfg, string datKey, string datCfg)
   // variables
   const char *datCfgStr = datCfg.data();
   int datCfgInt = atoi(datCfgStr);
+  bool datCfgBool = datCfgInt ? true : false;
 
   // mapping
   if      (datKey == "--input_file"  || datKey == "-i") cfg->input_file  = datCfgStr;
@@ -81,6 +84,7 @@ void cfgMap(cfg_t *cfg, string datKey, string datCfg)
   else if (datKey == "--minmatch"    || datKey == "-m") cfg->minmatch    = datCfgInt;
   else if (datKey == "--nicematch"   || datKey == "-n") cfg->nicematch   = datCfgInt;
   else if (datKey == "--btype"       || datKey == "-b") cfg->btype       = datCfgInt;
+  else if (datKey == "--dumpFilter"                   ) cfg->dumpFilter  = datCfgBool;
 }
 
 unsigned cfgSetFromFile(cfg_t *cfg, int argc, char **argv)
@@ -158,6 +162,10 @@ unsigned cfgChk(cfg_t *cfg)
   }
   if (cfg->btype < 0 || cfg->btype > 1){
     cout << "ERROR: btype should with [0, 1]" << endl;
+    return 1;
+  }
+  if (cfg->dumpFilter < 0 || cfg->dumpFilter > 1){
+    cout << "ERROR: dumpFilter should with [0, 1]" << endl;
     return 1;
   }
 

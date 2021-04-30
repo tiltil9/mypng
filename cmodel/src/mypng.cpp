@@ -24,7 +24,7 @@ void oneShot(const cfg_t* cfg)
   // original image data to filtered data
   unsigned char* dataFiltered = 0;
   size_t dataFilteredSize = 0;
-  preProcessScanlines(&dataFiltered, &dataFilteredSize, image, state.info_png.width, state.info_png.height, state.encoder.filter_strategy);
+  preProcessScanlines(cfg, &dataFiltered, &dataFilteredSize, image, state.info_png.width, state.info_png.height, state.encoder.filter_strategy);
   free(image);
 
   // filtered data to compressed zlib data
