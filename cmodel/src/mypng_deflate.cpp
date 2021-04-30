@@ -384,7 +384,8 @@ void encodeLZ77Hardware(uivector* out, Hash* hash, const unsigned char* in, size
     // search
     unsigned bestLength = 0;                // less than min
     unsigned bestDistance = windowsize + 1; // greater than max
-    for(size_t searchPos = windowPos; searchPos < inputPos; ++searchPos) { // search the window
+    // search each point in sliding window (the lastest windowsize points behind currenting input Point)
+    for(size_t searchPos = windowPos; searchPos < inputPos; ++searchPos) {
       unsigned searchLength = 0;
       unsigned searchDistance = inputPos - searchPos;
 
@@ -396,31 +397,24 @@ void encodeLZ77Hardware(uivector* out, Hash* hash, const unsigned char* in, size
         ++foreptr;
         ++searchLength;
       }
-
+      // update when confronted longer matched strings or closer distance
       if(searchLength > bestLength || (searchLength == bestLength && searchDistance < bestDistance)) {
         bestLength = searchLength;
         bestDistance = searchDistance;
       }
     }
-    // output
+    // output and update inputPos
     if(bestLength < minmatch) {
       uivector_push_back(out, in[inputPos]); // literal one byte
+      inputPos = inputPos + 1;
     }
     else {
       addLengthDistance(out, bestLength, bestDistance);
+      inputPos = inputPos + bestLength;
     }
-    // update
-    if(bestLength < minmatch) {
-      inputPos = inputPos + 1; // next input position
-      if(inputPos - windowPos > windowsize) { // maintain the window
-        windowPos = inputPos - windowsize;
-      }
-    }
-    else {
-      inputPos = inputPos + bestLength; // next input position
-      if(inputPos - windowPos > windowsize) { // maintain the window
-        windowPos = inputPos - windowsize;
-      }
+    // update windowPos according to sliding window size
+    if(inputPos - windowPos > windowsize) {
+      windowPos = inputPos - windowsize;
     }
   }
 }
