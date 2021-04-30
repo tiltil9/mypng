@@ -29,6 +29,7 @@ do
   width=${LIST_INFO[$cnt]} ; cnt=$((cnt+1))
   height=${LIST_INFO[$cnt]} ; cnt=$((cnt+1))
 
+  echo "--------------------------------------------"
   echo "$cntFile processing  $file"
 
   # encode rgba to png
