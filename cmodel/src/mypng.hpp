@@ -98,6 +98,7 @@ typedef struct cfg_t {
   unsigned nicematch;
   unsigned btype;
   bool     dumpFilter;
+  bool     dumpAdler32;
 } cfg_t;
 
 //*** COMMON TOOL **************************************************************
@@ -184,7 +185,7 @@ void oneShot(const cfg_t* cfg);
 void setState(const cfg_t* cfg, PNGState* state);
 unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
 void preProcessScanlines(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy);
-void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings);
+void zlibCompress(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings);
 void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info);
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function

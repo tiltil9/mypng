@@ -519,7 +519,7 @@ void deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size
 }
 
 /*The input are raw bytes, the output is the complete zlib stream*/
-void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
+void zlibCompress(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
 {
   // compress
   unsigned char* dataDeflate = 0;
@@ -546,7 +546,7 @@ void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in,
   free(dataDeflate);
 
   // dump
-  if (0) {
+  if (cfg->dumpAdler32) {
     dumpAdler32(in, insize, ADLER32);
   }
 }

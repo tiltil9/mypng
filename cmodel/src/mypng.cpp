@@ -30,7 +30,7 @@ void oneShot(const cfg_t* cfg)
   // filtered data to compressed zlib data
   unsigned char* dataZlib = 0;
   size_t dataZlibSize = 0;
-  zlibCompress(&dataZlib, &dataZlibSize, dataFiltered, dataFilteredSize, &state.encoder.zlibsettings);
+  zlibCompress(cfg, &dataZlib, &dataZlibSize, dataFiltered, dataFilteredSize, &state.encoder.zlibsettings);
   free(dataFiltered);
 
   // output all PNG chunks stream
