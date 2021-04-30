@@ -186,6 +186,7 @@ void zlibCompress(unsigned char** out, size_t* outsize, const unsigned char* in,
 void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info);
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function
+void dumpFilter(unsigned char** out, const unsigned char* in, unsigned w, unsigned h);
 void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32);
 
 

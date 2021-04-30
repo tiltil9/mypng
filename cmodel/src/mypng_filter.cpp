@@ -155,35 +155,6 @@ void preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const un
   }
 }
 
-void dumpFilter(unsigned char** out, const unsigned char* in, unsigned w, unsigned h)
-{
-  FILE* fpt;
- 
-  // dump ori rgba
-  fpt = fopen("../../rtl/sim/sim_filter/data/filter_i_rgba.dat","w");
-  for (unsigned y = 0; y < h ; ++y){
-    for (unsigned x = 0; x < w; ++x){
-      for (unsigned chn = 0; chn < 4; ++chn)
-        fprintf(fpt, "%02x", int(*(in + y * w * 4 + x * 4 + chn)));
-      fprintf(fpt, " ");
-    }
-    fprintf(fpt, "\n");
-  }
-  fclose(fpt); 
-
-  // dump preProcessScanlines
-  fpt = fopen("../../rtl/sim/sim_filter/data/filter_o_scanlines.dat","w");
-  for (unsigned y = 0; y < h ; ++y){
-    fprintf(fpt, "%02x000000 ", int(*(*out + y * (w * 4 + 1))));  // filter type
-    for (unsigned x = 0; x < w; ++x){
-        for (unsigned chn = 0; chn < 4; ++chn)
-          fprintf(fpt, "%02x", int(*(*out + y * (w * 4 + 1) + (x * 4 + 1) + chn)));
-        fprintf(fpt, " ");
-      }
-    fprintf(fpt, "\n");
-  }
-  fclose(fpt); 
-}
 
 /*The input is image, the output is filtered stream*/
 void preProcessScanlines(unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy)
