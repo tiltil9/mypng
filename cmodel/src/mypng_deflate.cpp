@@ -459,8 +459,8 @@ void deflateFixed(unsigned char** out, size_t* outsize, const unsigned char* in,
 
     uivector lz77_encoded;
     uivector_init(&lz77_encoded);
-    encodeLZ77(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
-    //encodeLZ77Hardware(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
+    // encodeLZ77(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
+    encodeLZ77Hardware(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
     writeLZ77data(&writer, &lz77_encoded, &tree_ll, &tree_d);
     writeBitsReversed(&writer,tree_ll.codes[256], tree_ll.lengths[256]); /*add END code*/
     uivector_cleanup(&lz77_encoded);
