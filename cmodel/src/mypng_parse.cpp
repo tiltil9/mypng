@@ -55,6 +55,7 @@ void cfgHelp()
   cout << "--dumpLog                   dump log knob                                                    " << endl;
   cout << "--dumpFilter                dump file knob for filter simulation                             " << endl;
   cout << "--dumpAdler32               dump file knob for Adler32 simulation                            " << endl;
+  cout << "--dumpLz77                  dump file knob for Lz77 simulation                               " << endl;
 }
 
 void cfgInit(cfg_t *cfg)
@@ -70,6 +71,7 @@ void cfgInit(cfg_t *cfg)
   cfg->dumpLog      = 0;
   cfg->dumpFilter   = 0;
   cfg->dumpAdler32  = 0;
+  cfg->dumpLz77     = 0;
 }
 
 void cfgMap(cfg_t *cfg, string datKey, string datCfg)
@@ -91,6 +93,7 @@ void cfgMap(cfg_t *cfg, string datKey, string datCfg)
   else if (datKey == "--dumpLog"                      ) cfg->dumpLog     = datCfgBool;
   else if (datKey == "--dumpFilter"                   ) cfg->dumpFilter  = datCfgBool;
   else if (datKey == "--dumpAdler32"                  ) cfg->dumpAdler32 = datCfgBool;
+  else if (datKey == "--dumpLz77"                     ) cfg->dumpLz77    = datCfgBool;
 }
 
 unsigned cfgSetFromFile(cfg_t *cfg, int argc, char **argv)
@@ -180,6 +183,10 @@ unsigned cfgChk(cfg_t *cfg)
   }
   if (cfg->dumpAdler32 < 0 || cfg->dumpAdler32 > 1){
     cout << "ERROR: dumpAdler32 should with [0, 1]" << endl;
+    return 1;
+  }
+  if (cfg->dumpLz77 < 0 || cfg->dumpLz77 > 1){
+    cout << "ERROR: dumpLz77 should with [0, 1]" << endl;
     return 1;
   }
 

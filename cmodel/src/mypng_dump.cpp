@@ -86,3 +86,22 @@ void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32)
   fprintf(fpt, "%x\n", adler32);
   fclose(fpt);
 }
+
+
+//*** LZ77 DUMP *************************************************************
+void dumpLz77(const unsigned int* in, size_t insize){
+  FILE* fpt;
+
+  fpt = fopen("../../rtl/sim/sim_lz77/check_data/lz77_o.dat","w");
+  for (unsigned i = 0; i < insize ; i = i + 2){
+    if ( in[i] == 1) { // literalFlag = true
+      fprintf(fpt, "1 %02x\n", in[i + 1]);
+    }
+    else {
+      fprintf(fpt, "0 %02x %02x\n", in[i + 1], in[i + 2]);
+      i = i + 1;
+    }
+  }
+
+  fclose(fpt); 
+}

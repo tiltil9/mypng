@@ -374,11 +374,14 @@ void encodeLZ77(uivector* out, Hash* hash, const unsigned char* in, size_t inpos
 
 /*The input are raw bytes, the output is in the form of unsigned integers
 with codes representing for example literal bytes, or length/distance pairs.*/
-void encodeLZ77Hardware(uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
+void encodeLZ77Hardware(const cfg_t* cfg, uivector* out, Hash* hash, const unsigned char* in, size_t inpos, size_t inposend, unsigned windowsize, unsigned minmatch, unsigned nicematch)
 {
   // init
   size_t windowPos = inpos;
   size_t inputPos = inpos;
+  uivector dump_data;
+  uivector_init(&dump_data);
+
   // iter
   while(inputPos < inposend) {
     // search
@@ -406,10 +409,15 @@ void encodeLZ77Hardware(uivector* out, Hash* hash, const unsigned char* in, size
     // output and update inputPos
     if(bestLength < minmatch) {
       uivector_push_back(out, in[inputPos]); // literal one byte
+      uivector_push_back(&dump_data, 1);     // literalFlag = true
+      uivector_push_back(&dump_data, (unsigned)in[inputPos]);
       inputPos = inputPos + 1;
     }
     else {
       addLengthDistance(out, bestLength, bestDistance);
+      uivector_push_back(&dump_data, 0);     // literalFlag = false
+      uivector_push_back(&dump_data, bestLength);
+      uivector_push_back(&dump_data, bestDistance);
       inputPos = inputPos + bestLength;
     }
     // update windowPos according to sliding window size
@@ -417,10 +425,15 @@ void encodeLZ77Hardware(uivector* out, Hash* hash, const unsigned char* in, size
       windowPos = inputPos - windowsize;
     }
   }
+
+  // dump
+  if (cfg->dumpLz77) {
+    dumpLz77(dump_data.data, dump_data.size);
+  }
 }
 
 /*The input are raw bytes, the output is LZ77-compressed data encoded with fixed Huffman codes*/
-void deflateFixed(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
+void deflateFixed(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
 {
   ucvector vout = ucvector_init(*out, *outsize);
 
@@ -454,7 +467,7 @@ void deflateFixed(unsigned char** out, size_t* outsize, const unsigned char* in,
     uivector lz77_encoded;
     uivector_init(&lz77_encoded);
     // encodeLZ77(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
-    encodeLZ77Hardware(&lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
+    encodeLZ77Hardware(cfg, &lz77_encoded, &hash, in, start, end, zlibsettings->windowsize, zlibsettings->minmatch, zlibsettings->nicematch);
     writeLZ77data(&writer, &lz77_encoded, &tree_ll, &tree_d);
     writeBitsReversed(&writer,tree_ll.codes[256], tree_ll.lengths[256]); /*add END code*/
     uivector_cleanup(&lz77_encoded);
@@ -504,10 +517,10 @@ void deflateNoCompression(unsigned char** out, size_t* outsize, const unsigned c
 }
 
 /*The input are raw bytes, the output is the stream of zlib compressed data blocks*/
-void deflate(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
+void deflate(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings)
 {
   if(zlibsettings->btype == 1)
-    deflateFixed(out, outsize, in, insize, zlibsettings);
+    deflateFixed(cfg, out, outsize, in, insize, zlibsettings);
   else
     deflateNoCompression(out, outsize, in, insize, zlibsettings);
 }
@@ -518,7 +531,7 @@ void zlibCompress(const cfg_t* cfg, unsigned char** out, size_t* outsize, const 
   // compress
   unsigned char* dataDeflate = 0;
   size_t dataDeflateSize = 0;
-  deflate(&dataDeflate, &dataDeflateSize, in, insize, zlibsettings);
+  deflate(cfg, &dataDeflate, &dataDeflateSize, in, insize, zlibsettings);
 
   // zlib data: 1 byte CMF (CM+CINFO), 1 byte FLG, deflate data, 4 byte ADLER32 checksum of the Decompressed data
   *outsize = 1 + 1 + dataDeflateSize + 4;
