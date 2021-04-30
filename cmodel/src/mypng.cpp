@@ -39,9 +39,8 @@ void oneShot(const cfg_t* cfg)
   pngPackage(&buffer, &bufferSize, dataZlib, dataZlibSize, &state.info_png);
   free(dataZlib);
 
-  // todo [LTT] : add it into cfg
   // print encode result
-  if(0) {
+  if(cfg->dumpLog) {
     cout << " Original RGBA size: "    << setw(8)                  << (cfg->width * cfg->height * 4)                                      << " bytes" << endl;
     cout << " Encoded  PNG  size: "    << setw(8)                  << (bufferSize)                                                        << " bytes" << endl;
     cout << " --> Compression ratio: " << fixed << setprecision(2) << (double)(bufferSize) / (double)(cfg->width * cfg->height * 4) * 100 << "%"      << endl;

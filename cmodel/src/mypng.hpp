@@ -97,6 +97,7 @@ typedef struct cfg_t {
   unsigned minmatch;
   unsigned nicematch;
   unsigned btype;
+  bool     dumpLog;
   bool     dumpFilter;
   bool     dumpAdler32;
 } cfg_t;
