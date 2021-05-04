@@ -8,7 +8,7 @@
   //
 //------------------------------------------------------------------------------
 
-module huffmanFixed(
+module huffman_fixed(
   flg_lit_i     ,
   //
   lit_dat_i     ,

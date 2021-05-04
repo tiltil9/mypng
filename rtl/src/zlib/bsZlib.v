@@ -122,12 +122,12 @@ module bsZlib(
 
 //---   HUFFMAN FIXED   -----------------------------------
   // inst huffman fixed
-  huffmanFixed huffmanFixed(.flg_lit_i     (flg_lit_i     ),
-                            .lit_dat_i     (lit_dat_i     ),
-                            .len_dat_i     (len_dat_i     ),
-                            .dis_dat_i     (dis_dat_i     ),
-                            .huf_code_o    (huf_code_w    ),
-                            .huf_code_w_d_o(huf_code_w_d_w) );
+  huffman_fixed huffman_fixed(.flg_lit_i     (flg_lit_i     ),
+                              .lit_dat_i     (lit_dat_i     ),
+                              .len_dat_i     (len_dat_i     ),
+                              .dis_dat_i     (dis_dat_i     ),
+                              .huf_code_o    (huf_code_w    ),
+                              .huf_code_w_d_o(huf_code_w_d_w) );
 
 //---   BITSTREAM OUTPUT  ---------------------------------
   // flush 0 numb accumulator
