@@ -8,7 +8,7 @@
   //
 //------------------------------------------------------------------------------
 
-module crc32(
+module crc32_top(
   clk    ,
   rstn   ,
   //
@@ -123,7 +123,7 @@ module crc32(
         IDAT   : if (cnt_stp_r == CNT_STP_IDAT && chunk_done_o_w) begin
                    cnt_stp_r <= 'd0;
                  end
-                 else if (cnt_stp_r == 'd0 || (cnt_stp_r != 'd0 && chunk_val_o_w)) begin
+                 else if (cnt_stp_r == 'd0 || (cnt_stp_r == 'd1 && chunk_val_o_w)) begin
                    cnt_stp_r <= cnt_stp_r + 'd1;
                  end
         IHDR   : if (cnt_stp_r == CNT_STP_IHDR && chunk_done_o_w) begin

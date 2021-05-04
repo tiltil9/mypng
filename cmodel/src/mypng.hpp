@@ -194,6 +194,7 @@ unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fi
 void dumpFilter(unsigned char** out, const unsigned char* in, unsigned w, unsigned h);
 void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32);
 void dumpLz77(const unsigned int* in, size_t insize);
+void dumpCrc32(const unsigned char* in, size_t insize, const unsigned char* out, size_t outsize, unsigned w, unsigned h);
 
 
 #endif /*__MY_PNG_HPP__*/
