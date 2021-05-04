@@ -176,13 +176,13 @@ module bsZlib(
   end
 
   // inst bitstream output
-  bsOut bsOut(.clk   (clk            ),
-              .rstn  (rstn           ),
-              .val_i (bs_out_val_i_w ),
-              .dat_i (bs_out_dat_i_w ),
-              .numb_i(bs_out_numb_i_w),
-              .val_o (bs_out_val_o_w ),
-              .dat_o (bs_out_dat_o_w ) );
+  bs_output bs_output(.clk   (clk            ),
+                      .rstn  (rstn           ),
+                      .val_i (bs_out_val_i_w ),
+                      .dat_i (bs_out_dat_i_w ),
+                      .numb_i(bs_out_numb_i_w),
+                      .val_o (bs_out_val_o_w ),
+                      .dat_o (bs_out_dat_o_w ) );
 
 //---   OUTPUT   ------------------------------------------
   // dat_o
