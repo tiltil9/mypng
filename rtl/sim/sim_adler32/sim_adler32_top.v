@@ -73,9 +73,10 @@ module sim_adler32_top;
   initial begin
     // initial
     start_i = 'd0;
+    dat_i   = 'd0;
     val_i   = 'd0;
-    lst_i   = 'd0;
     num_i   = 'd0;
+    lst_i   = 'd0;
 
     // delay
     #(5 * `CLK_FULL);
