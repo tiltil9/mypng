@@ -31,25 +31,27 @@ module sim_zlib_top;
   localparam DATA_WD    = 'd32;
 
 //***   INPUT / OUTPUT   ******************************************************
-  reg                         clk      ;
-  reg                         rstn     ;
-  reg                         start_i  ;
-  reg                         val_i    ;
-  reg                         flg_lit_i;
-  reg     [LIT_DAT_WD  -1 :0] lit_dat_i;
-  reg     [LEN_DAT_WD  -1 :0] len_dat_i;
-  reg     [DIS_DAT_WD  -1 :0] dis_dat_i;
-  reg                         lst_i    ;
-  wire                        done_o   ;
-  wire                        val_o    ;
-  wire    [DATA_WD     -1 :0] dat_o    ;
+  reg                         clk           ;
+  reg                         rstn          ;
+  reg                         start_i       ;
+  reg                         val_i         ;
+  reg                         flg_lit_i     ;
+  reg     [LIT_DAT_WD  -1 :0] lit_dat_i     ;
+  reg     [LEN_DAT_WD  -1 :0] len_dat_i     ;
+  reg     [DIS_DAT_WD  -1 :0] dis_dat_i     ;
+  reg                         lst_i         ;
+  reg                         adler32_done_i;
+  reg     [DATA_WD     -1 :0] adler32_dat_i ;
+  wire                        done_o        ;
+  wire                        val_o         ;
+  wire    [DATA_WD     -1 :0] dat_o         ;
 
 //***   WIRE / REG   **********************************************************
   // flag
-  integer                     lst_flg_r;
+  integer                     lst_flg_r     ;
 
   // counter
-  integer                     cnt_dat_r;
+  integer                     cnt_dat_r     ;
 
 //***   SUB BENCH   ***********************************************************
   `include "./sub_bench.vh"
@@ -76,13 +78,15 @@ module sim_zlib_top;
   // main
   initial begin
     // initial
-    start_i   = 'd0;
-    val_i     = 'd0;
-    flg_lit_i = 'd0;
-    lit_dat_i = 'd0;
-    len_dat_i = 'd0;
-    dis_dat_i = 'd0;
-    lst_i     = 'd0;
+    start_i        = 'd0;
+    val_i          = 'd0;
+    flg_lit_i      = 'd0;
+    lit_dat_i      = 'd0;
+    len_dat_i      = 'd0;
+    dis_dat_i      = 'd0;
+    lst_i          = 'd0;
+    adler32_done_i = 'd0;
+    adler32_dat_i  = 'd0; 
 
     // delay
     #(5 * `CLK_FULL);
@@ -125,6 +129,8 @@ module sim_zlib_top;
       cnt_dat_r = cnt_dat_r + 'd1;
     end
 
+    // !!! no need to wait done_o (hack code)
+
     // log
     # (10 * `CLK_FULL) ;
     $display("\n\n***   CHECK DONES   ***\n");
@@ -132,18 +138,20 @@ module sim_zlib_top;
   end
 
 //---   INST   --------------------------------------------
-  bsZlib dut(.clk      (clk      ),
-             .rstn     (rstn     ),
-             .start_i  (start_i  ),
-             .val_i    (val_i    ),
-             .flg_lit_i(flg_lit_i),
-             .lit_dat_i(lit_dat_i),
-             .len_dat_i(len_dat_i),
-             .dis_dat_i(dis_dat_i),
-             .lst_i    (lst_i    ),
-             .done_o   (done_o   ),
-             .val_o    (val_o    ),
-             .dat_o    (dat_o    ) );
+  bsZlib dut(.clk           (clk           ),
+             .rstn          (rstn          ),
+             .start_i       (start_i       ),
+             .val_i         (val_i         ),
+             .flg_lit_i     (flg_lit_i     ),
+             .lit_dat_i     (lit_dat_i     ),
+             .len_dat_i     (len_dat_i     ),
+             .dis_dat_i     (dis_dat_i     ),
+             .lst_i         (lst_i         ),
+             .adler32_done_i(adler32_done_i),
+             .adler32_dat_i (adler32_dat_i ),
+             .done_o        (done_o        ),
+             .val_o         (val_o         ),
+             .dat_o         (dat_o         ) );
 
 
 endmodule

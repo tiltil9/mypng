@@ -9,19 +9,22 @@
 //------------------------------------------------------------------------------
 
 module bsZlib(
-  clk      ,
-  rstn     ,
+  clk           ,
+  rstn          ,
   //
-  start_i  ,
-  val_i    ,
-  flg_lit_i,
-  lit_dat_i,
-  len_dat_i,
-  dis_dat_i,
-  lst_i    ,
+  start_i       ,
+  val_i         ,
+  flg_lit_i     ,
+  lit_dat_i     ,
+  len_dat_i     ,
+  dis_dat_i     ,
+  lst_i         ,
   //
-  done_o   ,
-  val_o    ,
+  adler32_done_i,
+  adler32_dat_i ,
+  //
+  done_o        ,
+  val_o         ,
   dat_o
   );
 
@@ -41,7 +44,7 @@ module bsZlib(
   localparam BLK_1       = 3'd3; // compressed data block
   localparam BLK_2       = 3'd4; // end of block
   localparam BLK_3       = 3'd5; // flush 0 to align with byte boundary
-  localparam ADLER32     = 3'd6; // TODO: may merge adler32 bs
+  localparam ADLER32     = 3'd6; // adler32
   localparam FLUSH       = 3'd7; // flush 0 to output remain // TODO: may add num_o
 
   // huffman fixed
@@ -64,6 +67,9 @@ module bsZlib(
   input  [DIS_DAT_WD  -1 :0] dis_dat_i          ;
   input                      lst_i              ;
   //
+  input                      adler32_done_i     ;
+  input  [DATA_WD     -1 :0] adler32_dat_i      ;
+  //
   output                     done_o             ;
   output                     val_o              ;
   output [DATA_WD     -1 :0] dat_o              ;
@@ -76,6 +82,9 @@ module bsZlib(
   // huffman fixed
   wire   [HUF_CODE_WD -1 :0] huf_code_w         ;
   wire   [HUFC_W_D_WD -1 :0] huf_code_w_d_w     ;
+
+  // adler32 buffer
+  reg    [DATA_WD     -1 :0] adler32_dat_buf_r  ;
 
   // flush 0 numb accumulator
   wire   [NUMB_WD     -1 :0] bs_flush_numb_nxt_w;
@@ -130,6 +139,16 @@ module bsZlib(
                               .huf_code_w_d_o(huf_code_w_d_w) );
 
 //---   BITSTREAM OUTPUT  ---------------------------------
+  // adler32 buffer
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      adler32_dat_buf_r <= 'd0;
+    end
+    else if (adler32_done_i) begin // !!! adler32 data should appear before ADLER32 state
+      adler32_dat_buf_r <= adler32_dat_i;
+    end
+  end
+
   // flush 0 numb accumulator
   assign bs_flush_numb_nxt_w = bs_flush_numb_r + (bs_out_numb_i_w + 'd1); // mod 32 acc
 
@@ -150,12 +169,19 @@ module bsZlib(
   always @(*) begin
     bs_out_dat_i_w = 'd0;
     case (cur_state_r)
-      CMF_FLG: bs_out_dat_i_w = 'b00011110_10000000; // !!! should reverse per byte
+      CMF_FLG: bs_out_dat_i_w = 'b00011110_10000000; // !!! all bs_out_dat_i_w should reverse per byte
       BLK_0  : bs_out_dat_i_w = 'b1_10;
       BLK_1  : bs_out_dat_i_w = huf_code_w;
       BLK_2  : bs_out_dat_i_w = 'b0000000; // end of block huffman fixed code
       BLK_3  : bs_out_dat_i_w = 'b0;
-      ADLER32: bs_out_dat_i_w = 'h482c6a1e; //TODO: may merge adler32 bs
+      ADLER32: bs_out_dat_i_w = {adler32_dat_buf_r[24], adler32_dat_buf_r[25], adler32_dat_buf_r[26], adler32_dat_buf_r[27],
+                                 adler32_dat_buf_r[28], adler32_dat_buf_r[29], adler32_dat_buf_r[30], adler32_dat_buf_r[31],
+                                 adler32_dat_buf_r[16], adler32_dat_buf_r[17], adler32_dat_buf_r[18], adler32_dat_buf_r[19],
+                                 adler32_dat_buf_r[20], adler32_dat_buf_r[21], adler32_dat_buf_r[22], adler32_dat_buf_r[23],
+                                 adler32_dat_buf_r[ 8], adler32_dat_buf_r[ 9], adler32_dat_buf_r[10], adler32_dat_buf_r[11],
+                                 adler32_dat_buf_r[12], adler32_dat_buf_r[13], adler32_dat_buf_r[14], adler32_dat_buf_r[15],
+                                 adler32_dat_buf_r[ 0], adler32_dat_buf_r[ 1], adler32_dat_buf_r[ 2], adler32_dat_buf_r[ 3],
+                                 adler32_dat_buf_r[ 4], adler32_dat_buf_r[ 5], adler32_dat_buf_r[ 6], adler32_dat_buf_r[ 7]};
       FLUSH  : bs_out_dat_i_w = 'b0;
       default: bs_out_dat_i_w = 'b0;
     endcase

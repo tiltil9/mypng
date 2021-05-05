@@ -48,6 +48,12 @@
           tmp = $fscanf(fpt, "%x", dis_dat_i); 
         end
 
+        // adler32
+        if (lst_i == 'd1) begin
+          adler32_done_i = 'd1; // can set this to zero later or not in sim
+          tmp = $fscanf(fpt, "%x", adler32_dat_i); 
+        end
+
         // set last
         if (lst_i == 'd1) begin
           lst_flg_r = 'd1;
@@ -83,7 +89,7 @@
         // wait
         @(negedge clk);
 
-        if(dut.val_o) begin// !!! val_o could be valid during several successively cycles
+        if(dut.val_o) begin // !!! val_o could be valid during several successively cycles
           dut_dat = dut.dat_o;
           tmp     = $fscanf(fpt, "%x", sim_dat);
 
