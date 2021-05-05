@@ -51,6 +51,10 @@ module bs_top(
   localparam HUF_CODE_WD = 'd19;
   localparam HUFC_W_D_WD = 'd5 ;
 
+  // delay count for waiting crc32 process
+  localparam DLY_CNT     = 'd4 ;
+  localparam DLY_CNT_WD  = 'd2 ; /*`LOG2(DLY_CNT)*/
+
   // bitstream output
   localparam NUMB_WD     = 'd5 ;
 
@@ -82,6 +86,9 @@ module bs_top(
   // huffman fixed
   wire   [HUF_CODE_WD -1 :0] huf_code_w         ;
   wire   [HUFC_W_D_WD -1 :0] huf_code_w_d_w     ;
+
+  // delay count for waiting crc32 process
+  reg    [DLY_CNT_WD  -1 :0] dly_cnt_r          ;
 
   // adler32 buffer
   reg    [DATA_WD     -1 :0] adler32_dat_buf_r  ;
@@ -119,12 +126,14 @@ module bs_top(
       BLK_0  :                                      nxt_state_w = BLK_1  ;
       BLK_1  : if (lst_i)                           nxt_state_w = BLK_2  ;
                else                                 nxt_state_w = BLK_1  ;
-      BLK_2  : if (bs_flush_numb_nxt_w[2:0] != 'd0) nxt_state_w = BLK_3  ;
+      BLK_2  : if (dly_cnt_r == DLY_CNT - 'd1)      nxt_state_w = bs_flush_numb_nxt_w[2:0] != 'd0 ? BLK_3 : ADLER32;
+               else                                 nxt_state_w = BLK_2  ;
+      BLK_3  : if (dly_cnt_r == DLY_CNT - 'd1)      nxt_state_w = ADLER32;
+               else                                 nxt_state_w = BLK_3  ;
+      ADLER32: if (dly_cnt_r == DLY_CNT - 'd1)      nxt_state_w = bs_flush_numb_nxt_w != 'd0 ? FLUSH : IDLE;
                else                                 nxt_state_w = ADLER32;
-      BLK_3  :                                      nxt_state_w = ADLER32;
-      ADLER32: if (bs_flush_numb_nxt_w != 'd0)      nxt_state_w = FLUSH  ;
-               else                                 nxt_state_w = IDLE   ;
-      FLUSH  :                                      nxt_state_w = IDLE   ;
+      FLUSH  : if (dly_cnt_r == DLY_CNT - 'd1)      nxt_state_w = IDLE   ;
+               else                                 nxt_state_w = FLUSH  ;
       default:                                      nxt_state_w = IDLE   ;
     endcase
   end
@@ -138,7 +147,22 @@ module bs_top(
                               .huf_code_o    (huf_code_w    ),
                               .huf_code_w_d_o(huf_code_w_d_w) );
 
-//---   BITSTREAM OUTPUT  ---------------------------------
+//---   BITSTREAM MISC  -----------------------------------
+  // delay count for waiting crc32 process
+  always @(posedge clk or negedge rstn) begin
+    if (!rstn) begin
+      dly_cnt_r <= 'd0;
+    end
+    else if (cur_state_r == BLK_2 || cur_state_r == BLK_3 || cur_state_r == ADLER32 || cur_state_r == FLUSH) begin
+      if (dly_cnt_r == DLY_CNT - 'd1) begin
+        dly_cnt_r <= 'd0;
+      end
+      else begin
+        dly_cnt_r <= dly_cnt_r + 'd1;
+      end
+    end
+  end
+
   // adler32 buffer
   always @(posedge clk or negedge rstn) begin
     if (!rstn) begin
@@ -149,6 +173,7 @@ module bs_top(
     end
   end
 
+//---   BITSTREAM OUTPUT  ---------------------------------
   // flush 0 numb accumulator
   assign bs_flush_numb_nxt_w = bs_flush_numb_r + (bs_out_numb_i_w + 'd1); // mod 32 acc
 
@@ -164,7 +189,8 @@ module bs_top(
   // bitstream output signals
   assign bs_out_val_i_w = (cur_state_r == CMF_FLG || cur_state_r == BLK_0)
                        || (cur_state_r == BLK_1 && val_i)  // !!! LZ77 data should only appear in this period
-                       || (cur_state_r == BLK_2 || cur_state_r == BLK_3 || cur_state_r == ADLER32 || cur_state_r == FLUSH);
+                       || ((cur_state_r == BLK_2 || cur_state_r == BLK_3 || cur_state_r == ADLER32 || cur_state_r == FLUSH) && (dly_cnt_r == DLY_CNT - 'd1))  // all need to wait crc32 process
+                       ;
 
   always @(*) begin
     bs_out_dat_i_w = 'd0;
