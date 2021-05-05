@@ -9,14 +9,14 @@
 //------------------------------------------------------------------------------
 
 //***   INIT   ****************************************************************
-//---   INIT_ZLIB_I   -------------------------------------
-  event init_zlib_i_event;
+//---   INIT_BS_I   -------------------------------------
+  event init_bs_i_event;
 
   initial begin
-    INIT_ZLIB_I;
+    INIT_BS_I;
   end
 
-  task INIT_ZLIB_I;
+  task INIT_BS_I;
     // variables
     integer fpt;
     integer tmp;
@@ -24,12 +24,12 @@
     // main body
     begin
       // open file
-      fpt = $fopen(`ZLIB_I_FILE, "r");
+      fpt = $fopen(`BS_I_FILE, "r");
 
       // core
       forever begin
         // wait
-        @(init_zlib_i_event);
+        @(init_bs_i_event);
 
         // active
         // lst
@@ -63,12 +63,12 @@
   endtask
 
 //***   CHKO   ****************************************************************
-//---   CHKO_ZLIB_O   -------------------------------------
+//---   CHKO_BS_O   -------------------------------------
   initial begin
-    CHKO_ZLIB_O;
+    CHKO_BS_O;
   end
 
-  task CHKO_ZLIB_O;
+  task CHKO_BS_O;
     // variables
     integer                  fpt     ;
     integer                  tmp     ;
@@ -79,10 +79,10 @@
     begin
       // log
       #(10 * `CLK_FULL);
-      $display( "\t\t function check to zlib is on!");
+      $display( "\t\t function check to bs is on!");
 
       // open file
-      fpt = $fopen(`ZLIB_O_FILE, "r");
+      fpt = $fopen(`BS_O_FILE, "r");
 
       // core
       forever begin
@@ -95,7 +95,7 @@
 
           // check
           if(dut_dat != sim_dat) begin
-            $display ("\n\t ZLIB ERROR: at %10d ns, zlib(data count %10d) should be %08x, however is %08x \n"
+            $display ("\n\t BS ERROR: at %10d ns, bs(data count %10d) should be %08x, however is %08x \n"
                           , $time
                           , cnt_dat_r
                           , sim_dat

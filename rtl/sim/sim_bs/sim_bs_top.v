@@ -14,13 +14,13 @@
   `define CLK_HALF    (`CLK_FULL / 2)
 
   // init
-  `define ZLIB_I_FILE      "./check_data/zlib_i_LZ77.dat"
+  `define BS_I_FILE      "./check_data/bs_i.dat"
 
   // chko
-  `define ZLIB_O_FILE      "./check_data/zlib_o_bitstream.dat"
+  `define BS_O_FILE      "./check_data/bs_o.dat"
 
 
-module sim_zlib_top;
+module sim_bs_top;
 
 //***   PARAMETER   ***********************************************************
   // !!! assume `NICE_MATCH and `WINDOW_SIZE are both no more than 64 yet
@@ -113,7 +113,7 @@ module sim_zlib_top;
       $display("\t at %10d ns, launching data %10d ... ", $time, cnt_dat_r);
 
       // init
-      -> init_zlib_i_event;
+      -> init_bs_i_event;
 
       // valid
       @(negedge clk);
@@ -138,7 +138,7 @@ module sim_zlib_top;
   end
 
 //---   INST   --------------------------------------------
-  bsZlib dut(.clk           (clk           ),
+  bs_top dut(.clk           (clk           ),
              .rstn          (rstn          ),
              .start_i       (start_i       ),
              .val_i         (val_i         ),
