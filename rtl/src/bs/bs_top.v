@@ -23,6 +23,10 @@ module bs_top(
   adler32_done_i,
   adler32_dat_i ,
   //
+  crc32_val_o   ,
+  crc32_num_o   ,
+  crc32_lst_o   ,
+  //
   done_o        ,
   val_o         ,
   dat_o
@@ -36,6 +40,8 @@ module bs_top(
 
   localparam DATA_WD     = 'd32;
 
+  localparam NUM_WD      = 'd2 ;
+
   // fsm
   localparam FSM_WD      =  'd4;
   localparam IDLE        = 4'd0;
@@ -45,7 +51,7 @@ module bs_top(
   localparam BLK_2       = 4'd4; // end of block
   localparam BLK_3       = 4'd5; // flush 0 to align with byte boundary
   localparam ADLER32     = 4'd6; // adler32
-  localparam FLUSH       = 4'd7; // flush 0 to output remain // TODO: may add num_o
+  localparam FLUSH       = 4'd7; // flush 0 to output remain
   localparam ZLIB_LEN    = 4'd8; // byte length of zlib data, assume no more than (1 << 32 - 1)
 
   // huffman fixed
@@ -77,6 +83,10 @@ module bs_top(
   //
   input                      adler32_done_i     ;
   input  [DATA_WD     -1 :0] adler32_dat_i      ;
+  //
+  output                     crc32_val_o        ;
+  output [NUM_WD      -1 :0] crc32_num_o        ;
+  output                     crc32_lst_o        ;
   //
   output                     done_o             ;
   output                     val_o              ;
@@ -196,6 +206,13 @@ module bs_top(
       end
     end
   end
+
+  // crc32 output signals
+  assign crc32_val_o = bs_out_val_o_w &&
+                       (cur_state_r == CMF_FLG || cur_state_r == BLK_0 || cur_state_r == BLK_1 ||cur_state_r == BLK_2
+                     || cur_state_r == BLK_3 || cur_state_r == ADLER32 || cur_state_r == FLUSH || cur_state_r == ZLIB_LEN); // !!! ADLER32 or FLUSH bitstream output will be valid in ZLIB_LEN state
+  assign crc32_num_o = crc32_lst_o ? (zlib_len_r[1:0] - 'd1) : 'd3;
+  assign crc32_lst_o = cur_state_r == ZLIB_LEN;
 
 //---   BITSTREAM OUTPUT  ---------------------------------
   // flush 0 numb accumulator
