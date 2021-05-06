@@ -13,8 +13,14 @@
 
 `define SIZE_W_MAX  'd1024
 `define SIZE_H_MAX  'd1024
-`define SIZE_W_WD   `LOG2(`SIZE_W_MAX)
-`define SIZE_H_WD   `LOG2(`SIZE_H_MAX)
+`define SIZE_LEN_MIN 'd3  // length   <= nice match
+`define SIZE_LEN_MAX 'd64  // length   <= nice match
+`define SIZE_DST_MAX 'd64  // distance <= window size
+
+`define SIZE_W_WD     `LOG2(`SIZE_W_MAX)
+`define SIZE_H_WD     `LOG2(`SIZE_H_MAX)
+`define SIZE_LEN_WD  (`LOG2(`SIZE_LEN_MAX) + 'd1)
+`define SIZE_DST_WD  (`LOG2(`SIZE_DST_MAX) + 'd1)
 
 `define DATA_PXL_WD     'd32  // RGBA: 4 chanels
 `define DATA_CHN_WD     'd8   // single chanel
@@ -26,6 +32,13 @@
   // `define FILTER_ENUM_AVRG  3'd3
   // `define FILTER_ENUM_PAETH 3'd4
 
+// `define NUMB_LZ77_ENG 1
+// `define NUMB_LZ77_ENG 2
+// `define NUMB_LZ77_ENG 4
+
+`define MIN2(x, y)  (x > y ? y : x)
+`define CEIL(x, y)  ((x + y - 'd1) / y * y)
+// `define CEIL(x, y)  (x % y == 'd0 ? x : x + 1)
 
 `define LOG2(x)    ( ((x) <= ('d1<<'d01)) ? 'd01    \
                    : ((x) <= ('d1<<'d02)) ? 'd02    \
