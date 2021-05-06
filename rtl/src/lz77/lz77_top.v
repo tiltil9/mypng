@@ -27,7 +27,12 @@ module lz77_top(
     flg_lst_o         ,
     // fifo_flt_rd
     fifo_flt_rd_val_o ,
-    fifo_flt_rd_dat_i 
+    fifo_flt_rd_dat_i ,
+    // adler32
+    adler32_val_o     ,
+    adler32_dat_o     ,
+    adler32_num_o     ,
+    adler32_lst_o
 );
 
 
@@ -46,10 +51,12 @@ module lz77_top(
 
 
   // derived
-  localparam    SIZE_INP_WD     = `LOG2( SIZE_INP_MAX     )     ;  // inp -> input
+  localparam    SIZE_INP_WD      = `LOG2( SIZE_INP_MAX     )    ;  // inp -> input
   
   localparam    SIZE_CYC_SCH_MAX = `SIZE_LEN_MAX                ;
-  localparam    SIZE_CYC_SCH_WD = `LOG2( SIZE_CYC_SCH_MAX )     ;
+  localparam    SIZE_CYC_SCH_WD  = `LOG2( SIZE_CYC_SCH_MAX )    ;
+  
+  localparam    DATA_THR_WD      = `LOG2( DATA_THR         )    ;
 
 
 //***   INPUT / OUTPUT   ******************************************************
@@ -74,8 +81,14 @@ module lz77_top(
   output                               flg_lst_o         ;  // lst -> last
 
   // fifo_pre_rd
-  output                              fifo_flt_rd_val_o  ;  // flt -> filter ; rd -> read
-  input         [`DATA_PXL_WD-1 :0]   fifo_flt_rd_dat_i  ;
+  output                               fifo_flt_rd_val_o ;  // flt -> filter ; rd -> read
+  input         [`DATA_PXL_WD-1 :0]    fifo_flt_rd_dat_i ;
+
+  // adler32
+  output                               adler32_val_o     ;
+  output        [`DATA_PXL_WD-1 :0]    adler32_dat_o     ;
+  output        [DATA_THR_WD -1 :0]    adler32_num_o     ; // means 1/2/3/4 most significant bytes are valid
+  output                               adler32_lst_o     ;
   
 
 //***   WIRE / REG   **********************************************************
@@ -84,7 +97,9 @@ module lz77_top(
   reg           [FSM_WD-1                 :0]    nxt_state_w    ;  // nxt -> next
 
   reg                                            start_r        ;
-
+  reg                                            start_d0_r     ;
+  reg                                            start_d1_r     ;
+  reg                                            start_d2_r     ;
 
   // counter (upt, sch)
   reg           [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_i_r        ;  // cnt -> count
@@ -148,6 +163,11 @@ module lz77_top(
   wire                                           val_w                      ;
   wire                                           done_w                     ;
 
+  // adler32
+  reg           [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_fifo_i_r               ;  // cnt -> count
+  wire          [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_fifo_i_w               ;
+  wire                                           cnt_fifo_done_w            ;
+
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -174,7 +194,7 @@ module lz77_top(
   // count done
   assign cnt_o_done_w   = cnt_o_r   == cfg_h_i * (cfg_w_i * DATA_THR + 'd1)       ;
   assign cnt_h_done_w   = cnt_h_r   == (cfg_h_i - 'd1)                            ;
-  assign cnt_upt_done_w = cnt_upt_r == len_inp_dlt_ceil_min_mux_w                 ; // ONE CYCLE FOR SHIFT INPUT
+  assign cnt_upt_done_w = cnt_upt_r == (len_inp_dlt_ceil_min_mux_w * DATA_THR)    ; // ONE CYCLE FOR SHIFT INPUT
   assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) ;
 
   //  jump condition 
@@ -190,17 +210,24 @@ module lz77_top(
   assign flg_fst_sch_w =  (cur_state_r==SCH) && (cnt_sch_r=='d0) ;
 
   // fetch filter scanline 
-  assign fifo_flt_rd_val_o =  (cur_state_r==UPT) && !cnt_upt_done_w ;
+  assign fifo_flt_rd_val_o =  (cur_state_r==UPT) && !cnt_upt_done_w                &&
+                              (start_r || (cnt_upt_r % (DATA_THR*DATA_THR) =='d0))  ;
 
 
 //---   DELAY   -----------------------------------------
   // start_r
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
-      start_r <= 'd0 ;
+      start_r    <= 'd0 ;
+      start_d0_r <= 'd0 ;
+      start_d1_r <= 'd0 ;
+      start_d2_r <= 'd0 ;
     end
     else begin
-      start_r <= start_i ;
+      start_r    <= start_i    ;
+      start_d0_r <= start_r    ;
+      start_d1_r <= start_d0_r ;
+      start_d2_r <= start_d1_r ;
     end
   end
 
@@ -212,8 +239,12 @@ module lz77_top(
     end
     else begin
       if( cur_state_r == UPT) begin
-        if( cnt_upt_done_w    ) cnt_upt_r <= 'd0                                    ;
-        if( fifo_flt_rd_val_o ) cnt_upt_r <= cnt_upt_r + (start_r ? 'd1 : DATA_THR) ;
+        if( cnt_upt_done_w    ) begin 
+          cnt_upt_r <= 'd0 ;
+        end
+        else begin
+         cnt_upt_r <= cnt_upt_r + ({start_r, start_d0_r, start_d1_r, start_d2_r} ? 'd1 : DATA_THR) ;
+        end
       end
     end
   end
@@ -225,7 +256,7 @@ module lz77_top(
     end
     else begin
       if( upt_done_w ) begin
-        cnt_i_r <= cnt_i_r + cnt_upt_r ;
+        cnt_i_r <= cnt_i_r + cnt_upt_r / DATA_THR ;
       end
     end
   end
@@ -508,7 +539,29 @@ module lz77_top(
   assign dat_len_o = val_o ? bst_len_r : 'd0 ;
   assign dat_dst_o = val_o ? bst_dst_r : 'd0 ;
 
-  // todo: adler32 input
+  // cnt_fifo_i_r
+  always @(posedge clk or negedge rstn ) begin
+    if( !rstn ) begin
+      cnt_fifo_i_r <= 'd0 ;
+    end
+    else begin
+      if( cnt_fifo_done_w ) begin
+        cnt_fifo_i_r <= 'd0 ;
+      end
+      else begin
+        cnt_fifo_i_r <= cnt_fifo_i_w ;
+      end
+    end
+  end
+
+  // cnt_fifo_w
+  assign cnt_fifo_i_w    = cnt_fifo_i_r + fifo_flt_rd_val_o            ;
+  assign cnt_fifo_done_w = cnt_fifo_i_w == (cfg_h_i * (cfg_w_i + 'd1)) ;
+
   // assign num_o     =  0/1/2/3
+  assign adler32_val_o   = fifo_flt_rd_val_o            ;
+  assign adler32_dat_o   = fifo_flt_rd_dat_i            ;
+  assign adler32_num_o   = start_r ? 'd0 : DATA_THR-'d1 ;
+  assign adler32_lst_o   =  cnt_fifo_done_w             ;
 
 endmodule
