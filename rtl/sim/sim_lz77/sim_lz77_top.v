@@ -104,7 +104,7 @@ module sim_lz77_top();
     // core loop
     for( cnt_h_r = 'd0 ; cnt_h_r < `SIZE_H ; cnt_h_r = cnt_h_r + 'd1 ) begin
       // log
-      $display( "\t at %06d ns, starting scanline %04d ... ", $time, cnt_h_r );
+      $write( "\t at %06d ns, starting scanline %04d ... ", $time, cnt_h_r );
   
       // start
       @(negedge clk ) ;

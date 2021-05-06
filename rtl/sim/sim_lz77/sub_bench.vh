@@ -111,7 +111,7 @@
               $stop ;
             end
             else begin
-              $display ("\t (%02d,%02d) ok",cnt_h_r, cnt_r) ;
+              // $display ("\t (%02d,%02d) ok",cnt_h_r, cnt_r) ;
               cnt_r = cnt_r + 'd1;
             end
           end
@@ -134,7 +134,7 @@
               $stop ;
             end
             else begin
-              $display ("\t (%02d,%02d) ok",cnt_h_r, cnt_r) ;
+              // $display ("\t (%02d,%02d) ok",cnt_h_r, cnt_r) ;
               cnt_r = cnt_r + 'd1;
             end
           end
