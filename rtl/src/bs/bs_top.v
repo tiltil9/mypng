@@ -26,6 +26,9 @@ module bs_top(
   crc32_val_o   ,
   crc32_num_o   ,
   crc32_lst_o   ,
+  crc32_done_i  ,
+  crc32_val_i   ,
+  crc32_dat_i   ,
   //
   done_o        ,
   val_o         ,
@@ -53,6 +56,7 @@ module bs_top(
   localparam ADLER32     = 4'd6; // adler32
   localparam FLUSH       = 4'd7; // flush 0 to output remain
   localparam ZLIB_LEN    = 4'd8; // byte length of zlib data, assume no more than (1 << 32 - 1)
+  localparam CRC32       = 4'd9; // CRC32 of IDAT, IHDR, IEND
 
   // huffman fixed
   localparam HUF_CODE_WD = 'd19;
@@ -87,6 +91,9 @@ module bs_top(
   output                     crc32_val_o        ;
   output [NUM_WD      -1 :0] crc32_num_o        ;
   output                     crc32_lst_o        ;
+  input                      crc32_done_i       ;
+  input                      crc32_val_i        ;
+  input  [DATA_WD     -1 :0] crc32_dat_i        ;
   //
   output                     done_o             ;
   output                     val_o              ;
@@ -152,7 +159,9 @@ module bs_top(
                 else                            nxt_state_w = ADLER32 ;
       FLUSH   : if (dly_cnt_r == DLY_CNT - 'd1) nxt_state_w = ZLIB_LEN;
                 else                            nxt_state_w = FLUSH   ;
-      ZLIB_LEN:                                 nxt_state_w = IDLE    ;
+      ZLIB_LEN:                                 nxt_state_w = CRC32   ;
+      CRC32   : if (crc32_done_i)               nxt_state_w = IDLE    ;
+                else                            nxt_state_w = CRC32   ;
       default :                                 nxt_state_w = IDLE    ;
     endcase
   end
@@ -231,7 +240,8 @@ module bs_top(
   assign bs_out_val_i_w = (cur_state_r == CMF_FLG || cur_state_r == BLK_0)
                        || (cur_state_r == BLK_1 && val_i)  // !!! LZ77 data should only appear in this period
                        || ((cur_state_r == BLK_2 || cur_state_r == BLK_3 || cur_state_r == ADLER32 || cur_state_r == FLUSH) && (dly_cnt_r == DLY_CNT - 'd1))  // all need to wait crc32 process
-                       || (cur_state_r == ZLIB_LEN);
+                       || (cur_state_r == ZLIB_LEN)
+                       || (cur_state_r == CRC32 && crc32_val_i); // !!! CRC32 data should only appear in this period
 
   always @(*) begin
     bs_out_dat_i_w = 'd0;
@@ -258,6 +268,14 @@ module bs_top(
                                   zlib_len_r[12], zlib_len_r[13], zlib_len_r[14], zlib_len_r[15],
                                   zlib_len_r[ 0], zlib_len_r[ 1], zlib_len_r[ 2], zlib_len_r[ 3],
                                   zlib_len_r[ 4], zlib_len_r[ 5], zlib_len_r[ 6], zlib_len_r[ 7]};
+      CRC32   : bs_out_dat_i_w = {crc32_dat_i[24], crc32_dat_i[25], crc32_dat_i[26], crc32_dat_i[27],
+                                  crc32_dat_i[28], crc32_dat_i[29], crc32_dat_i[30], crc32_dat_i[31],
+                                  crc32_dat_i[16], crc32_dat_i[17], crc32_dat_i[18], crc32_dat_i[19],
+                                  crc32_dat_i[20], crc32_dat_i[21], crc32_dat_i[22], crc32_dat_i[23],
+                                  crc32_dat_i[ 8], crc32_dat_i[ 9], crc32_dat_i[10], crc32_dat_i[11],
+                                  crc32_dat_i[12], crc32_dat_i[13], crc32_dat_i[14], crc32_dat_i[15],
+                                  crc32_dat_i[ 0], crc32_dat_i[ 1], crc32_dat_i[ 2], crc32_dat_i[ 3],
+                                  crc32_dat_i[ 4], crc32_dat_i[ 5], crc32_dat_i[ 6], crc32_dat_i[ 7]};
       default : bs_out_dat_i_w = 'b0;
     endcase
   end
@@ -273,6 +291,7 @@ module bs_top(
       ADLER32 : bs_out_numb_i_w = 'd32 - 'd1;
       FLUSH   : bs_out_numb_i_w = ('d32 - bs_flush_numb_r - 'd1);
       ZLIB_LEN: bs_out_numb_i_w = 'd32 - 'd1;
+      CRC32   : bs_out_numb_i_w = 'd32 - 'd1;
       default : bs_out_numb_i_w = 'd0;
     endcase
   end

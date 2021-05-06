@@ -32,31 +32,39 @@
         @(init_bs_i_event);
 
         // active
-        // lst
-        tmp = $fscanf(fpt, "%x", lst_i);
-        // flg lit
-        tmp = $fscanf(fpt, "%x", flg_lit_i);
-        // dat
-        if (flg_lit_i == 'd1) begin
-          // lit dat
-          tmp = $fscanf(fpt, "%x", lit_dat_i); 
+        if (lst_lvl_r == 'd0) begin
+          // lst
+          tmp = $fscanf(fpt, "%x", lst_i);
+          // flg lit
+          tmp = $fscanf(fpt, "%x", flg_lit_i);
+          // dat
+          if (flg_lit_i == 'd1) begin
+            // lit dat
+            tmp = $fscanf(fpt, "%x", lit_dat_i); 
+          end
+          else begin
+            // len dat
+            tmp = $fscanf(fpt, "%x", len_dat_i); 
+            // dis dat
+            tmp = $fscanf(fpt, "%x", dis_dat_i); 
+          end
+
+          // adler32
+          if (lst_i == 'd1) begin
+            tmp = $fscanf(fpt, "%x", adler32_dat_i); 
+          end
+
+          // set last
+          if (lst_i == 'd1) begin
+            lst_lvl_r = 'd1;
+          end
         end
         else begin
-          // len dat
-          tmp = $fscanf(fpt, "%x", len_dat_i); 
-          // dis dat
-          tmp = $fscanf(fpt, "%x", dis_dat_i); 
-        end
+          // crc32
+          tmp = $fscanf(fpt, "%x", crc32_dat_i); 
 
-        // adler32
-        if (lst_i == 'd1) begin
-          adler32_done_i = 'd1; // can set this to zero later or not in sim
-          tmp = $fscanf(fpt, "%x", adler32_dat_i); 
-        end
-
-        // set last
-        if (lst_i == 'd1) begin
-          lst_flg_r = 'd1;
+          // set last
+          lst_lvl_r = lst_lvl_r + 'd1; // 2, 3, 4
         end
       end
     end

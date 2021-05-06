@@ -30,6 +30,8 @@ module sim_bs_top;
 
   localparam DATA_WD    = 'd32;
 
+  localparam NUM_WD     = 'd2 ;
+
 //***   INPUT / OUTPUT   ******************************************************
   reg                         clk           ;
   reg                         rstn          ;
@@ -42,13 +44,19 @@ module sim_bs_top;
   reg                         lst_i         ;
   reg                         adler32_done_i;
   reg     [DATA_WD     -1 :0] adler32_dat_i ;
+  wire                        crc32_val_o   ;
+  wire    [NUM_WD      -1 :0] crc32_num_o   ;
+  wire                        crc32_lst_o   ;
+  reg                         crc32_done_i  ;
+  reg                         crc32_val_i   ;
+  reg     [DATA_WD     -1 :0] crc32_dat_i   ;
   wire                        done_o        ;
   wire                        val_o         ;
   wire    [DATA_WD     -1 :0] dat_o         ;
 
 //***   WIRE / REG   **********************************************************
-  // flag
-  integer                     lst_flg_r     ;
+  // level
+  integer                     lst_lvl_r     ;
 
   // counter
   integer                     cnt_dat_r     ;
@@ -87,6 +95,9 @@ module sim_bs_top;
     lst_i          = 'd0;
     adler32_done_i = 'd0;
     adler32_dat_i  = 'd0; 
+    crc32_done_i   = 'd0;
+    crc32_val_i    = 'd0;
+    crc32_dat_i    = 'd0;
 
     // delay
     #(5 * `CLK_FULL);
@@ -107,22 +118,38 @@ module sim_bs_top;
     #(10 * `CLK_FULL);
     // loop
     cnt_dat_r = 'd0;
-    lst_flg_r = 'd0;
-    while (lst_flg_r != 'd1) begin
+    lst_lvl_r = 'd0;
+    while (lst_lvl_r < 'd4) begin
       // log
       $display("\t at %10d ns, launching data %10d ... ", $time, cnt_dat_r);
 
       // init
+      // !!! lst_lvl_r will be changed
       -> init_bs_i_event;
 
-      // valid
-      @(negedge clk);
-      val_i = 'd1;
-      @(posedge clk);
-      @(negedge clk);
-      val_i = 'd0;
+      #(`CLK_FULL); // !!! ensure using updated lst_lvl_r
+      if (lst_lvl_r <= 'd1) begin
+        // valid
+        @(negedge clk);
+        val_i = 'd1;
+        if (lst_lvl_r == 'd1) adler32_done_i = 'd1;
+        @(posedge clk);
+        @(negedge clk);
+        val_i = 'd0;
+        if (lst_lvl_r == 'd1) adler32_done_i = 'd0;
+      end
+      else begin
+        @(negedge clk);
+        crc32_val_i = 'd1;
+        if (lst_lvl_r == 'd4) crc32_done_i = 'd1;
+        @(posedge clk);
+        @(negedge clk);
+        crc32_val_i = 'd0;
+        if (lst_lvl_r == 'd4) crc32_done_i = 'd0;
+      end
 
       // delay
+      if (lst_lvl_r == 'd1) @(negedge crc32_lst_o); // !!! waiting crc32 (hack code)
       #(10 * `CLK_FULL);
 
       // update
@@ -149,6 +176,12 @@ module sim_bs_top;
              .lst_i         (lst_i         ),
              .adler32_done_i(adler32_done_i),
              .adler32_dat_i (adler32_dat_i ),
+             .crc32_val_o   (crc32_val_o   ),
+             .crc32_num_o   (crc32_num_o   ),
+             .crc32_lst_o   (crc32_lst_o   ),
+             .crc32_done_i  (crc32_done_i  ),
+             .crc32_val_i   (crc32_val_i   ),
+             .crc32_dat_i   (crc32_dat_i   ),
              .done_o        (done_o        ),
              .val_o         (val_o         ),
              .dat_o         (dat_o         ) );
