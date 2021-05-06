@@ -142,7 +142,7 @@ module bs_top(
                 else                            nxt_state_w = IDLE    ;
       CMF_FLG :                                 nxt_state_w = BLK_0   ;
       BLK_0   :                                 nxt_state_w = BLK_1   ;
-      BLK_1   : if (lst_i)                      nxt_state_w = BLK_2   ;
+      BLK_1   : if (val_i && lst_i)             nxt_state_w = BLK_2   ;
                 else                            nxt_state_w = BLK_1   ;
       BLK_2   : if (dly_cnt_r == DLY_CNT - 'd1) nxt_state_w = bs_flush_numb_nxt_w[2:0] != 'd0 ? BLK_3 : ADLER32;
                 else                            nxt_state_w = BLK_2   ;
