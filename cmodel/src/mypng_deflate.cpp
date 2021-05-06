@@ -394,7 +394,7 @@ void encodeLZ77Hardware(const cfg_t* cfg, uivector* out, Hash* hash, const unsig
 
       const unsigned char *backptr = &in[searchPos];
       const unsigned char *foreptr = &in[inputPos];
-      const unsigned char *lastptr = &in[inposend < inputPos + nicematch ? inposend : inputPos + nicematch]; // in[inposend] may exceed the memory space of in
+      const unsigned char *lastptr = &in[(inposend - 1) < inputPos + nicematch ? (inposend - 1) : min((inputPos + nicematch), (inputPos * 2 - searchPos))];
       while(foreptr != lastptr && *backptr == *foreptr) {
         ++backptr;
         ++foreptr;
