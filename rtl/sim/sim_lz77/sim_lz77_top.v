@@ -19,10 +19,10 @@
   `define CLK_HALF           ( `CLK_FULL / 2 )
 
   // input file
-  `define LZ77_I_FILE      "../check_data/filter_o_scanlines.dat"
+  `define LZ77_I_FILE      "../check_data/Filtered.dat"
 
   // outout file
-  `define LZ77_O_FILE      "../check_data/lz77_o.dat"
+  `define LZ77_O_FILE      "../check_data/Lz77.dat"
 
 
 module sim_lz77_top();

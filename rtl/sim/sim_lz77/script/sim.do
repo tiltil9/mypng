@@ -14,6 +14,6 @@ vsim -voptargs=+acc work.sim_lz77_top
 
 add wave * 
 add wave sim:/sim_lz77_top/dut/*
-add wave sim:/sim_lz77_top/FILTER_DATA_O/*
+add wave sim:/sim_lz77_top/LZ77_DATA_O/*
 
 run 1000000000ns

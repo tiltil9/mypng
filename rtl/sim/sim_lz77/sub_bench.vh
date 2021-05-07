@@ -39,22 +39,24 @@
 
 
 //***   DATA_O   ***************************************************************
-//---   FILTER_DATA_O   -------------------------------------
+//---   LZ77_DATA_O   -------------------------------------
   initial begin
-    FILTER_DATA_O ;
+    LZ77_DATA_O ;
   end
 
-  task FILTER_DATA_O ;
+  task LZ77_DATA_O ;
     // variables
     integer                      fpt         ;
     integer                      tmp         ;
     integer                      cnt_r       ;
     reg                          dut_flg_lit ;
     reg     [`DATA_PXL_WD-1 :0]  dut_dat_lit ;
+    reg                          dut_flg_lst ;
     reg     [`SIZE_LEN_WD-1 :0]  dut_dat_len ;
     reg     [`SIZE_DST_WD-1 :0]  dut_dat_dis ;
     reg                          sim_flg_lit ;
     reg     [`DATA_PXL_WD-1 :0]  sim_dat_lit ;
+    reg                          sim_flg_lst ;
     reg     [`SIZE_LEN_WD-1 :0]  sim_dat_len ;
     reg     [`SIZE_DST_WD-1 :0]  sim_dat_dis ;
 
@@ -76,6 +78,10 @@
         @(negedge clk ) ;
 
         if( dut.val_o ) begin
+          // flg_lst
+          dut_flg_lst = dut.flg_lst_o ;
+          tmp         = $fscanf( fpt ,"%x" , sim_flg_lst ) ;
+
           // flg_lit
           dut_flg_lit = dut.flg_lit_o ;
           tmp         = $fscanf( fpt ,"%x" , sim_flg_lit ) ;
@@ -95,13 +101,15 @@
 
           // check
           if( sim_flg_lit ) begin
-            if ( sim_flg_lit != dut_flg_lit || sim_dat_lit != dut_dat_lit ) begin
-              $display ("\n\t LZ77_TOP ERROR: at %08d ns, lz77_data(scanline %02d-%02d) should be %01x-%02x, however is %01x-%02x \n"
+            if ( sim_flg_lit != dut_flg_lit || sim_flg_lst !=  dut_flg_lst || sim_dat_lit != dut_dat_lit ) begin
+              $display ("\n\t LZ77_TOP ERROR: at %08d ns, lz77_data(scanline %02d-%02d) should be %01x-%02x-%02x, however is %01x-%02x-%02x \n"
                             , $time
                             , cnt_h_r
                             , cnt_r
+                            , sim_flg_lst
                             , sim_flg_lit
                             , sim_dat_lit
+                            , dut_flg_lst
                             , dut_flg_lit
                             , dut_dat_lit
               ) ;
@@ -116,14 +124,16 @@
             end
           end
           else begin
-            if ( sim_flg_lit != dut_flg_lit || sim_dat_len != dut_dat_len || sim_dat_dis != dut_dat_dis ) begin
-              $display ("\n\t LZ77_TOP ERROR: at %08d ns, lz77_data(scanline %02d-%02d) should be %01x-%02x-%02x, however is %01x-%02x-%02x \n"
+            if ( sim_flg_lit != dut_flg_lit ||  sim_flg_lst !=  dut_flg_lst || sim_dat_len != dut_dat_len || sim_dat_dis != dut_dat_dis ) begin
+              $display ("\n\t LZ77_TOP ERROR: at %08d ns, lz77_data(scanline %02d-%02d) should be %01x-%02x-%02x-%02x, however is %01x-%02x-%02x-%02x \n"
                             , $time
                             , cnt_h_r
                             , cnt_r
+                            , sim_flg_lst
                             , sim_flg_lit
                             , sim_dat_len
                             , sim_dat_dis
+                            , dut_flg_lst
                             , dut_flg_lit
                             , dut_dat_len
                             , dut_dat_dis
