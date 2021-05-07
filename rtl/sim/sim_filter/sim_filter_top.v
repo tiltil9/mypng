@@ -8,16 +8,16 @@
   //
 //------------------------------------------------------------------------------
 
-// `define SIZE_W 'd256
-// `define SIZE_H 'd256
+`define SIZE_W 'd256
+`define SIZE_H 'd256
 // `define SIZE_W 'd480
 // `define SIZE_H 'd360
 // `define SIZE_W 'd393
 // `define SIZE_H 'd501
 // `define SIZE_W 'd440
 // `define SIZE_H 'd330
-`define SIZE_W 'd512
-`define SIZE_H 'd512
+// `define SIZE_W 'd512
+// `define SIZE_H 'd512
 
 
 
@@ -27,10 +27,10 @@
   `define CLK_HALF           ( `CLK_FULL / 2 )
 
   // input file
-  `define FILTER_I_FILE      "../data/filter_i_rgba.dat"
+  `define FILTER_I_FILE      "../check_data/RGBA.dat"
 
   // outout file
-  `define FILTER_O_FILE      "../data/filter_o_scanlines.dat"
+  `define FILTER_O_FILE      "../check_data/Filtered.dat"
 
 
 module sim_filter_top();
