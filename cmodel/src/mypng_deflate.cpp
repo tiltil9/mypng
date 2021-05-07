@@ -425,6 +425,11 @@ void encodeLZ77Hardware(const cfg_t* cfg, uivector* out, Hash* hash, const unsig
       windowPos = inputPos - windowsize;
     }
   }
+
+  // dump
+  if (cfg->derivedDumpLz77Data) {
+    dumpLz77Data(cfg->fptLz77Data, dump_data.data, dump_data.size);
+  }
 }
 
 /*The input are raw bytes, the output is LZ77-compressed data encoded with fixed Huffman codes*/
@@ -546,4 +551,15 @@ void zlibCompress(const cfg_t* cfg, unsigned char** out, size_t* outsize, const 
   set32bitInt(&(*out)[*outsize - 4], ADLER32);
 
   free(dataDeflate);
+
+  // dump 
+  if (cfg->derivedDumpAdler32Data) {
+    dumpAdler32Data(cfg->fptAdler32Data, ADLER32);
+  } 
+  if (cfg->derivedDumpZlibData) {
+    dumpZlibData(cfg->fptZlibData, *out, *outsize);
+  }
+  if (cfg->derivedDumpZlibBsData) {
+    dumpZlibBsData(cfg->fptZlibBsData, *out, *outsize);
+  }
 }

@@ -134,7 +134,7 @@ void addChunkIDAT(ucvector* out, const unsigned char* in, size_t insize)
 }
 
 /*The input are zlib and state, the output is all PNG chunks stream*/
-void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info)
+void pngPackage(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info)
 {
   ucvector outv = ucvector_init(NULL, 0);
 
@@ -145,4 +145,12 @@ void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, s
 
   *out = outv.data;
   *outsize = outv.size;
+
+  // dump
+  if (cfg->derivedDumpWhData) {
+    dumpWhData(cfg->fptWhData, info->width, info->height);
+  }
+  if (cfg->derivedDumpCrc32Data) {
+    dumpCrc32Data(cfg->fptCrc32Data, *out, *outsize);
+  }
 }

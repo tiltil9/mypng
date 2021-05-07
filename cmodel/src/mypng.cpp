@@ -36,7 +36,7 @@ void oneShot(const cfg_t* cfg)
   // output all PNG chunks stream
   unsigned char* buffer = 0;
   size_t bufferSize = 0;
-  pngPackage(&buffer, &bufferSize, dataZlib, dataZlibSize, &state.info_png);
+  pngPackage(cfg, &buffer, &bufferSize, dataZlib, dataZlibSize, &state.info_png);
   free(dataZlib);
 
   // print encode result

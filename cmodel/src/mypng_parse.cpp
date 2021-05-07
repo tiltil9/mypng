@@ -84,6 +84,7 @@ void cfgInit(cfg_t *cfg)
   cfg->fptAdler32Data  = NULL;
   cfg->fptLz77Data     = NULL;
   cfg->fptZlibData     = NULL;
+  cfg->fptZlibBsData   = NULL;
   cfg->fptCrc32Data    = NULL;
 }
 
@@ -246,7 +247,8 @@ unsigned cfgSet(cfg_t *cfg, int argc, char **argv)
   cfg->derivedDumpLz77Data            = cfg->dumpLz77    || cfg->dumpBs   ;
   cfg->derivedDumpFilteredAdler32Data = cfg->dumpAdler32                  ;
   cfg->derivedDumpAdler32Data         = cfg->dumpAdler32 || cfg->dumpBs   ;
-  cfg->derivedDumpZlibData            = cfg->dumpCrc32   || cfg->dumpBs   ;
+  cfg->derivedDumpZlibData            = cfg->dumpCrc32                    ;
+  cfg->derivedDumpZlibBsData          = cfg->dumpBs                       ;
   cfg->derivedDumpWhData              = cfg->dumpCrc32                    ;
   cfg->derivedDumpCrc32Data           = cfg->dumpCrc32   || cfg->dumpBs   ;
 
@@ -257,6 +259,7 @@ unsigned cfgSet(cfg_t *cfg, int argc, char **argv)
   if (cfg->derivedDumpFilteredAdler32Data) cfg->fptFilteredAdler32Data = fopen("./check_data/FilteredAdler32.dat" , "w");
   if (cfg->derivedDumpAdler32Data        ) cfg->fptAdler32Data         = fopen("./check_data/Adler32.dat"         , "w");
   if (cfg->derivedDumpZlibData           ) cfg->fptZlibData            = fopen("./check_data/Zlib.dat"            , "w");
+  if (cfg->derivedDumpZlibBsData         ) cfg->fptZlibBsData          = fopen("./check_data/ZlibBs.dat"          , "w");
   if (cfg->derivedDumpWhData             ) cfg->fptWhData              = fopen("./check_data/Wh.dat"              , "w");
   if (cfg->derivedDumpCrc32Data          ) cfg->fptCrc32Data           = fopen("./check_data/Crc32.dat"           , "w");
 

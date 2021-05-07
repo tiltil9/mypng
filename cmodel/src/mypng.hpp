@@ -110,6 +110,7 @@ typedef struct cfg_t {
   FILE *   fptAdler32Data;
   FILE *   fptFilteredAdler32Data;
   FILE *   fptZlibData;
+  FILE *   fptZlibBsData;
   FILE *   fptWhData;
   FILE *   fptCrc32Data;
 
@@ -119,6 +120,7 @@ typedef struct cfg_t {
   bool     derivedDumpAdler32Data ;
   bool     derivedDumpFilteredAdler32Data;
   bool     derivedDumpZlibData    ;
+  bool     derivedDumpZlibBsData  ;
   bool     derivedDumpWhData      ;
   bool     derivedDumpCrc32Data   ;
 } cfg_t;
@@ -208,7 +210,7 @@ void setState(const cfg_t* cfg, PNGState* state);
 unsigned readFile(unsigned char** image, unsigned w, unsigned h, const char* fileName);
 void preProcessScanlines(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy);
 void zlibCompress(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGCompressSettings* zlibsettings);
-void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info);
+void pngPackage(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info);
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function
 void dumpRGBAData(FILE* fpt, const unsigned char* image, unsigned w, unsigned h);
@@ -217,6 +219,7 @@ void dumpLz77Data(FILE* fpt, const unsigned int* dataLz77, size_t dataLz77Size);
 void dumpFilteredAdler32Data(FILE* fpt, const unsigned char* dataFiltered, unsigned w, unsigned h);
 void dumpAdler32Data(FILE* fpt, unsigned adler32);
 void dumpZlibData(FILE* fpt, const unsigned char* dataZlib, size_t dataZlibSize);
+void dumpZlibBsData(FILE* fpt, const unsigned char* dataZlib, size_t dataZlibSize);
 void dumpWhData(FILE* fpt, unsigned w, unsigned h);
 void dumpCrc32Data(FILE* fpt, const unsigned char* dataPNG, size_t dataPNGSize);
 

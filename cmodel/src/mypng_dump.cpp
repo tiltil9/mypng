@@ -14,7 +14,7 @@
 //*** DUMP TOOL ****************************************************************
 void dumpWhData(FILE* fpt, unsigned w, unsigned h)
 {
-  fprintf(fpt, "%08x %08x", w, h);
+  fprintf(fpt, "%08x %08x\n", w, h);
 }
 
 void dumpRGBAData(FILE* fpt, const unsigned char* image, unsigned w, unsigned h)
@@ -103,7 +103,27 @@ void dumpZlibData(FILE* fpt, const unsigned char* dataZlib, size_t dataZlibSize)
     }
     i = i + (i + 4 >= dataZlibSize ? dataZlibSize - i : 4);
   }
-  fprintf(fpt, "%08x ", (int)dataZlibSize); // for bs
+}
+
+void dumpZlibBsData(FILE* fpt, const unsigned char* dataZlib, size_t dataZlibSize)
+{
+  size_t i = 0;
+  while(i < dataZlibSize) {
+    if(dataZlibSize - i >= 4) {
+      fprintf(fpt, "%02x%02x%02x%02x\n", dataZlib[i] & 0xff, dataZlib[i + 1] & 0xff, dataZlib[i + 2] & 0xff, dataZlib[i + 3] & 0xff);
+    }
+    else if(dataZlibSize - i == 3) {
+      fprintf(fpt, "%02x%02x%02x00\n", dataZlib[i] & 0xff, dataZlib[i + 1] & 0xff, dataZlib[i + 2] & 0xff);
+    }
+    else if(dataZlibSize - i == 2) {
+      fprintf(fpt, "%02x%02x0000\n", dataZlib[i] & 0xff, dataZlib[i + 1] & 0xff);
+    }
+    else if(dataZlibSize - i == 1) {
+      fprintf(fpt, "%02x000000\n", dataZlib[i] & 0xff);
+    }
+    i = i + (i + 4 >= dataZlibSize ? dataZlibSize - i : 4);
+  }
+  fprintf(fpt, "%08x\n", (int)dataZlibSize);
 }
 
 void dumpCrc32Data(FILE* fpt, const unsigned char* dataPNG, size_t dataPNGSize)
