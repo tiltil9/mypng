@@ -30,33 +30,34 @@ void dumpRGBAData(FILE* fpt, const unsigned char* image, unsigned w, unsigned h)
   }
 }
 
-void dumpFilteredData(FILE* fpt, const unsigned char* dataFiltered, unsigned w, unsigned h, bool adler32Mode)
+void dumpFilteredData(FILE* fpt, const unsigned char* dataFiltered, unsigned w, unsigned h)
 {
-  if (!adler32Mode) {
-    for (unsigned y = 0; y < h ; ++y) {
-      fprintf(fpt, "%02x000000 ", int(*(dataFiltered + y * (w * 4 + 1)))); // filter type
-      for (unsigned x = 0; x < w; ++x) {
-        for (unsigned chn = 0; chn < 4; ++chn) {
-          fprintf(fpt, "%02x", int(*(dataFiltered + y * (w * 4 + 1) + (x * 4 + 1) + chn)));
-        }
-        fprintf(fpt, " ");
+  for (unsigned y = 0; y < h ; ++y) {
+    fprintf(fpt, "%02x000000 ", int(*(dataFiltered + y * (w * 4 + 1)))); // filter type
+    for (unsigned x = 0; x < w; ++x) {
+      for (unsigned chn = 0; chn < 4; ++chn) {
+        fprintf(fpt, "%02x", int(*(dataFiltered + y * (w * 4 + 1) + (x * 4 + 1) + chn)));
+      }
+      fprintf(fpt, " ");
+    }
+    fprintf(fpt, "\n");
+  }
+}
+
+void dumpFilteredAdler32Data(FILE* fpt, const unsigned char* dataFiltered, unsigned w, unsigned h)
+{
+  for (unsigned y = 0; y < h ; ++y) {
+    fprintf(fpt, "%02x %02x %02x000000\n", 0, 0, int(*(dataFiltered + y * (w * 4 + 1)))); // lst_i, num_i, dat_i
+    for (unsigned x = 0; x < w; ++x) {
+      fprintf(fpt, "%02x %02x ", (y == h - 1 && x == w - 1) , 3);
+      for (unsigned chn = 0; chn < 4; ++chn) {
+        fprintf(fpt, "%02x", int(*(dataFiltered + y * (w * 4 + 1) + (x * 4 + 1) + chn)));
       }
       fprintf(fpt, "\n");
     }
   }
-  else {
-    for (unsigned y = 0; y < h ; ++y) {
-      fprintf(fpt, "%02x %02x %02x000000\n", 0, 0, int(*(dataFiltered + y * (w * 4 + 1)))); // lst_i, num_i, dat_i
-      for (unsigned x = 0; x < w; ++x) {
-        fprintf(fpt, "%02x %02x ", (y == h - 1 && x == w - 1) , 3);
-        for (unsigned chn = 0; chn < 4; ++chn) {
-          fprintf(fpt, "%02x", int(*(dataFiltered + y * (w * 4 + 1) + (x * 4 + 1) + chn)));
-        }
-        fprintf(fpt, "\n");
-      }
-    }
-  }
 }
+
 
 void dumpAdler32Data(FILE* fpt, unsigned adler32)
 {
@@ -102,6 +103,7 @@ void dumpZlibData(FILE* fpt, const unsigned char* dataZlib, size_t dataZlibSize)
     }
     i = i + (i + 4 >= dataZlibSize ? dataZlibSize - i : 4);
   }
+  fprintf(fpt, "%08x ", (int)dataZlibSize); // for bs
 }
 
 void dumpCrc32Data(FILE* fpt, const unsigned char* dataPNG, size_t dataPNGSize)

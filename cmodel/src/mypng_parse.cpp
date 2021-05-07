@@ -54,8 +54,10 @@ void cfgHelp()
   cout << "--btype              / -b   the block type for lz77                                          " << endl;
   cout << "--dumpLog                   dump log knob                                                    " << endl;
   cout << "--dumpFilter                dump file knob for filter simulation                             " << endl;
-  cout << "--dumpAdler32               dump file knob for Adler32 simulation                            " << endl;
   cout << "--dumpLz77                  dump file knob for Lz77 simulation                               " << endl;
+  cout << "--dumpAdler32               dump file knob for Adler32 simulation                            " << endl;
+  cout << "--dumpCrc32                 dump file knob for Crc32 simulation                              " << endl;
+  cout << "--dumpBs                    dump file knob for Bs simulation                                 " << endl;
 }
 
 void cfgInit(cfg_t *cfg)
@@ -70,8 +72,19 @@ void cfgInit(cfg_t *cfg)
   cfg->btype        = 1;
   cfg->dumpLog      = 0;
   cfg->dumpFilter   = 0;
-  cfg->dumpAdler32  = 0;
   cfg->dumpLz77     = 0;
+  cfg->dumpAdler32  = 0;
+  cfg->dumpCrc32    = 0;
+  cfg->dumpBs       = 0;
+  
+  cfg->fptWhData       = NULL;
+  cfg->fptRGBAData     = NULL;
+  cfg->fptFilteredData = NULL;
+  cfg->fptFilteredAdler32Data = NULL;
+  cfg->fptAdler32Data  = NULL;
+  cfg->fptLz77Data     = NULL;
+  cfg->fptZlibData     = NULL;
+  cfg->fptCrc32Data    = NULL;
 }
 
 void cfgMap(cfg_t *cfg, string datKey, string datCfg)
@@ -92,8 +105,10 @@ void cfgMap(cfg_t *cfg, string datKey, string datCfg)
   else if (datKey == "--btype"       || datKey == "-b") cfg->btype       = datCfgInt;
   else if (datKey == "--dumpLog"                      ) cfg->dumpLog     = datCfgBool;
   else if (datKey == "--dumpFilter"                   ) cfg->dumpFilter  = datCfgBool;
-  else if (datKey == "--dumpAdler32"                  ) cfg->dumpAdler32 = datCfgBool;
   else if (datKey == "--dumpLz77"                     ) cfg->dumpLz77    = datCfgBool;
+  else if (datKey == "--dumpAdler32"                  ) cfg->dumpAdler32 = datCfgBool;
+  else if (datKey == "--dumpCrc32"                    ) cfg->dumpCrc32   = datCfgBool;
+  else if (datKey == "--dumpBs"                       ) cfg->dumpBs      = datCfgBool;
 }
 
 unsigned cfgSetFromFile(cfg_t *cfg, int argc, char **argv)
@@ -181,12 +196,20 @@ unsigned cfgChk(cfg_t *cfg)
     cout << "ERROR: dumpFilter should with [0, 1]" << endl;
     return 1;
   }
+  if (cfg->dumpLz77 < 0 || cfg->dumpLz77 > 1){
+    cout << "ERROR: dumpLz77 should with [0, 1]" << endl;
+    return 1;
+  }
   if (cfg->dumpAdler32 < 0 || cfg->dumpAdler32 > 1){
     cout << "ERROR: dumpAdler32 should with [0, 1]" << endl;
     return 1;
   }
-  if (cfg->dumpLz77 < 0 || cfg->dumpLz77 > 1){
-    cout << "ERROR: dumpLz77 should with [0, 1]" << endl;
+  if (cfg->dumpCrc32 < 0 || cfg->dumpCrc32 > 1){
+    cout << "ERROR: dumpCrc32 should with [0, 1]" << endl;
+    return 1;
+  }
+  if (cfg->dumpBs < 0 || cfg->dumpBs > 1){
+    cout << "ERROR: dumpBs should with [0, 1]" << endl;
     return 1;
   }
 
@@ -216,6 +239,26 @@ unsigned cfgSet(cfg_t *cfg, int argc, char **argv)
   // check
   if ((datRet = cfgChk(cfg)))
     return datRet;
+
+  // derive dump
+  cfg->derivedDumpRGBAData            = cfg->dumpFilter                   ;
+  cfg->derivedDumpFilteredData        = cfg->dumpFilter  || cfg->dumpLz77 ;
+  cfg->derivedDumpLz77Data            = cfg->dumpLz77    || cfg->dumpBs   ;
+  cfg->derivedDumpFilteredAdler32Data = cfg->dumpAdler32                  ;
+  cfg->derivedDumpAdler32Data         = cfg->dumpAdler32 || cfg->dumpBs   ;
+  cfg->derivedDumpZlibData            = cfg->dumpCrc32   || cfg->dumpBs   ;
+  cfg->derivedDumpWhData              = cfg->dumpCrc32                    ;
+  cfg->derivedDumpCrc32Data           = cfg->dumpCrc32   || cfg->dumpBs   ;
+
+  // open dump file
+  if (cfg->derivedDumpRGBAData           ) cfg->fptRGBAData            = fopen("./check_data/RGBA.dat"            , "w");
+  if (cfg->derivedDumpFilteredData       ) cfg->fptFilteredData        = fopen("./check_data/Filtered.dat"        , "w");
+  if (cfg->derivedDumpLz77Data           ) cfg->fptLz77Data            = fopen("./check_data/Lz77.dat"            , "w");
+  if (cfg->derivedDumpFilteredAdler32Data) cfg->fptFilteredAdler32Data = fopen("./check_data/FilteredAdler32.dat" , "w");
+  if (cfg->derivedDumpAdler32Data        ) cfg->fptAdler32Data         = fopen("./check_data/Adler32.dat"         , "w");
+  if (cfg->derivedDumpZlibData           ) cfg->fptZlibData            = fopen("./check_data/Zlib.dat"            , "w");
+  if (cfg->derivedDumpWhData             ) cfg->fptWhData              = fopen("./check_data/Wh.dat"              , "w");
+  if (cfg->derivedDumpCrc32Data          ) cfg->fptCrc32Data           = fopen("./check_data/Crc32.dat"           , "w");
 
   return 0;
 }

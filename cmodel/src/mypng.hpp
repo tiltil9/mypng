@@ -99,8 +99,28 @@ typedef struct cfg_t {
   unsigned btype;
   bool     dumpLog;
   bool     dumpFilter;
-  bool     dumpAdler32;
   bool     dumpLz77;
+  bool     dumpAdler32;
+  bool     dumpCrc32;
+  bool     dumpBs;
+
+  FILE *   fptRGBAData;
+  FILE *   fptFilteredData;
+  FILE *   fptLz77Data;
+  FILE *   fptAdler32Data;
+  FILE *   fptFilteredAdler32Data;
+  FILE *   fptZlibData;
+  FILE *   fptWhData;
+  FILE *   fptCrc32Data;
+
+  bool     derivedDumpRGBAData    ;
+  bool     derivedDumpFilteredData;
+  bool     derivedDumpLz77Data    ;
+  bool     derivedDumpAdler32Data ;
+  bool     derivedDumpFilteredAdler32Data;
+  bool     derivedDumpZlibData    ;
+  bool     derivedDumpWhData      ;
+  bool     derivedDumpCrc32Data   ;
 } cfg_t;
 
 //*** COMMON TOOL **************************************************************
@@ -191,12 +211,13 @@ void zlibCompress(const cfg_t* cfg, unsigned char** out, size_t* outsize, const 
 void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info);
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function
-void dumpWhData(FILE* fpt, unsigned w, unsigned h);
 void dumpRGBAData(FILE* fpt, const unsigned char* image, unsigned w, unsigned h);
-void dumpFilteredData(FILE* fpt, const unsigned char* dataFiltered, unsigned w, unsigned h, bool adler32Mode);
-void dumpAdler32Data(FILE* fpt, unsigned adler32);
+void dumpFilteredData(FILE* fpt, const unsigned char* dataFiltered, unsigned w, unsigned h);
 void dumpLz77Data(FILE* fpt, const unsigned int* dataLz77, size_t dataLz77Size);
+void dumpFilteredAdler32Data(FILE* fpt, const unsigned char* dataFiltered, unsigned w, unsigned h);
+void dumpAdler32Data(FILE* fpt, unsigned adler32);
 void dumpZlibData(FILE* fpt, const unsigned char* dataZlib, size_t dataZlibSize);
+void dumpWhData(FILE* fpt, unsigned w, unsigned h);
 void dumpCrc32Data(FILE* fpt, const unsigned char* dataPNG, size_t dataPNGSize);
 
 
