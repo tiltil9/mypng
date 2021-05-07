@@ -9,11 +9,11 @@ g++ ../src/mypng.cpp         \
 #          file_name                       width      height
 LIST_INFO=(
             AlphaBall                       256       256             
-            AlphaEdge                       256       256
-            black817-480x360-3.5            480       360
-            globe-scene-fish-bowl-pngcrush  393       501
-            imgcomp-440x330                 440       330
-            test                            512       512
+            # AlphaEdge                       256       256
+            # black817-480x360-3.5            480       360
+            # globe-scene-fish-bowl-pngcrush  393       501
+            # imgcomp-440x330                 440       330
+            # test                            512       512
 )
 PATH_RGBA_ANCHOR="./pic_rgba_anchor"
 PATH_RGBA="./pic_rgba"
@@ -44,4 +44,7 @@ do
 
   # compare rgba_anchor with rgba
   diff -q  $PATH_RGBA_ANCHOR/$file.txt $PATH_RGBA/$file.txt
+
+  # cat
+  cd ./check_data ; ./cat.py
 done
