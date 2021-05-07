@@ -145,10 +145,4 @@ void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, s
 
   *out = outv.data;
   *outsize = outv.size;
-
-  // dump
-  if (0) {
-    dumpCrc32(in, insize, *out, *outsize, info->width, info->height);
-  }
-
 }

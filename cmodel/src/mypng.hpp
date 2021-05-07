@@ -191,10 +191,6 @@ void zlibCompress(const cfg_t* cfg, unsigned char** out, size_t* outsize, const 
 void pngPackage(unsigned char** out, size_t* outsize, const unsigned char* in, size_t insize, const PNGInfo* info);
 unsigned saveFile(const unsigned char* buffer, size_t bufferSize, const char* fileName);
 // dump interface function
-void dumpFilter(unsigned char** out, const unsigned char* in, unsigned w, unsigned h);
-void dumpAdler32(const unsigned char* in, size_t insize, unsigned adler32);
-void dumpLz77(const unsigned int* in, size_t insize);
-void dumpCrc32(const unsigned char* in, size_t insize, const unsigned char* out, size_t outsize, unsigned w, unsigned h);
 void dumpWhData(FILE* fpt, unsigned w, unsigned h);
 void dumpRGBAData(FILE* fpt, const unsigned char* image, unsigned w, unsigned h);
 void dumpFilteredData(FILE* fpt, const unsigned char* dataFiltered, unsigned w, unsigned h, bool adler32Mode);

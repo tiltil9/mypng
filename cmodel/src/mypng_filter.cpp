@@ -160,9 +160,4 @@ void preProcessScanlines32bitRGBA(unsigned char** out, size_t* outsize, const un
 void preProcessScanlines(const cfg_t* cfg, unsigned char** out, size_t* outsize, const unsigned char* in, unsigned w, unsigned h, PNGFilterStrategy strategy)
 {
   preProcessScanlines32bitRGBA(out, outsize, in, w, h, strategy);
-
-  // dump
-  if (cfg->dumpFilter) {
-    dumpFilter(out, in, w, h);
-  }
 }
