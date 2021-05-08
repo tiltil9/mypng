@@ -14,10 +14,10 @@
   `define CLK_HALF    (`CLK_FULL / 2)
 
   // init
-  `define ADLER32_I_FILE      "./check_data/adler32_i_uncompressed.dat"
+  `define ADLER32_I_FILE      "./check_data/FilteredAdler32.dat"
 
   // chko
-  `define ADLER32_O_FILE      "./check_data/adler32_o_value.dat"
+  `define ADLER32_O_FILE      "./check_data/Adler32.dat"
 
 
 module sim_adler32_top;

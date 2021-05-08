@@ -17,7 +17,7 @@
   `define CRC32_I_FILE      "./check_data/crc32_i.dat"
 
   // chko
-  `define CRC32_O_FILE      "./check_data/crc32_o.dat"
+  `define CRC32_O_FILE      "./check_data/Crc32.dat"
 
 
 module sim_crc32_top;

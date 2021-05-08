@@ -25,13 +25,11 @@ def main():
       with open('Crc32.dat', 'r') as fptCrc32:
         fptBsI.writelines(fptCrc32.readlines())
 
-  # bs_o = zlib + adler32 + crc32
-  if 'ZlibBs.dat' in file_list and 'Adler32.dat' in file_list and 'Crc32.dat' in file_list:
+  # bs_o = zlib + crc32
+  if 'ZlibBs.dat' in file_list and 'Crc32.dat' in file_list:
     with open('bs_o.dat', 'w') as fptBsO:
       with open('ZlibBs.dat', 'r') as fptZlibBs:
         fptBsO.writelines(fptZlibBs.readlines())
-      with open('Adler32.dat', 'r') as fptAdler32:
-        fptBsO.writelines(fptAdler32.readlines())
       with open('Crc32.dat', 'r') as fptCrc32:
         fptBsO.writelines(fptCrc32.readlines())
 
