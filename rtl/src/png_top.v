@@ -119,7 +119,6 @@ module png_top(
 // crc32
   wire                                 crc32_start_i          ;
   wire                                 crc32_val_i            ;
-  wire   [DATA_WD     -1 :0]           crc32_dat_i            ;
   wire   [NUM_WD      -1 :0]           crc32_num_i            ;
   wire                                 crc32_lst_i            ;
   wire                                 crc32_done_o           ;
@@ -295,7 +294,7 @@ module png_top(
   //
   .start_i  ( crc32_start_i ),
   .val_i    ( crc32_val_i   ),
-  .dat_i    ( crc32_dat_i   ),
+  .dat_i    ( bs_dat_o      ),
   .num_i    ( crc32_num_i   ),
   .lst_i    ( crc32_lst_i   ),
   //
