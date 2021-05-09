@@ -266,3 +266,34 @@ endtask
       end
     end
   endtask
+
+//---   DUMP_DATA_O   -------------------------------------
+  initial begin
+    DUMP_DATA_O ;
+  end
+
+  task DUMP_DATA_O ;
+    // variables
+    integer                      fpt     ;
+    integer                      tmp     ;
+
+    // main body
+    begin
+      // log
+      #( 10 * `CLK_FULL );
+      $display( "\t\t dump to png is on!" ) ;
+
+      // open file
+      fpt = $fopen( `PNG_DUMP_O_FILE , "w") ;
+
+      // core loop
+      forever begin
+        // wait
+        @(negedge clk ) ;
+
+        if( dut.val_o ) begin
+          $fdisplay(fpt, "%08x", dut.dat_o);
+        end
+      end
+    end
+  endtask

@@ -31,6 +31,7 @@
 
   // outout file
   `define PNG_O_FILE      "../check_data/bs_o.dat"
+  `define PNG_DUMP_O_FILE "../check_data/dump_bs_o.dat"
   `define FILTER_O_FILE   "../check_data/Filtered.dat"
   `define LZ77_O_FILE     "../check_data/Lz77.dat"
 
@@ -130,6 +131,8 @@ module sim_png_top();
         // delay
         #( 10 * `CLK_FULL );
     end
+      // wait
+      @(posedge dut.done_o ) ;
 
       // log
       # ( 10 * `CLK_FULL ) ;
