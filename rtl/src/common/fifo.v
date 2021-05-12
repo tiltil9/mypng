@@ -118,7 +118,7 @@ module fifo(
     .wr_val_i ( wr_val_i   ),
     .wr_dat_i ( wr_dat_i   ),
   // read
-    .rd_val_i ( rd_val_w   ),
+    .rd_val_i ( rd_val_i   ),
     .rd_val_o ( /*UNUSED*/ ),
     .rd_dat_o ( rd_dat_o   )
   );

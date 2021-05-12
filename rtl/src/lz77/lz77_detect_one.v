@@ -37,7 +37,7 @@ module lz77_detect_one(
   // lvl_hig_w
   genvar i;
   generate 
-      for( i = 0; i < LVL_HIG_WD; i = i + 1) begin
+      for( i = 0; i < LVL_HIG_WD; i = i + 1) begin : lvl_hig
           assign lvl_hig_w[i] = dat_i[LVL_LOW_WD*i +: LVL_LOW_WD]!=0 ;
       end
   endgenerate

@@ -140,7 +140,7 @@ module filter_top(
       .wr_val_i    ( fifo_0_wr_val_w ) ,
       .wr_dat_i    ( fifo_0_wr_dat_w ) ,
       // read
-      .rd_ack_i    ( fifo_0_rd_val_w ) ,
+      .rd_val_i    ( fifo_0_rd_val_w ) ,
       .rd_dat_o    ( fifo_0_rd_dat_w )
   );
 
@@ -159,7 +159,7 @@ module filter_top(
       .wr_val_i    ( fifo_1_wr_val_w ) ,
       .wr_dat_i    ( fifo_1_wr_dat_w ) ,
       // read
-      .rd_ack_i    ( fifo_1_rd_val_w ) ,
+      .rd_val_i    ( fifo_1_rd_val_w ) ,
       .rd_dat_o    ( fifo_1_rd_dat_w )
   );
 
