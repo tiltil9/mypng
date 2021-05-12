@@ -47,8 +47,8 @@ module filter(
 
   localparam    FSM_WD      =  'd2              ;
   localparam    IDLE        = 2'd0              ;
-  localparam    OPT         = 2'd1              ;  // optimal : find the best filter type
-  localparam    DLY         = 2'd2              ;  // delay   : compare cost
+  localparam    OPT         = 2'd1              ;  // optimal : do five filters to find the best filter type
+  localparam    CMP         = 2'd2              ;  // compare : compare costs of five filter types 
   localparam    FNL         = 2'd3              ;  // final   : filter according to the best filter type
 
   // derived
@@ -94,7 +94,7 @@ module filter(
   reg           [FSM_WD-1                 :0]    nxt_state_w ;  // nxt -> next
 
   wire                                           opt_done_w  ;
-  wire                                           dly_done_w  ;
+  wire                                           cmp_done_w  ;
   wire                                           fnl_done_w  ;
   wire                                           flg_busy_w  ;
 
@@ -103,8 +103,8 @@ module filter(
   reg           [`SIZE_H_WD-1             :0]    cnt_h_r     ;
   wire                                           cnt_w_done_w;
   wire                                           cnt_h_done_w;
-  reg           [DATA_CYC_WD-1            :0]    cnt_dly_r   ;  // dly -> delay
-  wire                                           cnt_dly_done_w ;
+  reg           [DATA_CYC_WD-1            :0]    cnt_cmp_r   ;  // cmp -> compare
+  wire                                           cnt_cmp_done_w ;
 
   // dat_a/b/c_r
   wire          [`DATA_PXL_WD-1           :0]    dat_i_w     ;
@@ -165,8 +165,8 @@ module filter(
                                  nxt_state_w = IDLE ;
     case( cur_state_r )
       IDLE :    if( start_i )    nxt_state_w = OPT  ; else nxt_state_w = IDLE ;
-      OPT  :    if( opt_done_w ) nxt_state_w = DLY  ; else nxt_state_w = OPT  ;
-      DLY  :    if( dly_done_w ) nxt_state_w = FNL  ; else nxt_state_w = DLY  ;
+      OPT  :    if( opt_done_w ) nxt_state_w = CMP  ; else nxt_state_w = OPT  ;
+      CMP  :    if( cmp_done_w ) nxt_state_w = FNL  ; else nxt_state_w = CMP  ;
       FNL  :    if( fnl_done_w ) nxt_state_w = IDLE ; else nxt_state_w = FNL  ;
     endcase
   end
@@ -174,9 +174,9 @@ module filter(
   // jump condition
   assign cnt_w_done_w   = cnt_w_r == (cfg_w_i - 'd1)           ;
   assign cnt_h_done_w   = cnt_h_r == (cfg_h_i - 'd1)           ;
-  assign cnt_dly_done_w = cnt_dly_r == (DATA_CYC - 'd1)        ;
+  assign cnt_cmp_done_w = cnt_cmp_r == (DATA_CYC - 'd1)        ;
   assign opt_done_w     = (cur_state_r==OPT) && cnt_w_done_w   ;
-  assign dly_done_w     = (cur_state_r==DLY) && cnt_dly_done_w ;
+  assign cmp_done_w     = (cur_state_r==CMP) && cnt_cmp_done_w ;
   assign fnl_done_w     = (cur_state_r==FNL) && cnt_w_done_w   ;
 
   // flg_busy_w
@@ -213,15 +213,15 @@ module filter(
     end
   end
 
-  // cnt_dly_r
+  // cnt_cmp_r
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
-      cnt_dly_r <= 'd0 ;
+      cnt_cmp_r <= 'd0 ;
     end
     else begin
-      if( cur_state_r == DLY ) begin
-        if( cnt_dly_done_w ) cnt_dly_r <= 'd0             ;
-        else                 cnt_dly_r <= cnt_dly_r + 'd1 ;
+      if( cur_state_r == CMP ) begin
+        if( cnt_cmp_done_w ) cnt_cmp_r <= 'd0             ;
+        else                 cnt_cmp_r <= cnt_cmp_r + 'd1 ;
       end
     end
   end
@@ -336,7 +336,7 @@ module filter(
   end
 
 
-// ---   FSM: DLY (Compare)   -----------------------------
+// ---   FSM: CMP (Compare)   -----------------------------
   // bst_type_r
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
@@ -344,7 +344,7 @@ module filter(
       sum_bst_r <= 'd0 ;
     end
     else begin
-      if( cur_state_r == DLY ) begin
+      if( cur_state_r == CMP ) begin
         if( sum_m_w < sum_n_w ) begin
           typ_bst_r <= typ_m_w ;
           sum_bst_r <= sum_m_w ;
@@ -360,7 +360,7 @@ module filter(
   // typ/sum_m_w
   always @(*) begin
                     typ_m_w = 'd0 ; sum_m_w = 'd0     ;
-    case( cnt_dly_r )
+    case( cnt_cmp_r )
       'd0 : begin   typ_m_w = 'd1 ; sum_m_w = sum_1_r ; end
       'd1 : begin   typ_m_w = 'd2 ; sum_m_w = sum_2_r ; end
       'd2 : begin   typ_m_w = 'd3 ; sum_m_w = sum_3_r ; end
@@ -370,18 +370,18 @@ module filter(
   end
 
   // typ/sum_n_w
-  assign typ_n_w = (cnt_dly_r=='d0) ?     'd0 : typ_bst_r ;
-  assign sum_n_w = (cnt_dly_r=='d0) ? sum_0_r : sum_bst_r ;
+  assign typ_n_w = (cnt_cmp_r=='d0) ?     'd0 : typ_bst_r ;
+  assign sum_n_w = (cnt_cmp_r=='d0) ? sum_0_r : sum_bst_r ;
 
 
 // ---   FSM: FNL   ---------------------------------------
   // fifo_flt_wr_val_o
-  assign fifo_flt_wr_val_o = cnt_dly_done_w || (cur_state_r==FNL) ;
+  assign fifo_flt_wr_val_o = cnt_cmp_done_w || (cur_state_r==FNL) ;
 
   // fifo_flt_wr_dar_o
   always @(*) begin
               fifo_flt_wr_dat_o = 'd0         ;
-    if( cnt_dly_done_w ) begin
+    if( cnt_cmp_done_w ) begin
               fifo_flt_wr_dat_o = typ_bst_r << 24;
     end
     else if( cur_state_r==FNL ) begin
