@@ -45,11 +45,11 @@ module filter(
   parameter     DATA_THR    = 'd4               ;
   localparam    DATA_CYC    = 'd5               ;
 
-  localparam    FSM_WD      =  'd2              ;
-  localparam    IDLE        = 2'd0              ;
-  localparam    OPT         = 2'd1              ;  // optimal : do five filters to find the best filter type
-  localparam    CMP         = 2'd2              ;  // compare : compare costs of five filter types 
-  localparam    FNL         = 2'd3              ;  // final   : filter according to the best filter type
+  localparam    FSM_WD      =  'd4              ;
+  localparam    IDLE        = 4'b0001           ;
+  localparam    OPT         = 4'b0010           ;  // optimal : do five filters to find the best filter type
+  localparam    CMP         = 4'b0100           ;  // compare : compare costs of five filter types 
+  localparam    FNL         = 4'b1000           ;  // final   : filter according to the best filter type
 
   // derived
   localparam    DATA_CYC_WD = `LOG2( DATA_CYC ) ;
@@ -93,20 +93,38 @@ module filter(
   reg           [FSM_WD-1                 :0]    cur_state_r ;  // cur -> current
   reg           [FSM_WD-1                 :0]    nxt_state_w ;  // nxt -> next
 
-  wire                                           opt_done_w  ;
-  wire                                           cmp_done_w  ;
-  wire                                           fnl_done_w  ;
-  wire                                           flg_busy_w  ;
+  wire                                           flg_idle_w       ;
+  wire                                           flg_opt_w        ;
+  wire                                           flg_cmp_w        ;
+  wire                                           flg_fnl_w        ;
+
+  wire                                           flg_busy_opt_w   ;
+  reg                                            flg_busy_opt_r   ;
+  reg                                            flg_busy_opt_d1_r;
+  wire                                           flg_busy_fnl_w   ;
+  reg                                            flg_busy_fnl_r   ;
+  reg                                            flg_busy_fnl_d1_r;
+  wire                                           flg_busy_w       ;
+  reg                                            flg_busy_r       ;
+
+  wire                                           opt_done_w       ;
+  wire                                           cmp_done_w       ;
+  wire                                           fnl_done_w       ;
 
   // counter (opt, fnl)
-  reg           [`SIZE_W_WD-1             :0]    cnt_w_r     ;
-  reg           [`SIZE_H_WD-1             :0]    cnt_h_r     ;
-  wire                                           cnt_w_done_w;
-  wire                                           cnt_h_done_w;
-  reg           [DATA_CYC_WD-1            :0]    cnt_cmp_r   ;  // cmp -> compare
-  wire                                           cnt_cmp_done_w ;
+  reg           [`SIZE_W_WD-1             :0]    cnt_w_r          ;
+  reg           [`SIZE_W_WD-1             :0]    cnt_w_d1_r       ;
+  reg           [`SIZE_W_WD-1             :0]    cnt_w_d2_r       ;
+  wire                                           cnt_w_done_w     ;
+  wire                                           cnt_w_d1_done_w  ;
+  wire                                           cnt_w_d2_done_w  ;
+  reg           [`SIZE_H_WD-1             :0]    cnt_h_r          ;
+  wire                                           cnt_h_done_w     ;
+  reg           [DATA_CYC_WD-1            :0]    cnt_cmp_r        ;  // cmp -> compare
+  wire                                           cnt_cmp_done_w   ;
 
   // dat_a/b/c_r
+  reg           [`DATA_PXL_WD-1           :0]    dat_r       ; 
   wire          [`DATA_PXL_WD-1           :0]    dat_i_w     ;
   reg           [`DATA_PXL_WD-1           :0]    dat_a_r     ;
   reg           [`DATA_PXL_WD-1           :0]    dat_c_r     ;
@@ -122,6 +140,11 @@ module filter(
   wire          [`DATA_PXL_WD-1           :0]    res_2_w     ;
   wire          [`DATA_PXL_WD-1           :0]    res_3_w     ;
   wire          [`DATA_PXL_WD-1           :0]    res_4_w     ;
+  reg           [`DATA_PXL_WD-1           :0]    res_0_r     ;
+  reg           [`DATA_PXL_WD-1           :0]    res_1_r     ;
+  reg           [`DATA_PXL_WD-1           :0]    res_2_r     ;
+  reg           [`DATA_PXL_WD-1           :0]    res_3_r     ;
+  reg           [`DATA_PXL_WD-1           :0]    res_4_r     ;
   wire          [`DATA_PXL_WD-1           :0]    res_abs_0_w ;
   wire          [`DATA_PXL_WD-1           :0]    res_abs_1_w ;
   wire          [`DATA_PXL_WD-1           :0]    res_abs_2_w ;
@@ -150,6 +173,9 @@ module filter(
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
+  // flg_idle/opt/dly/fnl_w
+  assign {flg_fnl_w, flg_cmp_w, flg_opt_w, flg_idle_w} = cur_state_r ;
+
   // cur_state_r
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
@@ -172,15 +198,21 @@ module filter(
   end
 
   // jump condition
-  assign cnt_w_done_w   = cnt_w_r == (cfg_w_i - 'd1)           ;
-  assign cnt_h_done_w   = cnt_h_r == (cfg_h_i - 'd1)           ;
-  assign cnt_cmp_done_w = cnt_cmp_r == (DATA_CYC - 'd1)        ;
-  assign opt_done_w     = (cur_state_r==OPT) && cnt_w_done_w   ;
-  assign cmp_done_w     = (cur_state_r==CMP) && cnt_cmp_done_w ;
-  assign fnl_done_w     = (cur_state_r==FNL) && cnt_w_done_w   ;
+  assign cnt_w_done_w    = cnt_w_r    == (cfg_w_i - 'd1)  ;
+  assign cnt_w_d1_done_w = cnt_w_d1_r == (cfg_w_i - 'd1)  ;
+  assign cnt_w_d2_done_w = cnt_w_d2_r == (cfg_w_i - 'd1)  ;
+  assign opt_done_w      = flg_opt_w && cnt_w_d2_done_w   ;
+  assign fnl_done_w      = flg_fnl_w && cnt_w_d2_done_w   ;
+
+  assign cnt_h_done_w    = cnt_h_r    == (cfg_h_i  - 'd1) ;
+
+  assign cnt_cmp_done_w  = cnt_cmp_r  == (DATA_CYC - 'd1) ;
+  assign cmp_done_w      = flg_cmp_w && cnt_cmp_done_w    ;
 
   // flg_busy_w
-  assign flg_busy_w = (cur_state_r==OPT) || (cur_state_r==FNL) ;
+  assign flg_busy_opt_w = flg_opt_w      &&  val_i                               ;
+  assign flg_busy_fnl_w = flg_fnl_w      && !cnt_w_d1_done_w && !cnt_w_d2_done_w ;
+  assign flg_busy_w     = flg_busy_opt_w ||  flg_busy_fnl_w                      ;
 
   // fetch previous scanline data
   assign fifo_pre_rd_val_o = (cnt_h_r != 'd0) && flg_busy_w ;
@@ -195,7 +227,7 @@ module filter(
     else begin
       if( flg_busy_w ) begin
         if( cnt_w_done_w ) cnt_w_r <= 'd0           ;
-        else             cnt_w_r <= cnt_w_r + 'd1 ;
+        else               cnt_w_r <= cnt_w_r + 'd1 ;
       end
     end
   end
@@ -206,7 +238,7 @@ module filter(
       cnt_h_r <= 'd0 ;
     end
     else begin
-      if( cnt_w_done_w && (cur_state_r==FNL)) begin
+      if( cnt_w_d2_done_w && flg_fnl_w) begin
         if( cnt_h_done_w ) cnt_h_r <= 'd0           ;
         else               cnt_h_r <= cnt_h_r + 'd1 ;
       end
@@ -219,18 +251,54 @@ module filter(
       cnt_cmp_r <= 'd0 ;
     end
     else begin
-      if( cur_state_r == CMP ) begin
+      if( flg_cmp_w ) begin
         if( cnt_cmp_done_w ) cnt_cmp_r <= 'd0             ;
         else                 cnt_cmp_r <= cnt_cmp_r + 'd1 ;
       end
     end
   end
 
+  
+// --- DELAY ----------------------------------------------
+  // cnt_w_d1/d2_r - flg_busy_opt_(d1)_r - dat_r - res_0/1/2/3/4_r
+  always @(posedge clk or negedge rstn ) begin
+    if( !rstn ) begin
+      cnt_w_d1_r        <= 'd0 ;
+      cnt_w_d2_r        <= 'd0 ;
+      flg_busy_opt_r    <= 'd0 ;
+      flg_busy_opt_d1_r <= 'd0 ;
+      flg_busy_fnl_r    <= 'd0 ;
+      flg_busy_fnl_d1_r <= 'd0 ;
+      flg_busy_r        <= 'd0 ;
+      dat_r             <= 'd0 ;
+      res_0_r           <= 'd0 ;
+      res_1_r           <= 'd0 ;
+      res_2_r           <= 'd0 ;
+      res_3_r           <= 'd0 ;
+      res_4_r           <= 'd0 ;
+    end
+    else begin
+      cnt_w_d1_r        <= cnt_w_r           ;
+      cnt_w_d2_r        <= cnt_w_d1_r        ;
+      flg_busy_opt_r    <= flg_busy_opt_w    ;
+      flg_busy_opt_d1_r <= flg_busy_opt_r    ;
+      flg_busy_fnl_r    <= flg_busy_fnl_w    ;
+      flg_busy_fnl_d1_r <= flg_busy_fnl_r    ;
+      flg_busy_r        <= flg_busy_w        ;
+      dat_r             <= dat_i             ;
+      res_0_r           <= res_0_w           ;
+      res_1_r           <= res_1_w           ;
+      res_2_r           <= res_2_w           ;
+      res_3_r           <= res_3_w           ;
+      res_4_r           <= res_4_w           ;
+    end
+  end
+
 
 // ---   FSM: OPT or FNL   --------------------------------
   // dat_i_w
-  assign fifo_cur_rd_val_o = (cur_state_r==FNL)                              ;
-  assign dat_i_w           = (cur_state_r==OPT) ? dat_i :  fifo_cur_rd_dat_i ;
+  assign fifo_cur_rd_val_o = flg_busy_fnl_w                              ;
+  assign dat_i_w           = flg_busy_opt_r ? dat_r :  fifo_cur_rd_dat_i ;
 
   // dat_a/b/c_r
   always @(posedge clk or negedge rstn ) begin
@@ -239,7 +307,7 @@ module filter(
       dat_c_r <= 'd0 ;
     end
     else begin
-      if( flg_busy_w ) begin
+      if( flg_busy_r ) begin
         dat_a_r <= dat_i_w           ;
         dat_c_r <= fifo_pre_rd_dat_i ;
       end
@@ -247,9 +315,9 @@ module filter(
   end
 
   // dat_a/b/c_w
-  assign dat_a_w = (cnt_w_r=='d0                  ) ? 'd0 : dat_a_r           ;
-  assign dat_b_w = (cnt_h_r=='d0                  ) ? 'd0 : fifo_pre_rd_dat_i ;
-  assign dat_c_w = (cnt_h_r=='d0 || cnt_w_r  =='d0) ? 'd0 : dat_c_r           ;
+  assign dat_a_w = (cnt_w_d1_r=='d0                ) ? 'd0 : dat_a_r           ;
+  assign dat_b_w = (cnt_h_r   =='d0                ) ? 'd0 : fifo_pre_rd_dat_i ;
+  assign dat_c_w = (cnt_w_d1_r=='d0 || cnt_h_r=='d0) ? 'd0 : dat_c_r           ;
 
   // res_x_w
   //  -----
@@ -286,19 +354,19 @@ module filter(
         );
 
       // res_abs_x_w
-        assign res_abs_0_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_0_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         ;
-        assign res_abs_1_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_1_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] < 'd128 ?
-                                                                 res_1_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         :
-                                                               - res_1_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] + 'd255 ;
-        assign res_abs_2_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_2_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] < 'd128 ?
-                                                                 res_2_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         :
-                                                               - res_2_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] + 'd255 ;
-        assign res_abs_3_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_3_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] < 'd128 ?
-                                                                 res_3_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         :
-                                                               - res_3_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] + 'd255 ;
-        assign res_abs_4_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_4_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] < 'd128 ?
-                                                                 res_4_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         :
-                                                               - res_4_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] + 'd255 ;
+        assign res_abs_0_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_0_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         ;
+        assign res_abs_1_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_1_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] < 'd128 ?
+                                                                 res_1_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         :
+                                                               - res_1_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] + 'd255 ;
+        assign res_abs_2_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_2_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] < 'd128 ?
+                                                                 res_2_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         :
+                                                               - res_2_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] + 'd255 ;
+        assign res_abs_3_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_3_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] < 'd128 ?
+                                                                 res_3_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         :
+                                                               - res_3_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] + 'd255 ;
+        assign res_abs_4_w[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] = res_4_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] < 'd128 ?
+                                                                 res_4_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD]         :
+                                                               - res_4_r[`DATA_CHN_WD*gvIdx +: `DATA_CHN_WD] + 'd255 ;
     end 
   endgenerate
 
@@ -309,11 +377,11 @@ module filter(
   assign fifo_cur_wr_dat_o = dat_i ;
 
   // sum_x_w
-  assign sum_0_w = (cnt_w_r == 'd0) ? 'd0 : sum_0_r;
-  assign sum_1_w = (cnt_w_r == 'd0) ? 'd0 : sum_1_r;
-  assign sum_2_w = (cnt_w_r == 'd0) ? 'd0 : sum_2_r;
-  assign sum_3_w = (cnt_w_r == 'd0) ? 'd0 : sum_3_r;
-  assign sum_4_w = (cnt_w_r == 'd0) ? 'd0 : sum_4_r;
+  assign sum_0_w = (cnt_w_d2_r == 'd0) ? 'd0 : sum_0_r;
+  assign sum_1_w = (cnt_w_d2_r == 'd0) ? 'd0 : sum_1_r;
+  assign sum_2_w = (cnt_w_d2_r == 'd0) ? 'd0 : sum_2_r;
+  assign sum_3_w = (cnt_w_d2_r == 'd0) ? 'd0 : sum_3_r;
+  assign sum_4_w = (cnt_w_d2_r == 'd0) ? 'd0 : sum_4_r;
 
   // sum_x_r
   always @(posedge clk or negedge rstn ) begin
@@ -325,7 +393,7 @@ module filter(
       sum_4_r <= 'd0 ;
     end
     else begin
-      if( cur_state_r == OPT ) begin
+      if( flg_busy_opt_d1_r ) begin
         sum_0_r <= sum_0_w + res_abs_0_w[0 +:8] + res_abs_0_w[8 +:8] + res_abs_0_w[16 +:8] + res_abs_0_w[24 +:8] ;
         sum_1_r <= sum_1_w + res_abs_1_w[0 +:8] + res_abs_1_w[8 +:8] + res_abs_1_w[16 +:8] + res_abs_1_w[24 +:8] ;
         sum_2_r <= sum_2_w + res_abs_2_w[0 +:8] + res_abs_2_w[8 +:8] + res_abs_2_w[16 +:8] + res_abs_2_w[24 +:8] ;
@@ -344,7 +412,7 @@ module filter(
       sum_bst_r <= 'd0 ;
     end
     else begin
-      if( cur_state_r == CMP ) begin
+      if( flg_cmp_w ) begin
         if( sum_m_w < sum_n_w ) begin
           typ_bst_r <= typ_m_w ;
           sum_bst_r <= sum_m_w ;
@@ -376,15 +444,15 @@ module filter(
 
 // ---   FSM: FNL   ---------------------------------------
   // fifo_flt_wr_val_o
-  assign fifo_flt_wr_val_o = cnt_cmp_done_w || (cur_state_r==FNL) ;
+  assign fifo_flt_wr_val_o = cmp_done_w || flg_busy_fnl_r ;
 
   // fifo_flt_wr_dar_o
   always @(*) begin
               fifo_flt_wr_dat_o = 'd0         ;
-    if( cnt_cmp_done_w ) begin
+    if( cmp_done_w ) begin
               fifo_flt_wr_dat_o = typ_bst_r << 24;
     end
-    else if( cur_state_r==FNL ) begin
+    else if( flg_busy_fnl_r ) begin
       case( typ_bst_r )
         'd0 : fifo_flt_wr_dat_o = res_0_w ;
         'd1 : fifo_flt_wr_dat_o = res_1_w ;
