@@ -22,7 +22,7 @@ module png_top(
     val_i             ,
     dat_i             ,
     val_o             ,
-    dat_o             ,
+    dat_o
 );
 
 //***   PARAMETER   ***********************************************************
