@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 //
 //  Filename      : fifo.v
-//  Description   : register-based pre-reading specific fifo for mypng which writes once and read three times
+//  Description   : register-based fifo for mypng which writes once and read three times
 //  Author        : Tingting Li
 //  Email         : 1107319548@qq.com
 //  Created       : 2021-04-14
@@ -18,7 +18,7 @@ module fifo(
     wr_val_i    ,
     wr_dat_i    ,
     // read
-    rd_ack_i    ,
+    rd_val_i    ,
     rd_dat_o
 );
 
@@ -27,9 +27,6 @@ module fifo(
   // global
   parameter     SIZE       = -1               ;
   parameter     DATA_WD    = -1               ;
-
-  // local
-  localparam    CYC        = 'd5              ; // cyc -> cycle
 
   // derived
   localparam    SIZE_WD    = `LOG2( SIZE )    ;
@@ -49,37 +46,27 @@ module fifo(
   input         [DATA_WD-1  :0]     wr_dat_i  ;
   
   // read
-  input                             rd_ack_i  ;
+  input                             rd_val_i  ;
   output        [DATA_WD-1   :0]    rd_dat_o  ;
 
 
 //***   WIRE / REG   **********************************************************
+  // common
+  wire          [SIZE_WD-1   :0]    adr_w     ;
+
   // write
   reg           [SIZE_WD-1   :0]    wr_adr_r  ;
 
   // read
   reg           [SIZE_WD-1   :0]    rd_adr_r  ;
-  reg                               rd_rdy_r  ;
-  wire                              rd_val_w  ;
-  wire                              rd_ept_w  ;
-
-  reg           [CYC_WD-1    :0]    cnt_r     ; // write 1 time, read 3 times
 
 
 //***   MAIN BODY   ***********************************************************
 //---   COMMON   ------------------------------------------
-  // cnt_r
-  always @(posedge clk or negedge rstn ) begin
-    if( !rstn ) begin
-      cnt_r <= 'd0 ;
-    end
-    else if( cnt_r == CYC - 'd1) begin
-      cnt_r <= 'd0 ;
-    end
-    else if((wr_adr_r == cfg_w_i - 'd1) || (rd_adr_r == cfg_w_i - 'd1)) begin
-      cnt_r <= cnt_r + 'd1 ;
-    end
-  end
+  // adr_w
+  assign adr_w = wr_val_i ? wr_adr_r : 
+                 rd_val_i ? rd_adr_r :
+                            'd0      ;
 
 
 //---   WRITE   -----------------------------------------
@@ -100,33 +87,12 @@ module fifo(
 
 
 //---   READ   ------------------------------------------
-  // rd_rdy_r
-  always @(posedge clk or negedge rstn ) begin
-    if( !rstn ) begin
-      rd_rdy_r <= 'd0 ;
-    end
-    else begin
-      if( rd_val_w ) begin
-        rd_rdy_r <= 'd1 ;
-      end
-      else if( rd_ack_i )begin
-        rd_rdy_r <= 'd0 ;
-      end
-    end
-  end
-    
-  // rd_val_w
-  assign rd_val_w = !rd_ept_w && (!rd_rdy_r || rd_ack_i);
-
-  // rd_ept_w
-  assign rd_ept_w = (cnt_r == 'd0 || cnt_r == CYC-'d1);
-
   // rd_adr_r
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
       rd_adr_r <= 'd0 ;
     end
-    else if( rd_val_w ) begin
+    else if( rd_val_i ) begin
       if( rd_adr_r == cfg_w_i - 'd1 ) begin
         rd_adr_r <= 'd0 ;
       end
@@ -143,13 +109,16 @@ module fifo(
     .SIZE     ( SIZE       ),
     .DATA_WD  ( DATA_WD    )
   )ram_0(
+  // global
     .clk      ( clk        ),
     .rstn     ( rstn       ),
+  // common
+    .adr_i    ( adr_w      ),
+  // write
     .wr_val_i ( wr_val_i   ),
     .wr_dat_i ( wr_dat_i   ),
-    .wr_adr_i ( wr_adr_r   ),
+  // read
     .rd_val_i ( rd_val_w   ),
-    .rd_adr_i ( rd_adr_r   ),
     .rd_val_o ( /*UNUSED*/ ),
     .rd_dat_o ( rd_dat_o   )
   );
