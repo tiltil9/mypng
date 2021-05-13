@@ -116,8 +116,8 @@ module filter(
   reg           [`SIZE_W_WD-1             :0]    cnt_w_d1_r       ;
   reg           [`SIZE_W_WD-1             :0]    cnt_w_d2_r       ;
   wire                                           cnt_w_done_w     ;
-  wire                                           cnt_w_d1_done_w  ;
-  wire                                           cnt_w_d2_done_w  ;
+  reg                                            cnt_w_done_r     ;
+  reg                                            cnt_w_done_d1_r  ;
   reg           [`SIZE_H_WD-1             :0]    cnt_h_r          ;
   wire                                           cnt_h_done_w     ;
   reg           [DATA_CYC_WD-1            :0]    cnt_cmp_r        ;  // cmp -> compare
@@ -199,10 +199,8 @@ module filter(
 
   // jump condition
   assign cnt_w_done_w    = cnt_w_r    == (cfg_w_i - 'd1)  ;
-  assign cnt_w_d1_done_w = cnt_w_d1_r == (cfg_w_i - 'd1)  ;
-  assign cnt_w_d2_done_w = cnt_w_d2_r == (cfg_w_i - 'd1)  ;
-  assign opt_done_w      = flg_opt_w && cnt_w_d2_done_w   ;
-  assign fnl_done_w      = flg_fnl_w && cnt_w_d2_done_w   ;
+  assign opt_done_w      = flg_opt_w && cnt_w_done_d1_r   ;
+  assign fnl_done_w      = flg_fnl_w && cnt_w_done_d1_r   ;
 
   assign cnt_h_done_w    = cnt_h_r    == (cfg_h_i  - 'd1) ;
 
@@ -210,9 +208,9 @@ module filter(
   assign cmp_done_w      = flg_cmp_w && cnt_cmp_done_w    ;
 
   // flg_busy_w
-  assign flg_busy_opt_w = flg_opt_w      &&  val_i                               ;
-  assign flg_busy_fnl_w = flg_fnl_w      && !cnt_w_d1_done_w && !cnt_w_d2_done_w ;
-  assign flg_busy_w     = flg_busy_opt_w ||  flg_busy_fnl_w                      ;
+  assign flg_busy_opt_w = flg_opt_w      &&  val_i                            ;
+  assign flg_busy_fnl_w = flg_fnl_w      && !cnt_w_done_r && !cnt_w_done_d1_r ;
+  assign flg_busy_w     = flg_busy_opt_w ||  flg_busy_fnl_w                   ;
 
   // fetch previous scanline data
   assign fifo_pre_rd_val_o = (cnt_h_r != 'd0) && flg_busy_w ;
@@ -238,7 +236,7 @@ module filter(
       cnt_h_r <= 'd0 ;
     end
     else begin
-      if( cnt_w_d2_done_w && flg_fnl_w) begin
+      if( cnt_w_done_d1_r && flg_fnl_w) begin
         if( cnt_h_done_w ) cnt_h_r <= 'd0           ;
         else               cnt_h_r <= cnt_h_r + 'd1 ;
       end
@@ -265,6 +263,8 @@ module filter(
     if( !rstn ) begin
       cnt_w_d1_r        <= 'd0 ;
       cnt_w_d2_r        <= 'd0 ;
+      cnt_w_done_r      <= 'd0 ;
+      cnt_w_done_d1_r   <= 'd0 ;
       flg_busy_opt_r    <= 'd0 ;
       flg_busy_opt_d1_r <= 'd0 ;
       flg_busy_fnl_r    <= 'd0 ;
@@ -280,6 +280,8 @@ module filter(
     else begin
       cnt_w_d1_r        <= cnt_w_r           ;
       cnt_w_d2_r        <= cnt_w_d1_r        ;
+      cnt_w_done_r      <= cnt_w_done_w      ;
+      cnt_w_done_d1_r   <= cnt_w_done_r      ;
       flg_busy_opt_r    <= flg_busy_opt_w    ;
       flg_busy_opt_d1_r <= flg_busy_opt_r    ;
       flg_busy_fnl_r    <= flg_busy_fnl_w    ;
