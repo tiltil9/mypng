@@ -11,8 +11,8 @@
 
 `timescale 1ns/1ns
 
-`define SIZE_W_MAX  'd1024
-`define SIZE_H_MAX  'd1024
+`define SIZE_W_MAX  'd512
+`define SIZE_H_MAX  'd512
 `define SIZE_LEN_MIN 'd3  // length   <= nice match
 `define SIZE_LEN_MAX 'd64  // length   <= nice match
 `define SIZE_DST_MAX 'd64  // distance <= window size
@@ -31,6 +31,8 @@
   // `define FILTER_ENUM_UP    3'd2
   // `define FILTER_ENUM_AVRG  3'd3
   // `define FILTER_ENUM_PAETH 3'd4
+
+`define IMPL_TSMC90
 
 // `define NUMB_LZ77_ENG 1
 // `define NUMB_LZ77_ENG 2

@@ -104,6 +104,7 @@ module fifo(
 
 
 //--- MEMORY ARRAY ----------------------------------------
+  `ifndef IMPL_TSMC90
   // ram
   ram #(
     .SIZE     ( SIZE       ),
@@ -122,5 +123,21 @@ module fifo(
     .rd_val_o ( /*UNUSED*/ ),
     .rd_dat_o ( rd_dat_o   )
   );
+  `else
+  // ram
+  SRAM32x512_1rw ram_0(
+  // global
+    .CSB      ( 1'd0       ),
+    .CE       ( clk        ),
+  // common
+    .A        ( adr_w      ),
+  // write
+    .WEB      ( !wr_val_i  ),
+    .I        ( wr_dat_i   ),
+  // read
+    .OEB      ( 1'd0       ),
+    .O        ( rd_dat_o   )
+  );
+  `endif
 
 endmodule
