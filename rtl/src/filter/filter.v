@@ -477,7 +477,7 @@ module filter(
 
 // ---   FSM: FNL   ---------------------------------------
   // fifo_flt_wr_val_w
-  assign fifo_flt_wr_val_w = cmp_done_w || flg_busy_fnl_d1_r ;
+  assign fifo_flt_wr_val_w = cmp_done_w || flg_busy_fnl_d2_r ;
 
   // fifo_flt_wr_dar_w
   always @(*) begin
@@ -485,13 +485,13 @@ module filter(
     if( cmp_done_w ) begin
               fifo_flt_wr_dat_w = typ_bst_r << 24;
     end
-    else if( flg_busy_fnl_d1_r ) begin
+    else if( flg_busy_fnl_d2_r ) begin
       case( typ_bst_r )
-        'd0 : fifo_flt_wr_dat_w = res_0_w ;
-        'd1 : fifo_flt_wr_dat_w = res_1_w ;
-        'd2 : fifo_flt_wr_dat_w = res_2_w ;
-        'd3 : fifo_flt_wr_dat_w = res_3_w ;
-        'd4 : fifo_flt_wr_dat_w = res_4_w ;
+        'd0 : fifo_flt_wr_dat_w = res_0_r ;
+        'd1 : fifo_flt_wr_dat_w = res_1_r ;
+        'd2 : fifo_flt_wr_dat_w = res_2_r ;
+        'd3 : fifo_flt_wr_dat_w = res_3_r ;
+        'd4 : fifo_flt_wr_dat_w = res_4_r ;
       endcase
     end
   end
