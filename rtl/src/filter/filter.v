@@ -107,7 +107,6 @@ module filter(
   reg                                            flg_busy_fnl_r   ;
   reg                                            flg_busy_fnl_d1_r;
   reg                                            flg_busy_fnl_d2_r;
-  reg                                            flg_busy_fnl_d3_r;
   wire                                           flg_busy_w       ;
   reg                                            flg_busy_r       ;
   reg                                            flg_busy_d1_r    ;
@@ -306,7 +305,6 @@ module filter(
       flg_busy_fnl_r    <= 'd0 ;
       flg_busy_fnl_d1_r <= 'd0 ;
       flg_busy_fnl_d2_r <= 'd0 ;
-      flg_busy_fnl_d3_r <= 'd0 ;
       flg_busy_r        <= 'd0 ;
       flg_busy_d1_r     <= 'd0 ;
       dat_r             <= 'd0 ;
@@ -342,7 +340,6 @@ module filter(
       flg_busy_fnl_r    <= flg_busy_fnl_w    ;
       flg_busy_fnl_d1_r <= flg_busy_fnl_r    ;
       flg_busy_fnl_d2_r <= flg_busy_fnl_d1_r ;
-      flg_busy_fnl_d3_r <= flg_busy_fnl_d2_r ;
       flg_busy_r        <= flg_busy_w        ;
       flg_busy_d1_r     <= flg_busy_r        ;
       dat_r             <= dat_i             ;
