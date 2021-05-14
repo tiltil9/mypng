@@ -172,7 +172,7 @@ module png_top(
   assign fifo_flt_rd_val_i = lz77_fifo_flt_rd_val_o   ;
   assign lz77_fifo_flt_rd_dat_i = fifo_flt_rd_dat_o   ;
 
-  fifo_flt #(
+  fifo #(
       .SIZE        (`SIZE_W_MAX+'d1    ),
       .DATA_WD     (`DATA_PXL_WD       )
   )fifo_flt(
