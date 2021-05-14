@@ -47,9 +47,9 @@ module filter_paeth(
   //     if min{pa, pb, pc} = px, o = x
 
   // px_signed_w
-  assign pa_signed_w = $signed(dat_b_i           -  dat_c_i     ) ;
-  assign pb_signed_w = $signed(dat_a_i           -  dat_c_i     ) ;
-  assign pc_signed_w = $signed(dat_a_i + dat_b_i - (dat_c_i << 1)) ;
+  assign pa_signed_w = dat_b_i     -  dat_c_i    ;
+  assign pb_signed_w = dat_a_i     -  dat_c_i    ;
+  assign pc_signed_w = pa_signed_w + pb_signed_w ;
 
   // px_w
   assign pa_w = pa_signed_w[DATA_WD+1-1] ? -pa_signed_w : pa_signed_w ;

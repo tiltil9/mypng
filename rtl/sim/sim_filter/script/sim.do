@@ -19,5 +19,6 @@ add wave *
 add wave sim:/sim_filter_top/dut/filter/*
 add wave sim:/sim_filter_top/dut/fifo_0/*
 add wave sim:/sim_filter_top/dut/fifo_1/*
+add wave {sim:/sim_filter_top/dut/filter/res[0]/filter_paeth/*}
 
 run 10000000ns
