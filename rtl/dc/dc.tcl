@@ -132,7 +132,7 @@ compile
 report_constraint             > "$report_path/constraint.rpt"
 report_constraint -all        > "$report_path/constraint_violator.rpt"
 report_timing                 > "$report_path/timing.rpt"
-report_timing -nworst 10      > "$report_path/timing_10.rpt"
+report_timing -nworst 1000    > "$report_path/timing_1000.rpt"
 report_area                   > "$report_path/area.rpt"
 report_power                  > "$report_path/power.rpt"
 

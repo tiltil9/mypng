@@ -82,8 +82,8 @@ module filter_top(
   wire          [`DATA_PXL_WD-1 :0]   fifo_1_rd_dat_w      ;
 
   // delay
-  reg           [`DATA_PXL_WD-1 :0]   fifo_0_rd_dat_r      ;
-  reg           [`DATA_PXL_WD-1 :0]   fifo_1_rd_dat_r      ;
+  reg           [`DATA_PXL_WD-1 :0]   fifo_cur_rd_dat_i_r  ;
+  reg           [`DATA_PXL_WD-1 :0]   fifo_pre_rd_dat_i_r  ;
 
 
 //***   MAIN BODY   ***********************************************************
@@ -132,12 +132,12 @@ module filter_top(
 //---   delay ---------------------------------------------
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
-      fifo_0_rd_dat_r <= 'd0 ;
-      fifo_1_rd_dat_r <= 'd0 ;
+      fifo_cur_rd_dat_i_r <= 'd0 ;
+      fifo_pre_rd_dat_i_r <= 'd0 ;
     end
     else begin
-      fifo_0_rd_dat_r <= fifo_0_rd_dat_w ;
-      fifo_1_rd_dat_r <= fifo_1_rd_dat_w ;
+      fifo_cur_rd_dat_i_r <= fifo_cur_rd_dat_i_w ;
+      fifo_pre_rd_dat_i_r <= fifo_pre_rd_dat_i_w ;
     end
   end 
 
