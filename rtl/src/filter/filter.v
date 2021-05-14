@@ -468,11 +468,12 @@ module filter(
     end
   end
 
-assign sum_abs_0_w  = res_abs_0_w[0 +:8] + res_abs_0_w[8 +:8] + res_abs_0_w[16 +:8] + res_abs_0_w[24 +:8];
-assign sum_abs_1_w  = res_abs_1_w[0 +:8] + res_abs_1_w[8 +:8] + res_abs_1_w[16 +:8] + res_abs_1_w[24 +:8];
-assign sum_abs_2_w  = res_abs_2_w[0 +:8] + res_abs_2_w[8 +:8] + res_abs_2_w[16 +:8] + res_abs_2_w[24 +:8];
-assign sum_abs_3_w  = res_abs_3_w[0 +:8] + res_abs_3_w[8 +:8] + res_abs_3_w[16 +:8] + res_abs_3_w[24 +:8];
-assign sum_abs_4_w  = res_abs_4_w[0 +:8] + res_abs_4_w[8 +:8] + res_abs_4_w[16 +:8] + res_abs_4_w[24 +:8];
+  // sum_abs_x_w
+  assign sum_abs_0_w  = res_abs_0_w[0 +:8] + res_abs_0_w[8 +:8] + res_abs_0_w[16 +:8] + res_abs_0_w[24 +:8];
+  assign sum_abs_1_w  = res_abs_1_w[0 +:8] + res_abs_1_w[8 +:8] + res_abs_1_w[16 +:8] + res_abs_1_w[24 +:8];
+  assign sum_abs_2_w  = res_abs_2_w[0 +:8] + res_abs_2_w[8 +:8] + res_abs_2_w[16 +:8] + res_abs_2_w[24 +:8];
+  assign sum_abs_3_w  = res_abs_3_w[0 +:8] + res_abs_3_w[8 +:8] + res_abs_3_w[16 +:8] + res_abs_3_w[24 +:8];
+  assign sum_abs_4_w  = res_abs_4_w[0 +:8] + res_abs_4_w[8 +:8] + res_abs_4_w[16 +:8] + res_abs_4_w[24 +:8];
 
 // ---   FSM: CMP (Compare)   -----------------------------
   // bst_type_r
@@ -495,6 +496,7 @@ assign sum_abs_4_w  = res_abs_4_w[0 +:8] + res_abs_4_w[8 +:8] + res_abs_4_w[16 +
     end
   end
 
+  // sum_dlt_w
   assign sum_dlt_w = $signed(sum_m_w - sum_n_w);
 
   // typ/sum_m_w
