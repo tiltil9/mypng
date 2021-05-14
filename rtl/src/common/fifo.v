@@ -125,7 +125,7 @@ module fifo(
   );
   `else
   // ram
-  SRAM32x512_1rw ram_0(
+  SRAM32x512_1rw ram_90nm(
   // global
     .CSB      ( 1'd0       ),
     .CE       ( clk        ),

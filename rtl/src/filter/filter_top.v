@@ -81,6 +81,10 @@ module filter_top(
   wire                                fifo_1_rd_val_w      ;
   wire          [`DATA_PXL_WD-1 :0]   fifo_1_rd_dat_w      ;
 
+  // delay
+  reg           [`DATA_PXL_WD-1 :0]   fifo_0_rd_dat_r      ;
+  reg           [`DATA_PXL_WD-1 :0]   fifo_1_rd_dat_r      ;
+
 
 //***   MAIN BODY   ***********************************************************
 //---   filter   ------------------------------------------
@@ -102,13 +106,13 @@ module filter_top(
     .fifo_cur_wr_val_o  ( fifo_cur_wr_val_o_w ) ,
     .fifo_cur_wr_dat_o  ( fifo_cur_wr_dat_o_w ) ,
     .fifo_cur_rd_val_o  ( fifo_cur_rd_val_o_w ) ,
-    .fifo_cur_rd_dat_i  ( fifo_cur_rd_dat_i_w ) ,
+    .fifo_cur_rd_dat_i  ( fifo_cur_rd_dat_i_r ) ,
     // fifo_flt_wr
     .fifo_flt_wr_val_o  ( fifo_flt_wr_val_o   ) ,
     .fifo_flt_wr_dat_o  ( fifo_flt_wr_dat_o   ) ,
     // fifo_pre_rd
     .fifo_pre_rd_val_o  ( fifo_pre_rd_val_o_w ) ,
-    .fifo_pre_rd_dat_i  ( fifo_pre_rd_dat_i_w )
+    .fifo_pre_rd_dat_i  ( fifo_pre_rd_dat_i_r )
   );
 
 
@@ -124,6 +128,18 @@ module filter_top(
   assign fifo_0_wr_dat_w     = (cnt_h_o_w[0]=='d0) ? fifo_cur_wr_dat_o_w : 'd0;
   assign fifo_1_wr_val_w     = (cnt_h_o_w[0]=='d1) ? fifo_cur_wr_val_o_w : 'd0;
   assign fifo_1_wr_dat_w     = (cnt_h_o_w[0]=='d1) ? fifo_cur_wr_dat_o_w : 'd0;
+
+//---   delay ---------------------------------------------
+  always @(posedge clk or negedge rstn ) begin
+    if( !rstn ) begin
+      fifo_0_rd_dat_r <= 'd0 ;
+      fifo_1_rd_dat_r <= 'd0 ;
+    end
+    else begin
+      fifo_0_rd_dat_r <= fifo_0_rd_dat_w ;
+      fifo_1_rd_dat_r <= fifo_1_rd_dat_w ;
+    end
+  end 
 
 
 //---   fifo_0   ------------------------------------------
