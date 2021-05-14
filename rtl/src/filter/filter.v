@@ -158,19 +158,20 @@ module filter(
   wire          [`DATA_PXL_WD-1           :0]    res_abs_4_w ;
 
   // sum of residuals
-  wire          [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_0_w     ;
-  wire          [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_1_w     ;
-  wire          [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_2_w     ;
-  wire          [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_3_w     ;
-  wire          [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_4_w     ;
-  reg           [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_0_r     ;
-  reg           [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_1_r     ;
-  reg           [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_2_r     ;
-  reg           [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_3_r     ;
-  reg           [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_4_r     ;
-  reg           [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_bst_r   ;
-  reg           [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_m_w     ; 
-  wire          [`DATA_PXL_WD+`SIZE_W_WD-1:0]    sum_n_w     ; 
+  wire          [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_0_w     ;
+  wire          [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_1_w     ;
+  wire          [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_2_w     ;
+  wire          [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_3_w     ;
+  wire          [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_4_w     ;
+  reg           [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_0_r     ;
+  reg           [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_1_r     ;
+  reg           [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_2_r     ;
+  reg           [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_3_r     ;
+  reg           [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_4_r     ;
+  reg           [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_bst_r   ;
+  reg           [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_m_w     ; 
+  wire          [`DATA_CHN_WD+4+`SIZE_W_WD-1:0]  sum_n_w     ; 
+  wire signed   [`DATA_CHN_WD+4+`SIZE_W_WD  :0]  sum_dlt_w   ;
   
   // filter types
   reg           [`FILTER_ENUM_WD-1        :0]    typ_bst_r   ;
@@ -443,7 +444,7 @@ module filter(
     end
     else begin
       if( flg_cmp_w ) begin
-        if( sum_m_w < sum_n_w ) begin
+        if( sum_dlt_w[`DATA_CHN_WD+4+`SIZE_W_WD-1] ) begin
           typ_bst_r <= typ_m_w ;
           sum_bst_r <= sum_m_w ;
         end
@@ -454,6 +455,8 @@ module filter(
       end
     end
   end
+
+  assign sum_dlt_w = $signed(sum_m_w - sum_n_w);
 
   // typ/sum_m_w
   always @(*) begin
