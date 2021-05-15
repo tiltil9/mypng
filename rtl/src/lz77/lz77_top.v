@@ -43,10 +43,10 @@ module lz77_top(
   localparam    DATA_THR    = 'd4                               ;
 
   // local
-  localparam    FSM_WD      =  'd2                              ;
-  localparam    IDLE        = 2'd0                              ;
-  localparam    UPT         = 2'd1                              ;  // upt -> update : update input and sliding window
-  localparam    SCH         = 2'd2                              ;  // sch -> search : search the best length and distance
+  localparam    FSM_WD      =  'd3                              ;
+  localparam    IDLE        = 3'b001                            ;
+  localparam    UPT         = 3'b010                            ;  // upt -> update : update input and sliding window
+  localparam    SCH         = 3'b100                            ;  // sch -> search : search the best length and distance
 
   localparam    SIZE_INP_MAX   = `SIZE_LEN_MAX + DATA_THR - 'd1 ;
   localparam    SIZE_ALL_MAX   = `SIZE_DST_MAX + SIZE_INP_MAX   ;
@@ -97,6 +97,9 @@ module lz77_top(
   // FSM
   reg           [FSM_WD-1                 :0]    cur_state_r    ;  // cur -> current
   reg           [FSM_WD-1                 :0]    nxt_state_w    ;  // nxt -> next
+  wire                                           flg_idle_w     ;
+  wire                                           flg_upt_w      ;
+  wire                                           flg_sch_w      ;
 
   reg                                            start_r        ;
   reg                                            start_d0_r     ;
@@ -197,6 +200,9 @@ module lz77_top(
     endcase
   end
 
+  // flg_state_w
+  assign {flg_sch_w , flg_upt_w, flg_idle_w} = cur_state_r;
+
   // count done
   assign cnt_o_done_w   = cnt_o_r   == cfg_h_i * (cfg_w_i * DATA_THR + 'd1)       ;
   assign cnt_h_done_w   = cnt_h_r   == (cfg_h_i - 'd1)                            ;
@@ -204,18 +210,18 @@ module lz77_top(
   assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) ;
 
   //  jump condition 
-  assign upt_done_w     = (cur_state_r==UPT) && cnt_upt_done_w                    ;
-  assign sch_done_w     = (cur_state_r==SCH) && cnt_sch_done_w                    ;
+  assign upt_done_w     = flg_upt_w && cnt_upt_done_w                    ;
+  assign sch_done_w     = flg_sch_w && cnt_sch_done_w                    ;
   assign len_lin_rst_w  = (cnt_h_r + 'd1) * (cfg_w_i * DATA_THR + 'd1) - cnt_i_r  ;
   assign flg_skp_sch_w  = !cnt_h_done_w && (len_inp_dlt_ceil_mux_w > len_lin_rst_w); // do not skip the last scanline
-  assign flg_lin_done_w = (cur_state_r==SCH) && (cnt_o_w == (cnt_h_r + 'd1) * (cfg_w_i * DATA_THR + 'd1)) ;
+  assign flg_lin_done_w = flg_sch_w && (cnt_o_w == (cnt_h_r + 'd1) * (cfg_w_i * DATA_THR + 'd1)) ;
 
   // flg_fst_upt/sch_w
-  assign flg_fst_upt_w =  (cur_state_r==UPT) && (cnt_upt_r=='d0) ;
-  assign flg_fst_sch_w =  (cur_state_r==SCH) && (cnt_sch_r=='d0) ;
+  assign flg_fst_upt_w =  flg_upt_w && (cnt_upt_r=='d0) ;
+  assign flg_fst_sch_w =  flg_sch_w && (cnt_sch_r=='d0) ;
 
   // fetch filter scanline 
-  assign fifo_flt_rd_val_o =  (cur_state_r==UPT) && !cnt_upt_done_w                &&
+  assign fifo_flt_rd_val_o =  flg_upt_w && !cnt_upt_done_w                &&
                               (start_r || ((cnt_upt_r - DATA_THR) % (DATA_THR*DATA_THR) =='d0))  ;
 
 
