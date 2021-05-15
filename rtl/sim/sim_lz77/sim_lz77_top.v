@@ -10,6 +10,12 @@
 
 `define SIZE_W 'd256
 `define SIZE_H 'd256
+// `define SIZE_W 'd480
+// `define SIZE_H 'd360
+// `define SIZE_W 'd393
+// `define SIZE_H 'd501
+// `define SIZE_W 'd440
+// `define SIZE_H 'd330
 
 
 
