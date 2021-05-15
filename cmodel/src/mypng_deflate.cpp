@@ -394,7 +394,7 @@ void encodeLZ77Hardware(const cfg_t* cfg, uivector* out, Hash* hash, const unsig
 
       const unsigned char *backptr = &in[searchPos];
       const unsigned char *foreptr = &in[inputPos];
-      const unsigned char *lastptr = &in[(inposend - 1) < inputPos + nicematch ? (inposend - 1) : min((inputPos + nicematch), (inputPos * 2 - searchPos))];
+      const unsigned char *lastptr = &in[min(inposend, min((inputPos + nicematch), (inputPos * 2 - searchPos)))];
       while(foreptr != lastptr && *backptr == *foreptr) {
         ++backptr;
         ++foreptr;
@@ -411,6 +411,7 @@ void encodeLZ77Hardware(const cfg_t* cfg, uivector* out, Hash* hash, const unsig
       uivector_push_back(out, in[inputPos]); // literal one byte
       uivector_push_back(&dump_data, 1);     // literalFlag = true
       uivector_push_back(&dump_data, (unsigned)in[inputPos]);
+      printf("inputPos:%d %02x\n", inputPos, (unsigned)in[inputPos]);
       inputPos = inputPos + 1;
     }
     else {
@@ -418,6 +419,7 @@ void encodeLZ77Hardware(const cfg_t* cfg, uivector* out, Hash* hash, const unsig
       uivector_push_back(&dump_data, 0);     // literalFlag = false
       uivector_push_back(&dump_data, bestLength);
       uivector_push_back(&dump_data, bestDistance);
+      printf("inputPos:%d %02x %02x\n", inputPos, bestLength, bestDistance);
       inputPos = inputPos + bestLength;
     }
     // update windowPos according to sliding window size
