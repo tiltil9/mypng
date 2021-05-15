@@ -35,8 +35,6 @@ module lz77_top(
     adler32_lst_o
 );
 
-// todo: when mar_r=0, quit sch
-
 
 //***   PARAMETER   ***********************************************************
   // global
@@ -224,7 +222,8 @@ module lz77_top(
   // count done
   assign cnt_h_done_w   = cnt_h_r   == (cfg_h_i - 'd1)                            ;
   assign cnt_upt_done_w = cnt_upt_r == (len_inp_dlt_ceil_min_mux_w * DATA_THR)    ; // ONE CYCLE FOR SHIFT INPUT
-  assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) ;
+  assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) || 
+                          flg_mat_r == 'd0                                        ; // early end when flg_mat_r=0
 
   //  jump condition 
   assign upt_done_w     = flg_upt_w && cnt_upt_done_w ;
