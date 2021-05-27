@@ -39,6 +39,7 @@ module lz77_top(
 //***   PARAMETER   ***********************************************************
   // global
   localparam    DATA_THR    = 'd4                               ;
+  localparam    DLY         = 'd4                               ;
 
   // local
   localparam    FSM_WD      =  'd3                              ;
@@ -99,11 +100,7 @@ module lz77_top(
   wire                                           flg_upt_w      ;
   wire                                           flg_sch_w      ;
 
-  reg                                            start_r        ;
-  reg                                            start_d0_r     ;
-  reg                                            start_d1_r     ;
-  reg                                            start_d2_r     ;
-  wire                                           start_all_w    ;
+  reg           [DLY-1                    :0]    start_dly_r    ;
 
   // counter (upt, sch)
   reg           [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_i_r        ;  // cnt -> count
@@ -244,16 +241,13 @@ module lz77_top(
 
   // fetch filter scanline 
   assign fifo_flt_rd_val_o =  flg_upt_w && !cnt_upt_done_w &&
-                              (start_r || ((cnt_upt_r - DATA_THR) % (DATA_THR*DATA_THR) =='d0)) ;
+                              (start_dly_r[0] || ((cnt_upt_r - DATA_THR) % (DATA_THR*DATA_THR) =='d0)) ;
 
 
 //---   DELAY   -----------------------------------------
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
-      start_r        <= 'd0 ;
-      start_d0_r     <= 'd0 ;
-      start_d1_r     <= 'd0 ;
-      start_d2_r     <= 'd0 ;
+      start_dly_r    <= 'd0 ;
       flg_lin_done_r <= 'd0 ;
       flg_lst_r      <= 'd0 ;
       done_o         <= 'd0 ;
@@ -261,10 +255,7 @@ module lz77_top(
       cnt_fifo_i_r   <= 'd0 ;
     end
     else begin
-      start_r        <= start_i        ;
-      start_d0_r     <= start_r        ;
-      start_d1_r     <= start_d0_r     ;
-      start_d2_r     <= start_d1_r     ;
+      start_dly_r    <= {start_dly_r , start_i} ;
       flg_lin_done_r <= flg_lin_done_w ;
       flg_lst_r      <= flg_lst_o      ;
       done_o         <= done_w         ;
@@ -273,8 +264,6 @@ module lz77_top(
     end
   end
 
-  // start_all_w
-  assign start_all_w = start_r || start_d0_r || start_d1_r ||  start_d2_r ;
 
 //---   COUNTER   -----------------------------------------
   // cnt_upt_r
@@ -288,7 +277,7 @@ module lz77_top(
           cnt_upt_r <= 'd0 ;
         end
         else begin
-         cnt_upt_r <= cnt_upt_r + ( start_all_w ? 'd1 : DATA_THR) ;
+         cnt_upt_r <= cnt_upt_r + ( start_dly_r ? 'd1 : DATA_THR) ;
         end
       end
     end
@@ -363,7 +352,7 @@ module lz77_top(
 
   // len_inp_dlt_w
   assign len_inp_dlt_w              = `SIZE_LEN_MAX + dat_len_o - len_inp_r                                                            ;
-  assign len_inp_dlt_ceil_w         = (len_inp_dlt_w % DATA_THR == start_r) ? len_inp_dlt_w : `CEIL(len_inp_dlt_w, DATA_THR) + start_r ; // start_r == 'd1 : fetch type, fetch 1 or 4n + 1
+  assign len_inp_dlt_ceil_w         = (len_inp_dlt_w % DATA_THR == start_dly_r[0]) ? len_inp_dlt_w : `CEIL(len_inp_dlt_w, DATA_THR) + start_dly_r[0] ; // start_r == 'd1 : fetch type, fetch 1 or 4n + 1
   assign len_inp_dlt_ceil_min_w     = `MIN2(len_inp_dlt_ceil_w, len_lin_rst_w)                                                         ;
   assign len_inp_dlt_ceil_mux_w     = flg_fst_upt_w ? len_inp_dlt_ceil_w : len_inp_dlt_ceil_r                                          ;
   assign len_inp_dlt_ceil_min_mux_w = flg_fst_upt_w ? len_inp_dlt_ceil_min_w : len_inp_dlt_ceil_min_r                                  ;
@@ -409,7 +398,7 @@ module lz77_top(
     end
     else begin
       if( fifo_flt_rd_val_o ) begin
-        if( start_r ) begin
+        if( start_dly_r[0] ) begin
           dat_all_r <= {dat_all_r, fifo_flt_rd_dat_i[DATA_THR*`DATA_CHN_WD-'d1 -:`DATA_CHN_WD]} ;
         end
         else begin
@@ -546,7 +535,7 @@ module lz77_top(
   // adler32 output
   assign adler32_val_o = fifo_flt_rd_val_o            ;
   assign adler32_dat_o = fifo_flt_rd_dat_i            ;
-  assign adler32_num_o = start_r ? 'd0 : DATA_THR-'d1 ;
+  assign adler32_num_o = start_dly_r[0] ? 'd0 : DATA_THR-'d1 ;
   assign adler32_lst_o =  cnt_fifo_done_w             ;
 
 endmodule
