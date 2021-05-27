@@ -82,7 +82,7 @@ module lz77_top(
   output                               flg_lst_o         ;  // lst -> last
 
   // fifo_pre_rd
-  output                               fifo_flt_rd_val_o ;  // flt -> filter ; rd -> read
+  output reg                           fifo_flt_rd_val_o ;  // flt -> filter ; rd -> read
   input         [`DATA_PXL_WD-1 :0]    fifo_flt_rd_dat_i ;
 
   // adler32
@@ -101,6 +101,8 @@ module lz77_top(
   wire                                           flg_sch_w      ;
 
   reg           [DLY-1                    :0]    start_dly_r    ;
+  wire                                           fifo_flt_rd_val_w   ;  // flt -> filter ; rd -> read
+  reg                                            fifo_flt_rd_val_o_r ;  // flt -> filter ; rd -> read
 
   // counter (upt, sch)
   reg           [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_i_r        ;  // cnt -> count
@@ -113,6 +115,8 @@ module lz77_top(
 
   reg           [`SIZE_W_WD-1             :0]    cnt_upt_r      ;  // upt -> update
   wire                                           cnt_upt_done_w ;
+  reg                                            cnt_upt_done_r ;
+  reg                                            cnt_upt_done_d1_r ;
   wire                                           upt_done_w     ;
   wire                                           flg_fst_upt_w  ;  // flg -> flag ; fst -> first
 
@@ -226,7 +230,7 @@ module lz77_top(
                           flg_mat_r == 'd0                                        ; // early end when flg_mat_r=0
 
   //  jump condition 
-  assign upt_done_w     = flg_upt_w && cnt_upt_done_w ;
+  assign upt_done_w     = flg_upt_w && cnt_upt_done_d1_r ;
   assign sch_done_w     = flg_sch_w && cnt_sch_done_w ;
 
   assign len_lins_w     = (cnt_h_r + 'd1) * (cfg_w_i * DATA_THR + 'd1) ;
@@ -240,7 +244,7 @@ module lz77_top(
   assign flg_fst_sch_w =  flg_sch_w && (cnt_sch_r=='d0) ;
 
   // fetch filter scanline 
-  assign fifo_flt_rd_val_o =  flg_upt_w && !cnt_upt_done_w &&
+  assign fifo_flt_rd_val_w =  (flg_upt_w && !cnt_upt_done_w && !cnt_upt_done_r && !cnt_upt_done_d1_r) &&
                               (start_dly_r[0] || ((cnt_upt_r - DATA_THR) % (DATA_THR*DATA_THR) =='d0)) ;
 
 
@@ -253,6 +257,10 @@ module lz77_top(
       done_o         <= 'd0 ;
       val_o          <= 'd0 ;
       cnt_fifo_i_r   <= 'd0 ;
+      fifo_flt_rd_val_o   <= 'd0 ;
+      fifo_flt_rd_val_o_r <= 'd0 ;
+      cnt_upt_done_r      <= 'd0 ;
+      cnt_upt_done_d1_r   <= 'd0 ;
     end
     else begin
       start_dly_r    <= {start_dly_r , start_i} ;
@@ -261,6 +269,10 @@ module lz77_top(
       done_o         <= done_w         ;
       val_o          <= val_w          ;
       cnt_fifo_i_r   <= cnt_fifo_i_w   ;
+      fifo_flt_rd_val_o   <= fifo_flt_rd_val_w           ;
+      fifo_flt_rd_val_o_r <= fifo_flt_rd_val_o           ;
+      cnt_upt_done_r      <= flg_upt_w && cnt_upt_done_w ;
+      cnt_upt_done_d1_r   <= flg_upt_w && cnt_upt_done_r ;
     end
   end
 
@@ -272,7 +284,7 @@ module lz77_top(
       cnt_upt_r <= 'd0 ;
     end
     else begin
-      if( cur_state_r == UPT) begin
+      if( flg_upt_w && !cnt_upt_done_r && !cnt_upt_done_d1_r) begin
         if( cnt_upt_done_w ) begin 
           cnt_upt_r <= 'd0 ;
         end
@@ -289,7 +301,7 @@ module lz77_top(
       cnt_sch_r <= 'd0 ;
     end
     else begin
-      if( cur_state_r == SCH ) begin
+      if( flg_sch_w ) begin
         if( cnt_sch_done_w ) cnt_sch_r <= 'd0             ;
         else                 cnt_sch_r <= cnt_sch_r + 'd1 ;
       end
@@ -302,7 +314,7 @@ module lz77_top(
       cnt_i_r <= 'd0 ;
     end
     else begin
-      if( upt_done_w ) begin
+      if( cnt_upt_done_w ) begin
         cnt_i_r <= cnt_i_r + len_inp_dlt_ceil_min_mux_w ;
       end
     end
@@ -357,16 +369,18 @@ module lz77_top(
   assign len_inp_dlt_ceil_mux_w     = flg_fst_upt_w ? len_inp_dlt_ceil_w : len_inp_dlt_ceil_r                                          ;
   assign len_inp_dlt_ceil_min_mux_w = flg_fst_upt_w ? len_inp_dlt_ceil_min_w : len_inp_dlt_ceil_min_r                                  ;
 
-  // len_inp_dlt_ceil_min_r
+  // len_inp_dlt_ceil_min_r / len_inp_r
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
       len_inp_dlt_ceil_r     <= 'd0 ;
       len_inp_dlt_ceil_min_r <= 'd0 ;
+      len_inp_r              <= 'd0 ;
     end
     else begin
       if( flg_fst_upt_w ) begin
         len_inp_dlt_ceil_r     <= len_inp_dlt_ceil_w     ;
         len_inp_dlt_ceil_min_r <= len_inp_dlt_ceil_min_w ;
+        len_inp_r              <= len_inp_w              ;
       end
     end
   end
@@ -375,18 +389,6 @@ module lz77_top(
   assign len_inp_w              = len_inp_r - dat_len_o + len_inp_dlt_ceil_min_w ;
   assign len_inp_mux_w          = flg_fst_upt_w ? len_inp_w : len_inp_r          ;
 
-  // len_inp_r
-  always @(posedge clk or negedge rstn ) begin
-    if( !rstn ) begin
-      len_inp_r <= 'd0 ;
-    end
-    else begin
-      if( flg_fst_upt_w ) begin
-        len_inp_r <= len_inp_w ;
-      end
-    end
-  end
-  
   // ---- dat ---------------------
   // dat_win/inp_w
   assign {dat_win_w, dat_inp_w} = dat_all_r ;
@@ -397,8 +399,8 @@ module lz77_top(
       dat_all_r <= 'd0 ;
     end
     else begin
-      if( fifo_flt_rd_val_o ) begin
-        if( start_dly_r[0] ) begin
+      if( fifo_flt_rd_val_o_r ) begin
+        if( start_dly_r[2] ) begin
           dat_all_r <= {dat_all_r, fifo_flt_rd_dat_i[DATA_THR*`DATA_CHN_WD-'d1 -:`DATA_CHN_WD]} ;
         end
         else begin
@@ -448,7 +450,7 @@ module lz77_top(
       if ( upt_done_w ) begin
         flg_mat_r <= ('d1 << `SIZE_LEN_MAX) - 'd1 ;
       end
-      else if(  cur_state_r == SCH ) begin
+      else if( flg_sch_w ) begin
         flg_mat_r <= flg_mat_w ;
       end
     end
@@ -499,7 +501,7 @@ module lz77_top(
       bst_dst_r <= 'd0 ;
     end
     else begin
-      if(  cur_state_r == SCH ) begin
+      if( flg_sch_w ) begin
         if( flg_fst_sch_w ) begin
           flg_lit_r <= 'd1 ;
           bst_len_r <= 'd1 ;
@@ -529,13 +531,13 @@ module lz77_top(
   assign dat_dst_o = val_o ? bst_dst_r : 'd0 ;
 
   // cnt_fifo_w
-  assign cnt_fifo_i_w    = cnt_fifo_i_r + fifo_flt_rd_val_o            ;
+  assign cnt_fifo_i_w    = cnt_fifo_i_r + fifo_flt_rd_val_o_r          ;
   assign cnt_fifo_done_w = cnt_fifo_i_w == (cfg_h_i * (cfg_w_i + 'd1)) ;
 
   // adler32 output
-  assign adler32_val_o = fifo_flt_rd_val_o            ;
+  assign adler32_val_o = fifo_flt_rd_val_o_r          ;
   assign adler32_dat_o = fifo_flt_rd_dat_i            ;
-  assign adler32_num_o = start_dly_r[0] ? 'd0 : DATA_THR-'d1 ;
+  assign adler32_num_o = start_dly_r[2] ? 'd0 : DATA_THR-'d1 ;
   assign adler32_lst_o =  cnt_fifo_done_w             ;
 
 endmodule
