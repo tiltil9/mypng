@@ -173,19 +173,19 @@ module png_top(
   assign lz77_fifo_flt_rd_dat_i = fifo_flt_rd_dat_o   ;
 
   fifo #(
-      .SIZE        (`SIZE_W_MAX+'d1    ),
+      .SIZE        (`SIZE_W_MAX        ),
       .DATA_WD     (`DATA_PXL_WD       )
   )fifo_flt(
       // global
       .clk         ( clk               ),
       .rstn        ( rstn              ),
       // cfg 
-      .cfg_w_i     ( cfg_w_i           ),
+      .cfg_w_i     ( cfg_w_i+1'd1      ),
       // write
       .wr_val_i    ( fifo_flt_wr_val_i ),
       .wr_dat_i    ( fifo_flt_wr_dat_i ),
       // read
-      .rd_ack_i    ( fifo_flt_rd_val_i ),
+      .rd_val_i    ( fifo_flt_rd_val_i ),
       .rd_dat_o    ( fifo_flt_rd_dat_o )
   );
 

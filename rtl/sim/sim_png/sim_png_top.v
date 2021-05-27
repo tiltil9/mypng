@@ -16,8 +16,6 @@
 // `define SIZE_H 'd501
 // `define SIZE_W 'd440
 // `define SIZE_H 'd330
-// `define SIZE_W 'd512
-// `define SIZE_H 'd512
 
 
 
