@@ -53,6 +53,7 @@ module lz77_top(
 
   // derived
   localparam    SIZE_INP_WD      = `LOG2( SIZE_INP_MAX     )    ;  // inp -> input
+  localparam    SIZE_ALL_WD      = `LOG2( SIZE_ALL_MAX     )    ;  // inp -> input
   
   localparam    SIZE_CYC_SCH_MAX = `SIZE_LEN_MAX                ;
   localparam    SIZE_CYC_SCH_WD  = `LOG2( SIZE_CYC_SCH_MAX )    ;
@@ -105,15 +106,15 @@ module lz77_top(
   reg                                            fifo_flt_rd_val_o_r ;  // flt -> filter ; rd -> read
 
   // counter (upt, sch)
-  reg           [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_i_r             ;  // cnt -> count
+  reg           [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_i_r             ;  // cnt -> count
 
-  wire          [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_o_w             ;
-  reg           [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_o_r             ;
+  wire          [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_o_w             ;
+  reg           [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_o_r             ;
 
   reg           [`SIZE_H_WD-1             :0]    cnt_h_r             ;
   wire                                           cnt_h_done_w        ;
 
-  reg           [`SIZE_W_WD-1             :0]    cnt_upt_r           ;  // upt -> update
+  reg           [SIZE_INP_WD+2-1          :0]    cnt_upt_r           ;  // upt -> update
   wire                                           cnt_upt_done_w      ;
   reg                                            cnt_upt_done_r      ;
   reg                                            cnt_upt_done_d1_r   ;
@@ -144,8 +145,8 @@ module lz77_top(
   reg  signed   [ SIZE_INP_WD                :0] len_inp_r                  ;
   wire signed   [ SIZE_INP_WD                :0] len_inp_mux_w              ;  // mux -> multiplexer
 
-  wire          [`SIZE_W_WD*`SIZE_H_WD-1  :0]    len_lin_rst_w              ;  // len -> length ; lin -> line ; rst -> rest
-  wire          [`SIZE_W_WD*`SIZE_H_WD-1  :0]    len_lins_w                 ;
+  wire          [`SIZE_W_WD+`SIZE_H_WD-1  :0   ] len_lin_rst_w              ;  // len -> length ; lin -> line ; rst -> rest
+  wire          [`SIZE_W_WD+`SIZE_H_WD-1  :0   ] len_lins_w                 ;
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_w              ;  // dlt -> delta
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_w         ;
   reg  signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_r         ;
@@ -176,8 +177,8 @@ module lz77_top(
   wire                                           done_w                     ;
 
   // adler32
-  reg           [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_fifo_i_r               ;  // cnt -> count
-  wire          [`SIZE_W_WD*`SIZE_H_WD-1  :0]    cnt_fifo_i_w               ;
+  reg           [`SIZE_W_WD+`SIZE_H_WD-1     :0] cnt_fifo_i_r               ;  // cnt -> count
+  wire          [`SIZE_W_WD+`SIZE_H_WD-1     :0] cnt_fifo_i_w               ;
   wire                                           cnt_fifo_done_w            ;
 
 
