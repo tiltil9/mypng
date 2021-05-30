@@ -29,8 +29,8 @@ module crc32_top(
 //***   PARAMETER   ***********************************************************
   localparam DATA_WD      = 'd32;
   localparam NUM_WD       = 'd2 ;
-  localparam SIZE_W_WD    = 'd10; /*`LOG2(`SIZE_W_MAX)*/
-  localparam SIZE_H_WD    = 'd10; /*`LOG2(`SIZE_H_MAX)*/
+  localparam SIZE_W_WD    = 'd9; /*`LOG2(`SIZE_W_MAX)*/
+  localparam SIZE_H_WD    = 'd9; /*`LOG2(`SIZE_H_MAX)*/
 
   // fsm
   localparam FSM_WD       =  'd2;
