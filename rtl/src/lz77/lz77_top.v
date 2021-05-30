@@ -395,7 +395,7 @@ module lz77_top(
   end
 
   // dat_win_shift_w
-  assign dat_win_shift_w = (dat_win_w << (SIZE_INP_MAX - len_inp_mux_w)*`DATA_CHN_WD) + 
+  assign dat_win_shift_w = (dat_win_w << (SIZE_INP_MAX - len_inp_mux_w)*`DATA_CHN_WD) | 
                            (dat_inp_w >> (               len_inp_mux_w)*`DATA_CHN_WD) ;
 
   // dat_win_r
