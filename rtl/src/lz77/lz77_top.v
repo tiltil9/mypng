@@ -197,25 +197,9 @@ module lz77_top(
   always @(*) begin
              nxt_state_w = IDLE ;
     case( cur_state_r )
-      IDLE :  begin
-                  nxt_state_w = IDLE ;
-                if( start_i )
-                  nxt_state_w = UPT  ;
-              end
-      UPT  :  begin
-                  nxt_state_w = UPT  ;
-                if( upt_done_w && !flg_skp_sch_w )
-                  nxt_state_w = SCH  ;
-                if( upt_done_w &&  flg_skp_sch_w )
-                  nxt_state_w = IDLE ;
-              end
-      SCH  :  begin
-                  nxt_state_w = SCH  ;
-                if( sch_done_w && !flg_pic_done_w )
-                  nxt_state_w = UPT  ;
-                if( sch_done_w &&  flg_pic_done_w )
-                  nxt_state_w = IDLE ;
-              end
+      IDLE :  nxt_state_w = start_i ? UPT : IDLE ;
+      UPT  :  nxt_state_w = upt_done_w ? (flg_skp_sch_w  ? IDLE : SCH) : UPT ;
+      SCH  :  nxt_state_w = sch_done_w ? (flg_pic_done_w ? IDLE : UPT) : SCH ;
     endcase
   end
 
