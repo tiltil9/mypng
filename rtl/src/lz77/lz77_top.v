@@ -335,7 +335,7 @@ module lz77_top(
   assign len_inp_dlt_ceil_min_mux_w = flg_fst_upt_w ? len_inp_dlt_ceil_min_w : len_inp_dlt_ceil_min_r                                  ;
 
   // len_inp_w
-  assign len_inp_w              = len_inp_r - dat_len_o + len_inp_dlt_ceil_min_w ;
+  assign len_inp_w              = len_inp_r + len_inp_dlt_ceil_min_w - dat_len_o ;
   assign len_inp_mux_w          = flg_fst_upt_w ? len_inp_w : len_inp_r          ;
 
   // len_inp_*_r / len_win_r / cnt_i_r
