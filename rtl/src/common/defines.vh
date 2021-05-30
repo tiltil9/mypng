@@ -39,6 +39,7 @@
 // `define NUMB_LZ77_ENG 4
 
 `define MIN2(x, y)  (x > y ? y : x)
+`define MOD(x, y)   (x >= y ? (x - y) : x)
 `define CEIL(x, y)  ((x + y - 'd1) / y * y)
 // `define CEIL(x, y)  (x % y == 'd0 ? x : x + 1)
 
