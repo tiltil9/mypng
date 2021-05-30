@@ -111,8 +111,8 @@ module lz77_top(
   wire          [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_o_w             ;
   reg           [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_o_r             ;
 
-  reg           [`SIZE_H_WD-1             :0]    cnt_h_r             ;
-  wire                                           cnt_h_done_w        ;
+  reg           [`SIZE_H_WD-1             :0]    cnt_h_o_r           ;
+  wire                                           cnt_h_o_done_w      ;
 
   reg           [SIZE_INP_WD+2-1          :0]    cnt_upt_r           ;  // upt -> update
   wire                                           cnt_upt_done_w      ;
@@ -207,7 +207,7 @@ module lz77_top(
   assign {flg_sch_w , flg_upt_w, flg_idle_w} = cur_state_r ;
 
   // count done
-  assign cnt_h_done_w   = cnt_h_r   == (cfg_h_i - 'd1)                            ;
+  assign cnt_h_o_done_w = cnt_h_o_r   == (cfg_h_i - 'd1)                          ;
   assign cnt_upt_done_w = cnt_upt_r == (len_inp_dlt_ceil_min_mux_w * DATA_THR)    ; // ONE CYCLE FOR SHIFT INPUT
   assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) ;
 
@@ -218,9 +218,9 @@ module lz77_top(
   assign len_lins_w    = cfg_w_i * DATA_THR + 'd1 ;
   assign len_lin_rst_w = len_lins_w - cnt_i_r     ;
 
-  assign flg_skp_sch_w  = !cnt_h_done_w && (len_inp_dlt_ceil_mux_w > len_lin_rst_w) ; // do not skip the last scanline
+  assign flg_skp_sch_w  = !cnt_h_o_done_w && (len_inp_dlt_ceil_mux_w > len_lin_rst_w) ; // do not skip the last scanline
   assign flg_lin_done_w = flg_sch_w && (cnt_o_w == len_lins_w) ;
-  assign flg_pic_done_w = flg_lin_done_w && cnt_h_done_w && (len_lin_rst_w=='d0) ;
+  assign flg_pic_done_w = flg_lin_done_w && cnt_h_o_done_w && (len_lin_rst_w=='d0) ;
 
   // flg_fst_upt/sch_w
   assign flg_fst_upt_w =  flg_upt_w && (cnt_upt_r=='d0) ;
@@ -303,15 +303,15 @@ module lz77_top(
     end
   end
 
-  // cnt_h_r
+  // cnt_h_o_r
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
-      cnt_h_r <= 'd0 ;
+      cnt_h_o_r <= 'd0 ;
     end
     else begin
       if( done_o ) begin
-        if( cnt_h_done_w ) cnt_h_r <= 'd0           ;
-        else               cnt_h_r <= cnt_h_r + 'd1 ;
+        if( cnt_h_o_done_w ) cnt_h_o_r <= 'd0             ;
+        else                 cnt_h_o_r <= cnt_h_o_r + 'd1 ;
       end
     end
   end
