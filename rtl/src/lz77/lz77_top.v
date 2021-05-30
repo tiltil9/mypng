@@ -111,6 +111,8 @@ module lz77_top(
   wire          [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_o_w             ;
   reg           [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_o_r             ;
 
+  reg           [`SIZE_H_WD-1             :0]    cnt_h_i_r           ;
+  wire                                           cnt_h_i_done_w      ;
   reg           [`SIZE_H_WD-1             :0]    cnt_h_o_r           ;
   wire                                           cnt_h_o_done_w      ;
 
@@ -175,11 +177,6 @@ module lz77_top(
   wire                                           done_w                     ;
   wire                                           flg_lst_w                  ;
 
-  // adler32
-  reg           [`SIZE_W_WD+`SIZE_H_WD-1     :0] cnt_fifo_i_r               ;  // cnt -> count
-  wire          [`SIZE_W_WD+`SIZE_H_WD-1     :0] cnt_fifo_i_w               ;
-  wire                                           cnt_fifo_done_w            ;
-
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -207,6 +204,7 @@ module lz77_top(
   assign {flg_sch_w , flg_upt_w, flg_idle_w} = cur_state_r ;
 
   // count done
+  assign cnt_h_i_done_w = cnt_h_i_r   == cfg_h_i                                  ;
   assign cnt_h_o_done_w = cnt_h_o_r   == (cfg_h_i - 'd1)                          ;
   assign cnt_upt_done_w = cnt_upt_r == (len_inp_dlt_ceil_min_mux_w * DATA_THR)    ; // ONE CYCLE FOR SHIFT INPUT
   assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) ;
@@ -238,7 +236,6 @@ module lz77_top(
       done_o              <= 'd0 ;
       val_o               <= 'd0 ;
       flg_lst_o           <= 'd0 ;
-      cnt_fifo_i_r        <= 'd0 ;
       fifo_flt_rd_val_o   <= 'd0 ;
       fifo_flt_rd_val_o_r <= 'd0 ;
       cnt_upt_done_r      <= 'd0 ;
@@ -249,7 +246,6 @@ module lz77_top(
       done_o              <= done_w                      ;
       val_o               <= val_w                       ;
       flg_lst_o           <= flg_lst_w                   ;
-      cnt_fifo_i_r        <= cnt_fifo_i_w                ;
       fifo_flt_rd_val_o   <= fifo_flt_rd_val_w           ;
       fifo_flt_rd_val_o_r <= fifo_flt_rd_val_o           ;
       cnt_upt_done_r      <= flg_upt_w && cnt_upt_done_w ;
@@ -299,6 +295,18 @@ module lz77_top(
     else begin
       if( val_o ) begin
         cnt_o_r <= `MOD(cnt_o_r + dat_len_o, len_lins_w) ;
+      end
+    end
+  end
+
+  // cnt_h_i_r
+  always @(posedge clk or negedge rstn ) begin
+    if( !rstn ) begin
+      cnt_h_i_r <= 'd0 ;
+    end
+    else begin
+      if( start_i ) begin
+        cnt_h_i_r <= cnt_h_i_r + 'd1 ;
       end
     end
   end
@@ -486,14 +494,12 @@ module lz77_top(
   assign dat_dst_o = val_o ? bst_dst_r : 'd0 ;
 
   // ---- adler32 output ------------------------
-  // cnt_fifo_w
-  assign cnt_fifo_i_w    = cnt_fifo_i_r + fifo_flt_rd_val_o_r          ;
-  assign cnt_fifo_done_w = cnt_fifo_i_w == (cfg_h_i * (cfg_w_i + 'd1)) ;
-
   // adler32
   assign adler32_val_o = fifo_flt_rd_val_o_r          ;
   assign adler32_dat_o = fifo_flt_rd_dat_i            ;
   assign adler32_num_o = start_dly_r[2] ? 'd0 : DATA_THR-'d1 ;
-  assign adler32_lst_o =  cnt_fifo_done_w             ;
+  assign adler32_lst_o =  cnt_h_i_done_w 
+                      && (len_lin_rst_w == 'd0) 
+                      && (cnt_upt_r     == (len_inp_dlt_ceil_min_mux_w - 'd1)* DATA_THR) ;
 
 endmodule
