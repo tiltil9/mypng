@@ -106,10 +106,10 @@ module lz77_top(
   reg                                            fifo_flt_rd_val_o_r ;  // flt -> filter ; rd -> read
 
   // counter (upt, sch)
-  reg           [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_i_r             ;  // cnt -> count
+  reg           [`SIZE_W_WD+3-1           :0]    cnt_i_r             ;  // cnt -> count
 
-  wire          [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_o_w             ;
-  reg           [`SIZE_W_WD+`SIZE_H_WD-1  :0]    cnt_o_r             ;
+  wire          [`SIZE_W_WD+3-1           :0]    cnt_o_w             ;
+  reg           [`SIZE_W_WD+3-1           :0]    cnt_o_r             ;
 
   reg           [`SIZE_H_WD-1             :0]    cnt_h_i_r           ;
   wire                                           cnt_h_i_done_w      ;
@@ -146,8 +146,8 @@ module lz77_top(
   reg  signed   [ SIZE_INP_WD                :0] len_inp_r                  ;
   wire signed   [ SIZE_INP_WD                :0] len_inp_mux_w              ;  // mux -> multiplexer
 
-  wire          [`SIZE_W_WD+`SIZE_H_WD-1  :0   ] len_lin_rst_w              ;  // len -> length ; lin -> line ; rst -> rest
-  wire          [`SIZE_W_WD+`SIZE_H_WD-1  :0   ] len_lins_w                 ;
+  wire          [`SIZE_W_WD+3-1              :0] len_lin_rst_w              ;  // len -> length ; lin -> line ; rst -> rest
+  wire          [`SIZE_W_WD+3-1              :0] len_lins_w                 ;
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_w              ;  // dlt -> delta
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_w         ;
   reg  signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_r         ;
