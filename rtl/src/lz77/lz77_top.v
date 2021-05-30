@@ -129,7 +129,7 @@ module lz77_top(
   wire                                           flg_skp_sch_w       ;  // skp -> skip
   wire                                           flg_lin_done_w      ;
   reg                                            flg_lin_done_r      ;
-  reg                                            flg_lst_r           ;  // lst -> last
+  reg                                            flg_lst_o_r         ;  // lst -> last
 
 
   // sliding window
@@ -208,7 +208,7 @@ module lz77_top(
                 if( upt_done_w && !flg_skp_sch_w )
                   nxt_state_w = SCH  ;
                 if( (upt_done_w && flg_skp_sch_w ) ||
-                    (!flg_lst_r && flg_lin_done_r)  )
+                    (!flg_lst_o_r && flg_lin_done_r))
                   nxt_state_w = IDLE ;
               end
       SCH  :  begin
@@ -254,7 +254,7 @@ module lz77_top(
     if( !rstn ) begin
       start_dly_r         <= 'd0 ;
       flg_lin_done_r      <= 'd0 ;
-      flg_lst_r           <= 'd0 ;
+      flg_lst_o_r         <= 'd0 ;
       done_o              <= 'd0 ;
       val_o               <= 'd0 ;
       cnt_fifo_i_r        <= 'd0 ;
@@ -266,7 +266,7 @@ module lz77_top(
     else begin
       start_dly_r         <= {start_dly_r , start_i}     ;
       flg_lin_done_r      <= flg_lin_done_w              ;
-      flg_lst_r           <= flg_lst_o                   ;
+      flg_lst_o_r         <= flg_lst_o                   ;
       done_o              <= done_w                      ;
       val_o               <= val_w                       ;
       cnt_fifo_i_r        <= cnt_fifo_i_w                ;
@@ -418,7 +418,7 @@ module lz77_top(
       dat_inp_r <= 'd0 ;
     end
     else begin
-      if( upt_done_w && !(!flg_lst_r && flg_lin_done_r) ) begin
+      if( upt_done_w && !(!flg_lst_o_r && flg_lin_done_r) ) begin
         dat_inp_r <= dat_inp_w << (SIZE_INP_MAX - len_inp_mux_w)*`DATA_CHN_WD;
       end
     end
