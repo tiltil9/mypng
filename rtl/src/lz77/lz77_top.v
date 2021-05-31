@@ -285,7 +285,7 @@ module lz77_top(
     end
   end
 
-  assign cnt_o_w = cnt_o_r + (flg_lit_w ? bst_len_r : cnt_sch_r + 'd1);
+  assign cnt_o_w = cnt_o_r + (flg_lit_w ? bst_len_r : bst_len_w);
 
   // cnt_o_r
   always @(posedge clk or negedge rstn ) begin
@@ -472,7 +472,7 @@ module lz77_top(
         end
         else begin
           flg_lit_r <= flg_lit_w ? flg_lit_r : 'd0;
-          bst_len_r <= flg_lit_w ? bst_len_r : (cnt_sch_r + 'd1) ;
+          bst_len_r <= flg_lit_w ? bst_len_r : bst_len_w ;
           bst_dst_r <= flg_lit_w ? bst_dst_r : bst_dst_w;
         end
       end
