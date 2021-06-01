@@ -130,6 +130,7 @@ module lz77_top(
   reg           [SIZE_CYC_SCH_WD-1        :0]    cnt_sch_d0_r        ;  // sch -> search
   wire                                           cnt_sch_done_w      ;
   reg                                            cnt_sch_done_r      ;
+  reg                                            cnt_sch_done_d0_r   ;
   wire                                           sch_done_w          ;
   wire                                           flg_fst_sch_w       ;  // flg -> flag ; fst -> first
 
@@ -220,7 +221,7 @@ module lz77_top(
 
   //  jump condition 
   assign upt_done_w = flg_upt_w &&  cnt_upt_done_d1_r                     ;
-  assign sch_done_w = flg_sch_w && (cnt_sch_done_r || (flg_mat_r == 'd0)) ; // early end when flg_mat_r=0
+  assign sch_done_w = flg_sch_w && (cnt_sch_done_d0_r || (flg_mat_r == 'd0)) ; // early end when flg_mat_r=0
 
   assign len_lins_w    = cfg_w_i * DATA_THR + 'd1 ;
   assign len_lin_rst_w = len_lins_w - cnt_i_r     ;
@@ -254,6 +255,7 @@ module lz77_top(
       cnt_upt_done_d1_r   <= 'd0 ;
       cnt_sch_d0_r        <= 'd0 ;
       cnt_sch_done_r      <= 'd0 ;
+      cnt_sch_done_d0_r   <= 'd0 ;
       dat_len_o_r         <= 'd0 ;
       len_inp_cpt_r       <= 'd0 ; 
     end
@@ -271,6 +273,7 @@ module lz77_top(
       cnt_upt_done_d1_r   <= flg_upt_w && cnt_upt_done_d0_r ;
       cnt_sch_d0_r        <= cnt_sch_r                   ;
       cnt_sch_done_r      <= flg_sch_w && cnt_sch_done_w ;
+      cnt_sch_done_d0_r   <= flg_sch_w && cnt_sch_done_r ;
       dat_len_o_r         <= dat_len_o                   ;
       len_inp_cpt_r       <= len_inp_cpt_w               ;
     end
@@ -308,7 +311,7 @@ module lz77_top(
     end
   end
 
-  assign cnt_o_w = cnt_o_r + (flg_lit_w ? bst_len_r : bst_len_w);
+  assign cnt_o_w = cnt_o_r + bst_len_r ;
 
   // cnt_o_r
   always @(posedge clk or negedge rstn ) begin
