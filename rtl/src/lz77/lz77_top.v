@@ -150,6 +150,9 @@ module lz77_top(
   wire signed   [ SIZE_INP_WD                :0] len_inp_w                  ;
   reg  signed   [ SIZE_INP_WD                :0] len_inp_r                  ;
 
+  wire          [ SIZE_INP_WD+4-1            :0] len_inp_cpt_w              ; // cpt -> complement
+  reg           [ SIZE_INP_WD+4-1            :0] len_inp_cpt_r              ;
+
   wire          [`SIZE_W_WD+3-1              :0] len_lin_rst_w              ;  // len -> length ; lin -> line ; rst -> rest
   wire          [`SIZE_W_WD+3-1              :0] len_lins_w                 ;
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_w              ;  // dlt -> delta
@@ -252,6 +255,7 @@ module lz77_top(
       cnt_sch_d0_r        <= 'd0 ;
       cnt_sch_done_r      <= 'd0 ;
       dat_len_o_r         <= 'd0 ;
+      len_inp_cpt_r       <= 'd0 ; 
     end
     else begin
       start_dly_r         <= {start_dly_r , start_i}     ;
@@ -268,6 +272,7 @@ module lz77_top(
       cnt_sch_d0_r        <= cnt_sch_r                   ;
       cnt_sch_done_r      <= flg_sch_w && cnt_sch_done_w ;
       dat_len_o_r         <= dat_len_o                   ;
+      len_inp_cpt_r       <= len_inp_cpt_w               ;
     end
   end
 
@@ -401,6 +406,8 @@ module lz77_top(
   // dat_win/inp_w
   assign {dat_win_w, dat_inp_w} = dat_all_r ;
 
+  assign len_inp_cpt_w = (SIZE_INP_MAX - len_inp_r) * `DATA_CHN_WD ;
+
   // dat_inp_r
   always @(posedge clk or negedge rstn ) begin
     if( !rstn ) begin
@@ -408,14 +415,14 @@ module lz77_top(
     end
     else begin
       if( upt_done_w ) begin
-        dat_inp_r <= dat_inp_w << (SIZE_INP_MAX - len_inp_r)*`DATA_CHN_WD ;
+        dat_inp_r <= dat_inp_w << len_inp_cpt_r ;
       end
     end
   end
 
   // dat_win_shift_w
-  assign dat_win_shift_w = (dat_win_w << (SIZE_INP_MAX - len_inp_r)*`DATA_CHN_WD) | 
-                           (dat_inp_w >> (               len_inp_r)*`DATA_CHN_WD) ;
+  assign dat_win_shift_w = (dat_win_w << len_inp_cpt_r              ) | 
+                           (dat_inp_w >> len_inp_r     *`DATA_CHN_WD) ;
 
   // dat_win_r
   always @(posedge clk or negedge rstn ) begin
