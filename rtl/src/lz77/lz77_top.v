@@ -503,6 +503,6 @@ module lz77_top(
   assign adler32_num_o = start_dly_r[2] ? 'd0 : DATA_THR-'d1 ;
   assign adler32_lst_o =  cnt_h_i_done_w 
                       && (len_lin_rst_w == 'd0) 
-                      && (cnt_upt_r[SIZE_INP_WD+2-1:2] == (len_inp_dlt_ceil_min_mux_w - 'd1)) ;
+                      && (cnt_upt_r[SIZE_INP_WD+2-1:2] == (len_inp_dlt_ceil_min_r - 'd1)) ;
 
 endmodule
