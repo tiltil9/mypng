@@ -333,7 +333,7 @@ module lz77_top(
   // ---- len ---------------------
   // len_inp_dlt_w
   assign len_inp_dlt_w              = `SIZE_LEN_MAX + dat_len_o - len_inp_r                            ;
-  assign len_inp_dlt_ceil_w         = (len_inp_dlt_w[1:0] == start_dly_r[0])          ? len_inp_dlt_w  : 
+  assign len_inp_dlt_ceil_w         = (len_inp_dlt_w[0] == start_dly_r[0]) ? len_inp_dlt_w             : 
                                       `CEIL(len_inp_dlt_w, DATA_THR) + start_dly_r[0]                  ; // start_r == 'd1 : fetch type, fetch 1 or 4n + 1
   assign len_inp_dlt_ceil_min_w     = `MIN2(len_inp_dlt_ceil_w, len_lin_rst_w)                         ;
   assign len_inp_dlt_ceil_min_mux_w = flg_fst_upt_w ? len_inp_dlt_ceil_min_w : len_inp_dlt_ceil_min_r  ;
