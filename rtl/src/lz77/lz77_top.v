@@ -206,7 +206,7 @@ module lz77_top(
   // count done
   assign cnt_h_i_done_w = cnt_h_i_r ==  cfg_h_i                                   ;
   assign cnt_h_o_done_w = cnt_h_o_r == (cfg_h_i - 'd1)                            ;
-  assign cnt_upt_done_w = cnt_upt_r == (len_inp_dlt_ceil_min_mux_w * DATA_THR)    ; // ONE CYCLE FOR SHIFT INPUT
+  assign cnt_upt_done_w = cnt_upt_r[SIZE_INP_WD+2-1:2] == len_inp_dlt_ceil_min_mux_w; // ONE CYCLE FOR SHIFT INPUT
   assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) ;
 
   //  jump condition 
@@ -333,7 +333,7 @@ module lz77_top(
   // ---- len ---------------------
   // len_inp_dlt_w
   assign len_inp_dlt_w              = `SIZE_LEN_MAX + dat_len_o - len_inp_r                            ;
-  assign len_inp_dlt_ceil_w         = (len_inp_dlt_w % DATA_THR == start_dly_r[0])     ? len_inp_dlt_w : 
+  assign len_inp_dlt_ceil_w         = (len_inp_dlt_w[1:0] == start_dly_r[0])          ? len_inp_dlt_w  : 
                                       `CEIL(len_inp_dlt_w, DATA_THR) + start_dly_r[0]                  ; // start_r == 'd1 : fetch type, fetch 1 or 4n + 1
   assign len_inp_dlt_ceil_min_w     = `MIN2(len_inp_dlt_ceil_w, len_lin_rst_w)                         ;
   assign len_inp_dlt_ceil_min_mux_w = flg_fst_upt_w ? len_inp_dlt_ceil_min_w : len_inp_dlt_ceil_min_r  ;
@@ -503,6 +503,6 @@ module lz77_top(
   assign adler32_num_o = start_dly_r[2] ? 'd0 : DATA_THR-'d1 ;
   assign adler32_lst_o =  cnt_h_i_done_w 
                       && (len_lin_rst_w == 'd0) 
-                      && (cnt_upt_r     == (len_inp_dlt_ceil_min_mux_w - 'd1) * DATA_THR) ;
+                      && (cnt_upt_r[SIZE_INP_WD+2-1:2] == (len_inp_dlt_ceil_min_mux_w - 'd1)) ;
 
 endmodule
