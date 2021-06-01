@@ -55,7 +55,7 @@ module lz77_top(
   localparam    SIZE_INP_WD      = `LOG2( SIZE_INP_MAX     )    ;  // inp -> input
   localparam    SIZE_ALL_WD      = `LOG2( SIZE_ALL_MAX     )    ;  // inp -> input
   
-  localparam    SIZE_CYC_SCH_MAX = `SIZE_LEN_MAX                ;
+  localparam    SIZE_CYC_SCH_MAX = `SIZE_LEN_MAX + 'd1          ;
   localparam    SIZE_CYC_SCH_WD  = `LOG2( SIZE_CYC_SCH_MAX )    ;
   
   localparam    DATA_THR_WD      = `LOG2( DATA_THR         )    ;
@@ -124,7 +124,9 @@ module lz77_top(
   wire                                           flg_fst_upt_w       ;  // flg -> flag ; fst -> first
 
   reg           [SIZE_CYC_SCH_WD-1        :0]    cnt_sch_r           ;  // sch -> search
+  reg           [SIZE_CYC_SCH_WD-1        :0]    cnt_sch_d0_r        ;  // sch -> search
   wire                                           cnt_sch_done_w      ;
+  reg                                            cnt_sch_done_r      ;
   wire                                           sch_done_w          ;
   wire                                           flg_fst_sch_w       ;  // flg -> flag ; fst -> first
 
@@ -211,7 +213,7 @@ module lz77_top(
 
   //  jump condition 
   assign upt_done_w = flg_upt_w &&  cnt_upt_done_d1_r                     ;
-  assign sch_done_w = flg_sch_w && (cnt_sch_done_w || (flg_mat_r == 'd0)) ; // early end when flg_mat_r=0
+  assign sch_done_w = flg_sch_w && (cnt_sch_done_r || (flg_mat_r == 'd0)) ; // early end when flg_mat_r=0
 
   assign len_lins_w    = cfg_w_i * DATA_THR + 'd1 ;
   assign len_lin_rst_w = len_lins_w - cnt_i_r     ;
@@ -240,6 +242,8 @@ module lz77_top(
       fifo_flt_rd_val_o_r <= 'd0 ;
       cnt_upt_done_r      <= 'd0 ;
       cnt_upt_done_d1_r   <= 'd0 ;
+      cnt_sch_d0_r        <= 'd0 ;
+      cnt_sch_done_r      <= 'd0 ;
     end
     else begin
       start_dly_r         <= {start_dly_r , start_i}     ;
@@ -250,6 +254,8 @@ module lz77_top(
       fifo_flt_rd_val_o_r <= fifo_flt_rd_val_o           ;
       cnt_upt_done_r      <= flg_upt_w && cnt_upt_done_w ;
       cnt_upt_done_d1_r   <= flg_upt_w && cnt_upt_done_r ;
+      cnt_sch_d0_r        <= cnt_sch_r                   ;
+      cnt_sch_done_r      <= flg_sch_w && cnt_sch_done_w ;
     end
   end
 
@@ -443,12 +449,12 @@ module lz77_top(
   // ---- (distance, length) / literal ----------
   // bst_dst_w
   lz77_detect_one lz77_detect_one(
-    .dat_i ( flg_mat_w ) ,
+    .dat_i ( flg_mat_r ) ,
     .pos_o ( bst_dst_w )
   );
 
   // bst_len_w
-  assign bst_len_w = cnt_sch_r + 'd1;
+  assign bst_len_w = cnt_sch_d0_r + 'd1;
 
   // flg_lit_w
   assign flg_lit_w = (bst_dst_w >  len_win_r                      ) ||
