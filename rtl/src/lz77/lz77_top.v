@@ -119,7 +119,7 @@ module lz77_top(
   reg           [SIZE_INP_WD+2-1          :0]    cnt_upt_r           ;  // upt -> update
   wire                                           cnt_upt_done_w      ;
   reg                                            cnt_upt_done_r      ;
-  reg                                            cnt_upt_done_d1_r   ;
+  reg                                            cnt_upt_done_d0_r   ;
   wire                                           upt_done_w          ;
   wire                                           flg_fst_upt_w       ;  // flg -> flag ; fst -> first
 
@@ -210,7 +210,7 @@ module lz77_top(
   assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) ;
 
   //  jump condition 
-  assign upt_done_w = flg_upt_w &&  cnt_upt_done_d1_r                     ;
+  assign upt_done_w = flg_upt_w &&  cnt_upt_done_d0_r                     ;
   assign sch_done_w = flg_sch_w && (cnt_sch_done_r || (flg_mat_r == 'd0)) ; // early end when flg_mat_r=0
 
   assign len_lins_w    = cfg_w_i * DATA_THR + 'd1 ;
@@ -225,7 +225,7 @@ module lz77_top(
   assign flg_fst_sch_w = flg_sch_w && (cnt_sch_r=='d0) ;
 
   // fetch filter scanline 
-  assign fifo_flt_rd_val_w =  (flg_upt_w && !cnt_upt_done_w && !cnt_upt_done_r && !cnt_upt_done_d1_r) &&
+  assign fifo_flt_rd_val_w =  (flg_upt_w && !cnt_upt_done_w && !cnt_upt_done_r && !cnt_upt_done_d0_r) &&
                               (start_dly_r[0] || ((cnt_upt_r - DATA_THR) % (DATA_THR*DATA_THR) =='d0)) ;
 
 
@@ -239,7 +239,7 @@ module lz77_top(
       fifo_flt_rd_val_o   <= 'd0 ;
       fifo_flt_rd_val_o_r <= 'd0 ;
       cnt_upt_done_r      <= 'd0 ;
-      cnt_upt_done_d1_r   <= 'd0 ;
+      cnt_upt_done_d0_r   <= 'd0 ;
       cnt_sch_d0_r        <= 'd0 ;
       cnt_sch_done_r      <= 'd0 ;
     end
@@ -251,7 +251,7 @@ module lz77_top(
       fifo_flt_rd_val_o   <= fifo_flt_rd_val_w           ;
       fifo_flt_rd_val_o_r <= fifo_flt_rd_val_o           ;
       cnt_upt_done_r      <= flg_upt_w && cnt_upt_done_w ;
-      cnt_upt_done_d1_r   <= flg_upt_w && cnt_upt_done_r ;
+      cnt_upt_done_d0_r   <= flg_upt_w && cnt_upt_done_r ;
       cnt_sch_d0_r        <= cnt_sch_r                   ;
       cnt_sch_done_r      <= flg_sch_w && cnt_sch_done_w ;
     end
@@ -265,7 +265,7 @@ module lz77_top(
       cnt_upt_r <= 'd0 ;
     end
     else begin
-      if( flg_upt_w && !cnt_upt_done_r && !cnt_upt_done_d1_r) begin
+      if( flg_upt_w && !cnt_upt_done_r && !cnt_upt_done_d0_r) begin
         if( cnt_upt_done_w ) begin 
           cnt_upt_r <= 'd0 ;
         end
