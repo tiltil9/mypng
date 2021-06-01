@@ -146,7 +146,6 @@ module lz77_top(
   reg           [`DATA_CHN_WD* SIZE_INP_MAX-1:0] dat_inp_r                  ;
   wire signed   [ SIZE_INP_WD                :0] len_inp_w                  ;
   reg  signed   [ SIZE_INP_WD                :0] len_inp_r                  ;
-  wire signed   [ SIZE_INP_WD                :0] len_inp_mux_w              ;  // mux -> multiplexer
 
   wire          [`SIZE_W_WD+3-1              :0] len_lin_rst_w              ;  // len -> length ; lin -> line ; rst -> rest
   wire          [`SIZE_W_WD+3-1              :0] len_lins_w                 ;
@@ -343,7 +342,6 @@ module lz77_top(
 
   // len_inp_w
   assign len_inp_w     = len_inp_r + len_inp_dlt_ceil_min_w - dat_len_o ;
-  assign len_inp_mux_w = flg_fst_upt_w ? len_inp_w : len_inp_r          ;
 
   // len_inp_*_r / len_win_r / cnt_i_r
   always @(posedge clk or negedge rstn ) begin
@@ -396,14 +394,14 @@ module lz77_top(
     end
     else begin
       if( upt_done_w ) begin
-        dat_inp_r <= dat_inp_w << (SIZE_INP_MAX - len_inp_mux_w)*`DATA_CHN_WD ;
+        dat_inp_r <= dat_inp_w << (SIZE_INP_MAX - len_inp_r)*`DATA_CHN_WD ;
       end
     end
   end
 
   // dat_win_shift_w
-  assign dat_win_shift_w = (dat_win_w << (SIZE_INP_MAX - len_inp_mux_w)*`DATA_CHN_WD) | 
-                           (dat_inp_w >> (               len_inp_mux_w)*`DATA_CHN_WD) ;
+  assign dat_win_shift_w = (dat_win_w << (SIZE_INP_MAX - len_inp_r)*`DATA_CHN_WD) | 
+                           (dat_inp_w >> (               len_inp_r)*`DATA_CHN_WD) ;
 
   // dat_win_r
   always @(posedge clk or negedge rstn ) begin
