@@ -152,7 +152,6 @@ module lz77_top(
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_w              ;  // dlt -> delta
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_w         ;
   reg  signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_r         ;
-  wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_mux_w     ;
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_min_w     ;
   reg  signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_min_r     ;
   wire signed   [ SIZE_INP_WD                :0] len_inp_dlt_ceil_min_mux_w ;
@@ -217,7 +216,7 @@ module lz77_top(
   assign len_lins_w    = cfg_w_i * DATA_THR + 'd1 ;
   assign len_lin_rst_w = len_lins_w - cnt_i_r     ;
 
-  assign flg_skp_sch_w  = !cnt_h_o_done_w && (len_inp_dlt_ceil_mux_w > len_lin_rst_w) ; // do not skip the last scanline
+  assign flg_skp_sch_w  = !cnt_h_o_done_w && (len_inp_dlt_ceil_r > len_lin_rst_w) ; // do not skip the last scanline
   assign flg_lin_done_w = flg_sch_w && (cnt_o_w == len_lins_w)                        ;
   assign flg_pic_done_w = flg_lin_done_w && cnt_h_o_done_w && (len_lin_rst_w=='d0)    ;
 
@@ -336,7 +335,6 @@ module lz77_top(
   assign len_inp_dlt_w              = `SIZE_LEN_MAX + dat_len_o - len_inp_r                            ;
   assign len_inp_dlt_ceil_w         = (len_inp_dlt_w % DATA_THR == start_dly_r[0])     ? len_inp_dlt_w : 
                                       `CEIL(len_inp_dlt_w, DATA_THR) + start_dly_r[0]                  ; // start_r == 'd1 : fetch type, fetch 1 or 4n + 1
-  assign len_inp_dlt_ceil_mux_w     = flg_fst_upt_w ? len_inp_dlt_ceil_w : len_inp_dlt_ceil_r          ;
   assign len_inp_dlt_ceil_min_w     = `MIN2(len_inp_dlt_ceil_w, len_lin_rst_w)                         ;
   assign len_inp_dlt_ceil_min_mux_w = flg_fst_upt_w ? len_inp_dlt_ceil_min_w : len_inp_dlt_ceil_min_r  ;
 
