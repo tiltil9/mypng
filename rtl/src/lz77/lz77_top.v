@@ -117,11 +117,14 @@ module lz77_top(
   wire                                           cnt_h_o_done_w      ;
 
   reg           [SIZE_INP_WD+2-1          :0]    cnt_upt_r           ;  // upt -> update
+  reg           [SIZE_INP_WD+2-1          :0]    cnt_upt_d0_r        ;  // upt -> update
   wire                                           cnt_upt_done_w      ;
   reg                                            cnt_upt_done_r      ;
   reg                                            cnt_upt_done_d0_r   ;
+  reg                                            cnt_upt_done_d1_r   ;
   wire                                           upt_done_w          ;
   wire                                           flg_fst_upt_w       ;  // flg -> flag ; fst -> first
+  reg                                            flg_fst_upt_r       ;
 
   reg           [SIZE_CYC_SCH_WD-1        :0]    cnt_sch_r           ;  // sch -> search
   reg           [SIZE_CYC_SCH_WD-1        :0]    cnt_sch_d0_r        ;  // sch -> search
@@ -177,6 +180,8 @@ module lz77_top(
   wire                                           done_w                     ;
   wire                                           flg_lst_w                  ;
 
+  reg           [`SIZE_LEN_WD-1              :0] dat_len_o_r                ;  // len -> length
+
 
 //***   MAIN BODY   ***********************************************************
 //---   FSM   ---------------------------------------------
@@ -206,11 +211,12 @@ module lz77_top(
   // count done
   assign cnt_h_i_done_w = cnt_h_i_r ==  cfg_h_i                                   ;
   assign cnt_h_o_done_w = cnt_h_o_r == (cfg_h_i - 'd1)                            ;
-  assign cnt_upt_done_w = cnt_upt_r[SIZE_INP_WD+2-1:2] == len_inp_dlt_ceil_min_mux_w; // ONE CYCLE FOR SHIFT INPUT
+  assign cnt_upt_done_w = cnt_upt_d0_r[SIZE_INP_WD+2-1:2] == len_inp_dlt_ceil_min_mux_w
+                       && !flg_fst_upt_w                                          ; // ONE CYCLE FOR SHIFT INPUT
   assign cnt_sch_done_w = cnt_sch_r == (len_win_r == 'd0 ? 'd0 : len_win_r - 'd1) ;
 
   //  jump condition 
-  assign upt_done_w = flg_upt_w &&  cnt_upt_done_d0_r                     ;
+  assign upt_done_w = flg_upt_w &&  cnt_upt_done_d1_r                     ;
   assign sch_done_w = flg_sch_w && (cnt_sch_done_r || (flg_mat_r == 'd0)) ; // early end when flg_mat_r=0
 
   assign len_lins_w    = cfg_w_i * DATA_THR + 'd1 ;
@@ -225,8 +231,8 @@ module lz77_top(
   assign flg_fst_sch_w = flg_sch_w && (cnt_sch_r=='d0) ;
 
   // fetch filter scanline 
-  assign fifo_flt_rd_val_w =  (flg_upt_w && !cnt_upt_done_w && !cnt_upt_done_r && !cnt_upt_done_d0_r) &&
-                              (start_dly_r[0] || ((cnt_upt_r - DATA_THR) % (DATA_THR*DATA_THR) =='d0)) ;
+  assign fifo_flt_rd_val_w =  (flg_upt_w && !cnt_upt_done_w && !cnt_upt_done_r && !cnt_upt_done_d0_r && !cnt_upt_done_d1_r) &&
+                              (start_dly_r[1] || ((cnt_upt_d0_r - DATA_THR) % (DATA_THR*DATA_THR) =='d0)) ;
 
 
 //---   DELAY   -----------------------------------------
@@ -238,10 +244,14 @@ module lz77_top(
       flg_lst_o           <= 'd0 ;
       fifo_flt_rd_val_o   <= 'd0 ;
       fifo_flt_rd_val_o_r <= 'd0 ;
+      flg_fst_upt_r       <= 'd0 ;
+      cnt_upt_d0_r        <= 'd0 ;
       cnt_upt_done_r      <= 'd0 ;
       cnt_upt_done_d0_r   <= 'd0 ;
+      cnt_upt_done_d1_r   <= 'd0 ;
       cnt_sch_d0_r        <= 'd0 ;
       cnt_sch_done_r      <= 'd0 ;
+      dat_len_o_r         <= 'd0 ;
     end
     else begin
       start_dly_r         <= {start_dly_r , start_i}     ;
@@ -250,10 +260,14 @@ module lz77_top(
       flg_lst_o           <= flg_lst_w                   ;
       fifo_flt_rd_val_o   <= fifo_flt_rd_val_w           ;
       fifo_flt_rd_val_o_r <= fifo_flt_rd_val_o           ;
+      flg_fst_upt_r       <= flg_fst_upt_w               ;
+      cnt_upt_d0_r        <= cnt_upt_r                   ;
       cnt_upt_done_r      <= flg_upt_w && cnt_upt_done_w ;
       cnt_upt_done_d0_r   <= flg_upt_w && cnt_upt_done_r ;
+      cnt_upt_done_d1_r   <= flg_upt_w && cnt_upt_done_d0_r ;
       cnt_sch_d0_r        <= cnt_sch_r                   ;
       cnt_sch_done_r      <= flg_sch_w && cnt_sch_done_w ;
+      dat_len_o_r         <= dat_len_o                   ;
     end
   end
 
@@ -265,7 +279,7 @@ module lz77_top(
       cnt_upt_r <= 'd0 ;
     end
     else begin
-      if( flg_upt_w && !cnt_upt_done_r && !cnt_upt_done_d0_r) begin
+      if( flg_upt_w && !cnt_upt_done_r && !cnt_upt_done_d0_r && !cnt_upt_done_d1_r) begin
         if( cnt_upt_done_w ) begin 
           cnt_upt_r <= 'd0 ;
         end
@@ -333,13 +347,13 @@ module lz77_top(
   // ---- len ---------------------
   // len_inp_dlt_w
   assign len_inp_dlt_w              = `SIZE_LEN_MAX + dat_len_o - len_inp_r                            ;
-  assign len_inp_dlt_ceil_w         = (len_inp_dlt_w[0] == start_dly_r[0]) ? len_inp_dlt_w             : 
+  assign len_inp_dlt_ceil_w         = (len_inp_dlt_w[1:0] == start_dly_r[0]) ? len_inp_dlt_w             : 
                                       `CEIL(len_inp_dlt_w, DATA_THR) + start_dly_r[0]                  ; // start_r == 'd1 : fetch type, fetch 1 or 4n + 1
-  assign len_inp_dlt_ceil_min_w     = `MIN2(len_inp_dlt_ceil_w, len_lin_rst_w)                         ;
-  assign len_inp_dlt_ceil_min_mux_w = flg_fst_upt_w ? len_inp_dlt_ceil_min_w : len_inp_dlt_ceil_min_r  ;
+  assign len_inp_dlt_ceil_min_w     = `MIN2(len_inp_dlt_ceil_r, len_lin_rst_w)                         ;
+  assign len_inp_dlt_ceil_min_mux_w = flg_fst_upt_r ? len_inp_dlt_ceil_min_w : len_inp_dlt_ceil_min_r  ;
 
   // len_inp_w
-  assign len_inp_w     = len_inp_r + len_inp_dlt_ceil_min_w - dat_len_o ;
+  assign len_inp_w     = len_inp_r + len_inp_dlt_ceil_min_w - dat_len_o_r ;
 
   // len_inp_*_r / len_win_r / cnt_i_r
   always @(posedge clk or negedge rstn ) begin
@@ -353,9 +367,11 @@ module lz77_top(
     else begin
       if( flg_fst_upt_w ) begin
         len_inp_dlt_ceil_r     <= len_inp_dlt_ceil_w                          ;
+      end
+      if( flg_fst_upt_r ) begin
         len_inp_dlt_ceil_min_r <= len_inp_dlt_ceil_min_w                      ;
         len_inp_r              <= len_inp_w                                   ;
-        len_win_r              <= `MIN2(len_win_r + dat_len_o, `SIZE_DST_MAX) ;
+        len_win_r              <= `MIN2(len_win_r + dat_len_o_r, `SIZE_DST_MAX) ;
         cnt_i_r                <= cnt_i_r + len_inp_dlt_ceil_min_mux_w        ;
       end
       if( done_o ) begin
@@ -372,7 +388,7 @@ module lz77_top(
     end
     else begin
       if( fifo_flt_rd_val_o_r ) begin
-        if( start_dly_r[2] ) begin
+        if( start_dly_r[3] ) begin
           dat_all_r <= {dat_all_r, fifo_flt_rd_dat_i[DATA_THR*`DATA_CHN_WD-'d1 -:`DATA_CHN_WD]} ;
         end
         else begin
@@ -500,7 +516,7 @@ module lz77_top(
   // adler32
   assign adler32_val_o = fifo_flt_rd_val_o_r                 ;
   assign adler32_dat_o = fifo_flt_rd_dat_i                   ;
-  assign adler32_num_o = start_dly_r[2] ? 'd0 : DATA_THR-'d1 ;
+  assign adler32_num_o = start_dly_r[3] ? 'd0 : DATA_THR-'d1 ;
   assign adler32_lst_o =  cnt_h_i_done_w 
                       && (len_lin_rst_w == 'd0) 
                       && (cnt_upt_r[SIZE_INP_WD+2-1:2] == (len_inp_dlt_ceil_min_r - 'd1)) ;
