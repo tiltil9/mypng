@@ -62,6 +62,7 @@ module sim_png_top();
   integer                      cnt_h_r        ;
   integer                      cyc_start_r    ;
   integer                      cyc_done_r     ;
+  integer                      cyc_all_r      ;
 
 
 `include "D:/Documents/OneDrive/O_2021_SPRING/1M_VLSI/PJ/PNG/mypng/rtl/sim/sim_png/sub_bench.vh"
@@ -94,6 +95,7 @@ module sim_png_top();
     start_i = 'd0   ;
     val_i   = 'd0   ;
     dat_i   = 'd0   ;
+    cyc_all_r = 'd0 ;
 
     // delay
     #( 5 * `CLK_FULL );
@@ -121,10 +123,11 @@ module sim_png_top();
         -> png_data_i_event ;
 
         // wait
-        @(posedge dut.lz77_done_o ) ;
+        @(posedge dut.lz77_top.done_o ) ;
         @(posedge clk ) ;
         cyc_done_r = $time / `CLK_FULL ;
         $display( "(delta cycle %04d)", (cyc_done_r - cyc_start_r));
+        cyc_all_r = cyc_all_r + (cyc_done_r - cyc_start_r);
 
         // delay
         #( 10 * `CLK_FULL );
@@ -135,6 +138,7 @@ module sim_png_top();
       // log
       # ( 10 * `CLK_FULL ) ;
       $display( "\n\n***   CHECK DONES   ***\n");
+        $display( "(delta cycle %04d)", cyc_all_r);
       $stop ;
   end
 
