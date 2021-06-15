@@ -7,6 +7,7 @@ help:
 	@ echo "  build                                       build mypng                                                  "
 	@ echo "  run                                         build mypng and run session test                             "
 	@ echo "  cat                                         cat dumped check data                                        "
+	@ echo "  oneShot                                     clean & run & cat                                            "
 
 clean:
 	cd ./check_data ;\
@@ -21,3 +22,8 @@ run:
 cat:
 	cd ./check_data ;\
 	    ./cat.py
+
+oneShot:
+	make clean ;
+	make run   ;
+	make cat

@@ -1,8 +1,8 @@
 # dc
 
 #===================== set variables ======================
-set top             "filter_top"
-set design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/icc/filter/netlist"
+set top             "png_top"
+set design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/icc/png2/netlist"
 set search_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/ref/db"
 
 
@@ -25,4 +25,4 @@ source $design_path/${top}.icc.sdc
 report_timing > primetime.icc.log
 check_timing -verbose > primetime.violations.icc.log
 
-quit
+# quit

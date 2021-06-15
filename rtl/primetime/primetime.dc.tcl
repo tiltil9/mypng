@@ -1,9 +1,9 @@
 # dc
 
 #===================== set variables ======================
-set top             "filter_top"
-set design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/dc_submodule/dc_filter/netlist"
-set search_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/ref/models"
+set top             "png_top"
+set design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/dc_high/netlist"
+set search_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/ref/db"
 
 
 #===================== set library ========================

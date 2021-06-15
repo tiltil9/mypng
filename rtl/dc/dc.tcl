@@ -2,7 +2,7 @@
 #                            0   Setup
 #------------------------------------------------------------------------------
 # 0.1   logic Library settings
-set search_path         "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/ref/models"  
+set search_path         "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/ref/db"
 # set target_library      "saed90nm_max.db"
 # set link_library        "saed90nm_max.db" 
 # set target_library      "saed90nm_min.db"
@@ -90,10 +90,6 @@ create_clock -name $clk_name -period 8 -waveform {0 4} [get_ports $clk_name]
 set_dont_touch_network [get_clocks $clk_name]
 set_clock_latency 0.1 [get_clocks $clk_name]
 set_clock_uncertainty 0.1 [get_clocks $clk_name]
-set_input_delay -max 0.1 -clock $clk_name [remove_from_collection [all_inputs] [get_ports "$clk_name $rst_name"]]
-set_input_delay -min -0.1 -clock $clk_name [remove_from_collection [all_inputs] [get_ports "$clk_name $rst_name"]]
-set_output_delay -max 0.1 -clock $clk_name [all_outputs]
-set_output_delay -min -0.1 -clock $clk_name [all_outputs]
 set_fix_hold [get_clocks $clk_name]
 
 set_ideal_network [get_ports "$rst_name"]
@@ -103,6 +99,10 @@ set_dont_touch_network [get_ports "$rst_name"]
 # 2.3   environment
 # set_operating_conditions WCCOM
 # set_wire_load_mode top
+set_input_delay -max 0.1 -clock $clk_name [remove_from_collection [all_inputs] [get_ports "$clk_name $rst_name"]]
+set_input_delay -min -0.1 -clock $clk_name [remove_from_collection [all_inputs] [get_ports "$clk_name $rst_name"]]
+set_output_delay -max 0.1 -clock $clk_name [all_outputs]
+set_output_delay -min -0.1 -clock $clk_name [all_outputs]
 set_drive 0  $clk_name
 set_drive 0  $rst_name
 set_load  0.5 [all_outputs]
@@ -123,7 +123,7 @@ set_max_area 0
 #                            3  map
 #------------------------------------------------------------------------------
 # compile_ultra
-compile
+compile -map_effort high
 
 
 #------------------------------------------------------------------------------

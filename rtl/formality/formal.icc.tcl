@@ -1,9 +1,9 @@
 # dc vs icc
 
 #===================== set variables ======================
-set top                 "filter_top"
-set ref_design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/dc_submodule/dc_filter/netlist"
-set imp_design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/icc/filter/netlist"
+set top                 "png_top"
+set ref_design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/dc_high/netlist"
+set imp_design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/icc/png2/netlist"
 set search_path         "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/ref/db"
 
 
@@ -32,4 +32,4 @@ verify
 #==================== report ==============================
 report_status > formality.icc.log
 
-quit
+# quit

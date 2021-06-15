@@ -1,10 +1,10 @@
 # rtl vs dc
 
 #===================== set variables ======================
-set top                 "filter_top"
+set top                 "png_top"
 set ref_design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/rtl"
-set imp_design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/dc_submodule/dc_filter/netlist"
-set search_path         "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/ref/models"
+set imp_design_path     "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/dc_high/netlist"
+set search_path         "/net/dellr940d/export/ybfan2/ttli/VLSI/mypng/ref/db"
 
 
 #===================== set library ========================
@@ -19,6 +19,15 @@ read_verilog -r "   $ref_design_path/common/defines.vh        \
                     $ref_design_path/filter/filter.v          \
                     $ref_design_path/filter/filter_paeth.v    \
                     $ref_design_path/filter/filter_top.v      \
+                    $ref_design_path/adler32/adler32.v        \
+                    $ref_design_path/bs/bs_output.v           \
+                    $ref_design_path/bs/bs_top.v              \
+                    $ref_design_path/bs/huffman_fixed.v       \
+                    $ref_design_path/crc32/crc32_core.v       \
+                    $ref_design_path/crc32/crc32_top.v        \
+                    $ref_design_path/lz77/lz77_detect_one.v   \
+                    $ref_design_path/lz77/lz77_top.v          \
+                    $ref_design_path/$top.v                   \
                 "
 set_top r:/WORK/${top}
 current_design $top
