@@ -1,3 +1,6 @@
-rtl/sim/test/work
-rtl/sim/test/lib
-rtl/sim/test/modelsim*
+rtl/sim/sim_filter/check_data
+rtl/sim/sim_filter/run
+rtl/sim/sim_lz77/check_data
+rtl/sim/sim_lz77/run
+rtl/sim/sim_png/check_data
+rtl/sim/sim_png/run
